@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>조팸스 원정대 AR - 체크포인트</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+
+<div class="ar-topbar">
+  <a href="index.html">← 나가기</a>
+  <span class="ep-tag" id="epTag">EP.1</span>
+</div>
+
+<div class="ar-instructions" id="instructions">
+  마커 카드를 화면 중앙에 비추고 3초간 유지하세요
+</div>
+
+<div class="dwell-ring-wrap" id="dwellRing">
+  <svg viewBox="0 0 74 74">
+    <circle class="dwell-ring-bg" cx="37" cy="37" r="33"></circle>
+    <circle class="dwell-ring-fg" id="dwellFg" cx="37" cy="37" r="33"></circle>
+  </svg>
+  <div class="dwell-icon" id="dwellIcon">🔍</div>
+</div>
+
+<div class="card-overlay" id="cardOverlay">
+  <div class="get-card">
+    <div class="tag" id="cardTag">ITEM 01 / 12</div>
+    <div class="icon" id="cardIcon">🏭</div>
+    <div class="name" id="cardName">중소기업제품</div>
+    <div class="quote" id="cardQuote">"이거 만든 사람이 누구게?"</div>
+    <div class="all-done-badge" id="allDoneBadge" style="display:none;">🎉 12개 전체 수집 완료!</div>
+    <button id="cardNextBtn">다음 체크포인트로</button>
+  </div>
+</div>
+
+<a-scene
+  embedded
+  vr-mode-ui="enabled: false"
+  renderer="logarithmicDepthBuffer: true;"
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix;">
+
+  <a-assets>
+    <img id="charSunsik" src="assets/img/sunsik.png" crossorigin="anonymous">
+    <img id="charDaim" src="assets/img/daim.png" crossorigin="anonymous">
+    <img id="charHoonmin" src="assets/img/hoonmin.png" crossorigin="anonymous">
+  </a-assets>
+
+  <a-marker type="pattern" url="assets/markers/patt.hiro" id="hiroMarker">
+    <a-image id="charPlane" src="#charSunsik"
+      position="0 0.9 0" width="1.4" height="2.1"></a-image>
+    <a-entity id="itemFloat" position="0 2.1 0">
+      <a-text id="floatText" value="ITEM" align="center" color="#161616"
+        width="3" side="double"></a-text>
+    </a-entity>
+  </a-marker>
+
+  <a-entity camera></a-entity>
+</a-scene>
+
+<script src="assets/app.js"></script>
+<script>
+  // ---- episode setup ----
+  const params = new URLSearchParams(location.search);
+  const epId = Number(params.get('ep')) || nextEpisodeId();
+  const ep = getEpisode(epId);
+
+  document.getElementById('epTag').textContent = 'EP.' + ep.id + ' · ' + ep.item;
+  document.getElementById('cardTag').textContent = 'ITEM ' + String(ep.id).padStart(2,'0') + ' / 12';
+  document.getElementById('cardIcon').textContent = ep.icon;
+  document.getElementById('cardName').textContent = ep.item;
+  document.getElementById('cardQuote').textContent = '"' + ep.quote + '"';
+  document.getElementById('instructions').textContent =
+    ep.location + ' 마커를 화면 중앙에 비추고 3초간 유지하세요';
+
+  // pick a character image to feature (rotate by episode number)
+  const charIds = ['#charSunsik', '#charDaim', '#charHoonmin'];
+  document.getElementById('charPlane').setAttribute('src', charIds[(ep.id - 1) % 3]);
+  document.getElementById('floatText').setAttribute('value', ep.icon + ' ' + ep.item);
+
+  // ---- dwell-to-collect logic ----
+  const DWELL_MS = 3000;
+  const CIRC = 2 * Math.PI * 33; // ~207
+  let dwellStart = null;
+  let dwellRAF = null;
+  let collected = false;
+
+  const marker = document.getElementById('hiroMarker');
+  const dwellFg = document.getElementById('dwellFg');
+  const dwellRing = document.getElementById('dwellRing');
+  const dwellIcon = document.getElementById('dwellIcon');
+
+  function tick(){
+    if(dwellStart === null || collected) return;
+    const elapsed = performance.now() - dwellStart;
+    const pct = Math.min(elapsed / DWELL_MS, 1);
+    dwellFg.style.strokeDashoffset = String(CIRC * (1 - pct));
+    if(pct >= 1){
+      onCollect();
+      return;
+    }
+    dwellRAF = requestAnimationFrame(tick);
+  }
+
+  marker.addEventListener('markerFound', () => {
+    if(collected) return;
+    dwellStart = performance.now();
+    dwellIcon.textContent = '✨';
+    dwellRAF = requestAnimationFrame(tick);
+  });
+
+  marker.addEventListener('markerLost', () => {
+    dwellStart = null;
+    cancelAnimationFrame(dwellRAF);
+    dwellFg.style.strokeDashoffset = String(CIRC);
+    dwellIcon.textContent = '🔍';
+  });
+
+  function onCollect(){
+    collected = true;
+    cancelAnimationFrame(dwellRAF);
+    const done = markCollected(ep.id);
+    document.getElementById('cardOverlay').classList.add('show');
+    if(done.length >= 12){
+      document.getElementById('allDoneBadge').style.display = 'block';
+      document.getElementById('cardNextBtn').textContent = '명예의 전당으로';
+    }
+  }
+
+  document.getElementById('cardNextBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조팸스 원정대 - 마커 인쇄 시트</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="print-wrap">
+  <div class="masthead no-print">
+    <div class="kicker">PRINT SHEET</div>
+    <h1>마커 <span>인쇄 시트</span></h1>
+    <p>각 카드를 잘라 담당자가 정한 12곳에 하나씩 부착하세요</p>
+  </div>
+
+  <div class="print-hint no-print">
+    ⚠️ 모든 카드가 <b>같은 마커 그림(Hiro)</b>을 사용합니다. AR 앱이 자동으로 "다음 체크포인트" 순서를 안내하므로,
+    직원이 정해진 순서대로 실제 장소를 찾아가는 것이 게임의 핵심입니다.
+    카드 하단의 장소명을 실제 배치 장소로 수정한 뒤 인쇄해주세요 (입력창에 바로 타이핑 가능, 인쇄 시에도 반영됩니다).
+    <br><br>
+    더 정확한 인식을 원하시면 A4 용지에 <b>실제 크기(가로 약 8~10cm 이상)</b>로 인쇄하고, 코팅하여 벽면에 평평하게 부착하는 것을 권장합니다.
+    <button onclick="window.print()" style="margin-top:10px; font-family:'Black Han Sans',sans-serif; background:var(--ink); color:#fff; border:none; border-radius:8px; padding:10px 16px; cursor:pointer;">🖨️ 지금 인쇄하기</button>
+  </div>
+
+  <div class="marker-grid" id="markerGrid"></div>
+
+  <div class="foot-note no-print"><a href="index.html" style="color:inherit;">← 게임 허브로 돌아가기</a></div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const grid = document.getElementById('markerGrid');
+  EPISODES.forEach(ep => {
+    const card = document.createElement('div');
+    card.className = 'marker-card';
+    card.innerHTML = `
+      <img src="assets/markers/hiro.png" alt="마커 EP${ep.id}">
+      <div class="ep-no">EP.${String(ep.id).padStart(2,'0')} ${ep.icon}</div>
+      <div class="ep-item">${ep.item} · ${ep.kicker}</div>
+      <input class="loc-edit" value="${ep.location}">
+    `;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>
