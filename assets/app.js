@@ -123,3 +123,24 @@ function kakaoMapLink(lat,lng,label='조팸스 GO 체크포인트'){return 'http
 function avatarMeta(key){const k=['hoonmin','daim','sunsik'].includes(key)?key:'daim';return {key:k,path:avatarPath(k),name:k==='hoonmin'?'훈민':k==='sunsik'?'순식':'다임'}}
 function syncAvatarUI(root=document){const p=getProfile(),a=avatarMeta(p.avatar);root.querySelectorAll('[data-player-avatar]').forEach(img=>{if(img.getAttribute('src')!==a.path)img.setAttribute('src',a.path);img.setAttribute('alt',a.name)});root.querySelectorAll('[data-crew-avatar]').forEach(el=>el.classList.toggle('active',el.dataset.crewAvatar===a.key));root.querySelectorAll('[data-player-character-name]').forEach(el=>el.textContent=a.name);return a}
 window.addEventListener('pageshow',()=>syncAvatarUI());window.addEventListener('storage',e=>{if(e.key===GO_PROFILE_KEY)syncAvatarUI()});
+
+
+// ===== 조팸스 GO v7 : 공공구매 컬렉션 현대형 벡터 아이콘 =====
+function publicPurchaseIcon(id, unlocked=true){
+  const paths={
+    1:'<path d="M10 26V13h8v5l7-4v4l7-4v12H10Z"/><path d="M14 26v-5h5v5M25 21h3M25 24h3"/>',
+    2:'<path d="M14 8h12M18 8v7l-6 10a3 3 0 0 0 3 5h10a3 3 0 0 0 3-5l-6-10V8"/><path d="M15 23h13M18 19h5"/>',
+    3:'<circle cx="20" cy="12" r="5"/><path d="M10 30c1-7 5-11 10-11s9 4 10 11M27 10h5M29.5 7.5v5"/>',
+    4:'<circle cx="16" cy="12" r="4"/><path d="M16 16v7h8M13 30l5-7h7l4 7M25 18l4 4"/>',
+    5:'<path d="M20 8l2.8 6.2 6.7.7-5 4.5 1.5 6.6-6-3.4-6 3.4 1.5-6.6-5-4.5 6.7-.7L20 8Z"/><path d="M12 30h16"/>',
+    6:'<path d="M7 18l7-6 6 5 6-5 7 6-13 12L7 18Z"/><path d="M14 22l6 5 6-5"/>',
+    7:'<path d="M20 31V17M20 18c-6 0-9-4-9-8 6 0 9 3 9 8ZM20 22c6 0 9-4 9-8-6 0-9 3-9 8Z"/><path d="M12 31h16"/>',
+    8:'<path d="M14 9h7v7h-7zM22 16h7v7h-7zM14 23h7v7h-7zM7 16h7v7H7z"/><path d="M14 19h8M17 16v7"/>',
+    9:'<path d="M8 29h24M11 29V17l9-8 9 8v12M16 29v-7h8v7"/><path d="M8 16l12-9 12 9"/>',
+    10:'<path d="M14 18a6 6 0 1 1 12 0c0 3-2 4-3 6h-6c-1-2-3-3-3-6Z"/><path d="M17 28h6M18 31h4M20 7V4M9 18H5M35 18h-4M11 9l-3-3M29 9l3-3"/>',
+    11:'<path d="M31 9C19 9 11 15 11 23c0 5 4 8 9 8 9 0 12-10 11-22Z"/><path d="M12 30c4-7 9-11 16-15"/>',
+    12:'<path d="M11 10h18v13H11zM15 23v7h10v-7"/><path d="M15 15h10M20 12v6"/><circle cx="29" cy="28" r="4"/><path d="M29 26v4M27 28h4"/>'
+  };
+  const body=unlocked?(paths[id]||paths[1]):'<path d="M14 18a6 6 0 0 1 12 0c0 5-6 5-6 9"/><circle cx="20" cy="32" r="1"/>';
+  return `<svg class="pp-icon" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="ppg${id}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2f80ed"/><stop offset="1" stop-color="#6c5ce7"/></linearGradient></defs><g fill="none" stroke="url(#ppg${id})" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
+}
