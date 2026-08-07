@@ -1,204 +1,281 @@
-@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&family=Do+Hyeon&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum:wght@400;700&family=Do+Hyeon&display=swap');
 
 :root{
-  --ink:#161616;
+  --ink:#14141a;
   --paper:#f6f4ee;
   --yellow:#ffc63c;
   --red:#ff4b45;
   --blue:#2e5cff;
   --green:#2fbf71;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
 }
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; overscroll-behavior:none; }
 body{
   background:var(--paper);
-  background-image:radial-gradient(circle, rgba(22,22,22,0.06) 1px, transparent 1.2px);
+  background-image:radial-gradient(circle, rgba(20,20,26,0.06) 1px, transparent 1.2px);
   background-size:14px 14px;
   font-family:'Gowun Dodum', sans-serif;
   color:var(--ink);
   min-height:100vh;
+  -webkit-font-smoothing:antialiased;
 }
 
-/* ---------- HUB (index.html) ---------- */
-.hub-wrap{
-  max-width:520px; margin:0 auto; padding:28px 16px 60px;
-}
+/* ================= HUB ================= */
+.hub-wrap{ max-width:520px; margin:0 auto; padding:calc(28px + var(--safe-t)) 16px calc(60px + var(--safe-b)); }
 .masthead{ text-align:center; margin-bottom:6px; }
-.masthead .kicker{
-  font-family:'Do Hyeon', sans-serif; font-size:12px; letter-spacing:4px; color:var(--red);
-}
-.masthead h1{
-  font-family:'Black Han Sans', sans-serif;
-  font-size:clamp(26px,7vw,36px);
-  margin:4px 0 0;
-}
+.masthead .kicker{ font-family:'Do Hyeon', sans-serif; font-size:12px; letter-spacing:4px; color:var(--red); }
+.masthead h1{ font-family:'Black Han Sans', sans-serif; font-size:clamp(26px,7vw,36px); margin:4px 0 0; }
 .masthead h1 span{ color:var(--blue); }
-.masthead p{ font-size:13px; opacity:.65; margin-top:6px; }
+.masthead p{ font-size:13px; opacity:.65; margin-top:6px; line-height:1.5; }
 
 .progress-card{
-  background:#fff; border:4px solid var(--ink); border-radius:16px;
+  background:#fff; border:4px solid var(--ink); border-radius:18px;
   box-shadow:6px 6px 0 var(--ink); padding:18px; margin:20px 0;
 }
 .progress-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
 .progress-top .num{ font-family:'Black Han Sans', sans-serif; font-size:26px; color:var(--red); }
 .progress-bar-track{ background:#eee; border:2px solid var(--ink); border-radius:20px; height:14px; overflow:hidden; }
-.progress-bar-fill{ height:100%; background:linear-gradient(90deg, var(--yellow), var(--red)); transition:width .4s ease; }
+.progress-bar-fill{ height:100%; background:linear-gradient(90deg, var(--yellow), var(--red)); transition:width .5s cubic-bezier(.2,.9,.3,1); }
 
-.badge-grid{
-  display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:14px;
-}
+.badge-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:14px; }
 .badge{
-  aspect-ratio:1; border-radius:10px; border:3px solid var(--ink);
+  aspect-ratio:1; border-radius:12px; border:3px solid var(--ink);
   display:flex; align-items:center; justify-content:center; font-size:18px;
-  background:#eee; opacity:.35;
+  background:#eee; opacity:.35; transition:transform .25s ease, opacity .25s ease;
 }
-.badge.got{ background:var(--yellow); opacity:1; }
+.badge.got{ background:var(--yellow); opacity:1; animation:badgePop .4s ease; }
+@keyframes badgePop{ 0%{ transform:scale(.4) rotate(-15deg);} 70%{ transform:scale(1.15) rotate(6deg);} 100%{ transform:scale(1) rotate(0);} }
 
 .cta-row{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
 .cta{
   display:flex; align-items:center; justify-content:center; gap:8px;
   font-family:'Black Han Sans', sans-serif; font-size:16px;
   background:var(--ink); color:var(--paper);
-  border:none; border-radius:14px; padding:16px; text-decoration:none;
+  border:none; border-radius:16px; padding:17px; text-decoration:none;
   box-shadow:5px 5px 0 rgba(0,0,0,0.15);
-  transition:transform .12s ease;
+  transition:transform .12s ease, box-shadow .12s ease;
 }
-.cta:hover{ transform:translateY(-2px); }
+.cta:active{ transform:translateY(2px); box-shadow:2px 2px 0 rgba(0,0,0,0.15); }
 .cta.secondary{ background:#fff; color:var(--ink); border:3px solid var(--ink); box-shadow:5px 5px 0 var(--ink); }
 
-.checklist{
-  background:#fff; border:3px solid var(--ink); border-radius:14px; padding:14px 16px; margin-top:20px;
+.status-row{ display:flex; gap:8px; margin-top:14px; }
+.status-chip{
+  flex:1; display:flex; align-items:center; gap:6px; justify-content:center;
+  font-family:'Do Hyeon', sans-serif; font-size:11px; padding:8px 6px;
+  border-radius:10px; border:2px solid var(--ink); background:#fff;
 }
+.status-chip .dot{ width:8px; height:8px; border-radius:50%; background:#ccc; }
+.status-chip.ok .dot{ background:var(--green); }
+
+.checklist{ background:#fff; border:3px solid var(--ink); border-radius:16px; padding:14px 16px; margin-top:20px; }
 .checklist h3{ font-family:'Black Han Sans', sans-serif; font-size:15px; margin:0 0 8px; }
 .checklist ol{ margin:0; padding-left:20px; font-size:13px; line-height:1.7; }
 
-.reset-link{
-  display:block; text-align:center; margin-top:22px; font-size:12px; opacity:.4;
-  font-family:'Do Hyeon', sans-serif; text-decoration:underline; cursor:pointer;
+.reset-link{ display:block; text-align:center; margin-top:22px; font-size:12px; opacity:.4; font-family:'Do Hyeon', sans-serif; text-decoration:underline; }
+.foot-note{ text-align:center; font-size:11px; opacity:.5; margin-top:24px; font-family:'Do Hyeon', sans-serif; letter-spacing:1px; }
+
+/* ================= CHECKPOINT LIST ================= */
+.cp-wrap{ max-width:640px; margin:0 auto; padding:calc(24px + var(--safe-t)) 16px 60px; }
+.cp-list{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+.cp-row{ display:flex; align-items:center; gap:10px; background:#fff; border:3px solid var(--ink); border-radius:12px; padding:10px 12px; }
+.cp-row .icon{ font-size:20px; width:28px; text-align:center; }
+.cp-row .meta{ flex:1; }
+.cp-row .item-name{ font-family:'Black Han Sans', sans-serif; font-size:13px; }
+.cp-row .coord{ font-size:11px; opacity:.6; }
+.cp-row a{ font-family:'Do Hyeon', sans-serif; font-size:11px; color:var(--blue); text-decoration:none; border:1px solid var(--blue); border-radius:14px; padding:4px 10px; white-space:nowrap; }
+
+/* ================= AR SCREEN ================= */
+.ar-body{ margin:0; overflow:hidden; height:100vh; height:100dvh; background:#000; }
+#cameraVideo{
+  position:fixed; inset:0; width:100vw; height:100vh; height:100dvh;
+  object-fit:cover; background:#000;
+}
+.ar-vignette{
+  position:fixed; inset:0; pointer-events:none; z-index:5;
+  background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.35) 100%);
 }
 
-.dist-pill{
-  position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:50;
-  background:rgba(22,22,22,0.75); color:#fff; font-family:'Do Hyeon', sans-serif;
-  font-size:12px; padding:5px 14px; border-radius:20px;
+.ar-topbar{
+  position:fixed; top:0; left:0; right:0; z-index:60;
+  padding:calc(12px + var(--safe-t)) 14px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0));
+}
+.ar-topbar .back-btn{
+  color:#fff; text-decoration:none; font-family:'Do Hyeon', sans-serif; font-size:13px;
+  border:2px solid rgba(255,255,255,0.8); border-radius:20px; padding:6px 14px;
+  backdrop-filter:blur(4px);
+}
+.ar-topbar .ep-tag{
+  background:var(--red); color:#fff; font-family:'Do Hyeon', sans-serif; font-size:12px;
+  padding:6px 12px; border-radius:20px; box-shadow:0 2px 8px rgba(255,75,69,0.5);
 }
 
+.status-banner{
+  position:fixed; top:calc(58px + var(--safe-t)); left:14px; right:14px; z-index:55;
+  background:rgba(0,0,0,0.55); color:#fff; backdrop-filter:blur(6px);
+  border-radius:14px; padding:10px 14px; font-size:12.5px; text-align:center;
+  font-family:'Gowun Dodum', sans-serif; line-height:1.5;
+  transition:opacity .3s ease, transform .3s ease;
+}
+
+/* 발견 대상 캐릭터 (나침반 시야 안에 있을 때) */
+.target-wrap{
+  position:fixed; top:50%; left:50%; z-index:20;
+  transform:translate(-50%,-50%);
+  transition:transform .12s linear, opacity .25s ease;
+  opacity:0; pointer-events:none;
+  text-align:center;
+}
+.target-wrap.visible{ opacity:1; }
+.target-wrap img{
+  width:150px; filter:drop-shadow(0 10px 18px rgba(0,0,0,0.5));
+  animation:floaty 2.6s ease-in-out infinite;
+}
+@keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-14px);} }
+.target-label{
+  margin-top:6px; display:inline-block;
+  background:rgba(0,0,0,0.6); color:#fff; font-family:'Do Hyeon', sans-serif;
+  font-size:12px; padding:5px 12px; border-radius:14px; backdrop-filter:blur(4px);
+}
+.target-ring{
+  position:absolute; left:50%; top:38%; transform:translate(-50%,-50%);
+  width:180px; height:180px; border-radius:50%;
+  border:3px solid rgba(255,198,60,0.85);
+  opacity:0;
+}
+.target-wrap.visible .target-ring{ animation:ringPulse 1.6s ease-out infinite; }
+@keyframes ringPulse{
+  0%{ opacity:.9; transform:translate(-50%,-50%) scale(.7); }
+  80%{ opacity:0; transform:translate(-50%,-50%) scale(1.25); }
+  100%{ opacity:0; }
+}
+
+/* 화면 밖에 있을 때 방향을 알려주는 가장자리 화살표 */
+.edge-arrow{
+  position:fixed; top:50%; z-index:20; transform:translateY(-50%);
+  font-size:38px; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,0.6);
+  opacity:0; transition:opacity .25s ease;
+  animation:arrowPulse 1.2s ease-in-out infinite;
+}
+.edge-arrow.visible{ opacity:.95; }
+.edge-arrow.left{ left:10px; }
+.edge-arrow.right{ right:10px; }
+@keyframes arrowPulse{ 0%,100%{ transform:translateY(-50%) scale(1);} 50%{ transform:translateY(-50%) scale(1.18);} }
+
+/* 하단 레이더 HUD */
+.radar-hud{
+  position:fixed; left:0; right:0; bottom:calc(18px + var(--safe-b)); z-index:55;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.radar-dist{
+  background:rgba(0,0,0,0.55); color:#fff; backdrop-filter:blur(6px);
+  font-family:'Do Hyeon', sans-serif; font-size:13px; padding:7px 16px; border-radius:20px;
+}
+.radar-dist b{ color:var(--yellow); font-size:15px; }
+.compass-ring-wrap{ position:relative; width:96px; height:96px; }
+.compass-ring-wrap svg{ width:100%; height:100%; }
+.compass-bg{ fill:rgba(0,0,0,0.5); stroke:rgba(255,255,255,0.25); stroke-width:2; }
+.compass-needle{
+  position:absolute; left:50%; top:50%; width:4px; height:36px;
+  background:linear-gradient(180deg, var(--red), transparent);
+  transform-origin:50% 100%;
+  transform:translate(-50%,-100%) rotate(0deg);
+  transition:transform .15s linear;
+  border-radius:4px;
+}
+.compass-center-icon{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:#fff;
+}
+
+/* 발견 후 dwell 진행 링 */
+.dwell-ring-wrap{
+  position:fixed; bottom:calc(175px + var(--safe-b)); left:50%; transform:translateX(-50%); z-index:56;
+  width:64px; height:64px; opacity:0; transition:opacity .2s ease;
+}
+.dwell-ring-wrap.show{ opacity:1; }
+.dwell-ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+.dwell-ring-bg{ fill:rgba(0,0,0,0.4); stroke:rgba(255,255,255,0.3); stroke-width:6; }
+.dwell-ring-fg{ fill:none; stroke:var(--yellow); stroke-width:6; stroke-linecap:round; stroke-dasharray:175; stroke-dashoffset:175; transition:stroke-dashoffset .1s linear; }
+
+/* ---- 권한 온보딩 ---- */
 .perm-gate{
-  position:fixed; inset:0; z-index:200;
-  background:var(--paper);
+  position:fixed; inset:0; z-index:200; background:linear-gradient(160deg,#161622,#1f1f30);
   display:flex; align-items:center; justify-content:center; padding:24px;
+  padding-top:calc(24px + var(--safe-t)); padding-bottom:calc(24px + var(--safe-b));
 }
 .perm-card{
-  max-width:340px; text-align:center; background:#fff;
-  border:4px solid var(--ink); border-radius:18px; padding:28px 22px;
-  box-shadow:6px 6px 0 var(--ink);
+  max-width:360px; width:100%; text-align:center; background:#fff;
+  border-radius:24px; padding:32px 24px; box-shadow:0 20px 60px rgba(0,0,0,0.4);
 }
-.perm-icon{ font-size:40px; margin-bottom:10px; }
-.perm-card h2{ font-family:'Black Han Sans', sans-serif; font-size:18px; margin:0 0 10px; }
-.perm-card p{ font-size:13px; line-height:1.6; opacity:.8; margin-bottom:18px; }
+.perm-icon{ font-size:44px; margin-bottom:12px; }
+.perm-card h2{ font-family:'Black Han Sans', sans-serif; font-size:19px; margin:0 0 10px; }
+.perm-card p{ font-size:13.5px; line-height:1.6; opacity:.75; margin-bottom:20px; }
+.perm-steps{ display:flex; flex-direction:column; gap:8px; margin-bottom:20px; text-align:left; }
+.perm-step{
+  display:flex; align-items:center; gap:10px; font-size:13px;
+  background:#f6f4ee; border-radius:10px; padding:10px 12px;
+}
+.perm-step .icon-badge{
+  width:26px; height:26px; border-radius:50%; background:#e4e4e4;
+  display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;
+  transition:background .2s ease;
+}
+.perm-step.ok .icon-badge{ background:var(--green); color:#fff; }
+.perm-step.fail .icon-badge{ background:var(--red); color:#fff; }
 .perm-card button{
-  font-family:'Black Han Sans', sans-serif; font-size:15px;
-  background:var(--ink); color:#fff; border:none; border-radius:14px;
-  padding:14px 22px; cursor:pointer; width:100%;
+  font-family:'Black Han Sans', sans-serif; font-size:16px;
+  background:var(--ink); color:#fff; border:none; border-radius:16px;
+  padding:16px 22px; cursor:pointer; width:100%;
+  transition:transform .12s ease;
 }
-.perm-note{ font-size:12px; color:var(--red); margin-top:10px; min-height:16px; }
+.perm-card button:active{ transform:scale(.97); }
+.perm-card button:disabled{ opacity:.5; }
+.perm-note{ font-size:12px; color:var(--red); margin-top:12px; min-height:16px; line-height:1.5; }
 
-/* ---------- AR SCREEN (ar.html) ---------- */
-/* AR.js가 초기 로드시 비디오/캔버스 크기를 잘못 계산해 확대되어 보이는
-   현상을 막기 위해 항상 뷰포트 전체를 올바른 비율로 덮도록 강제 */
-video, .a-canvas, #arjs-video{
-  position:fixed !important;
-  top:0 !important; left:0 !important;
-  width:100vw !important; height:100vh !important;
-  max-width:none !important; max-height:none !important;
-  object-fit:cover !important;
-}
-.ar-topbar{
-  position:fixed; top:0; left:0; right:0; z-index:50;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:10px 14px; background:rgba(22,22,22,0.75); color:#fff;
-  font-family:'Do Hyeon', sans-serif; font-size:13px;
-}
-.ar-topbar a{ color:#fff; text-decoration:none; border:2px solid #fff; border-radius:20px; padding:4px 12px; }
-.ar-topbar .ep-tag{ background:var(--red); padding:4px 10px; border-radius:20px; }
-
-.ar-instructions{
-  position:fixed; bottom:110px; left:0; right:0; z-index:50; text-align:center;
-  font-family:'Gowun Dodum', sans-serif; color:#fff; font-size:14px;
-  text-shadow:0 2px 4px rgba(0,0,0,0.8); padding:0 20px;
-}
-
-.dwell-ring-wrap{
-  position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:50;
-  width:74px; height:74px;
-}
-.dwell-ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
-.dwell-ring-bg{ fill:none; stroke:rgba(255,255,255,0.35); stroke-width:8; }
-.dwell-ring-fg{ fill:none; stroke:var(--yellow); stroke-width:8; stroke-linecap:round;
-  stroke-dasharray:207; stroke-dashoffset:207; transition:stroke-dashoffset .1s linear; }
-.dwell-icon{
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-size:24px;
-}
-
+/* ---- 아이템 획득 카드 ---- */
 .card-overlay{
   position:fixed; inset:0; z-index:100; display:none;
-  align-items:center; justify-content:center;
-  background:rgba(22,22,22,0.75);
+  align-items:center; justify-content:center; padding:24px;
+  background:rgba(10,10,16,0.72); backdrop-filter:blur(6px);
 }
 .card-overlay.show{ display:flex; }
 .get-card{
-  width:220px; background:linear-gradient(160deg,#fff,#fff2cf);
-  border:5px solid var(--ink); border-radius:18px; padding:22px 16px;
-  text-align:center; box-shadow:0 0 0 8px rgba(255,198,60,0.35);
+  width:100%; max-width:280px; background:linear-gradient(165deg,#fff,#fff3cf);
+  border-radius:26px; padding:30px 22px; text-align:center;
+  box-shadow:0 0 0 8px rgba(255,198,60,0.3), 0 20px 50px rgba(0,0,0,0.4);
   animation:popIn .5s cubic-bezier(.2,1.4,.4,1);
 }
-@keyframes popIn{
-  0%{ transform:scale(.5) rotate(-8deg); opacity:0; }
-  70%{ transform:scale(1.08) rotate(3deg); opacity:1; }
-  100%{ transform:scale(1) rotate(0deg); opacity:1; }
-}
-.get-card .tag{ font-family:'Do Hyeon',sans-serif; font-size:11px; color:var(--red); letter-spacing:2px; }
-.get-card .icon{ font-size:52px; margin:10px 0; }
-.get-card .name{ font-family:'Black Han Sans', sans-serif; font-size:18px; line-height:1.35; }
+@keyframes popIn{ 0%{ transform:scale(.5) rotate(-8deg); opacity:0;} 70%{ transform:scale(1.08) rotate(3deg); opacity:1;} 100%{ transform:scale(1) rotate(0); opacity:1;} }
+.get-card .tag{ font-family:'Do Hyeon', sans-serif; font-size:11px; color:var(--red); letter-spacing:2px; }
+.get-card .icon{ font-size:56px; margin:12px 0; }
+.get-card .name{ font-family:'Black Han Sans', sans-serif; font-size:19px; line-height:1.35; }
 .get-card .quote{ font-size:12px; opacity:.7; margin-top:10px; }
+.get-card .all-done-badge{ font-family:'Do Hyeon', sans-serif; font-size:12px; color:var(--green); margin-top:8px; }
 .get-card button{
-  margin-top:16px; font-family:'Black Han Sans', sans-serif; font-size:14px;
-  background:var(--ink); color:#fff; border:none; border-radius:12px; padding:12px 18px;
-  cursor:pointer;
+  margin-top:18px; font-family:'Black Han Sans', sans-serif; font-size:14px;
+  background:var(--ink); color:#fff; border:none; border-radius:14px; padding:13px 20px;
+  cursor:pointer; width:100%;
 }
 
-.all-done-badge{
-  font-family:'Do Hyeon', sans-serif; font-size:12px; color:var(--green); margin-top:6px;
+/* ---- 토스트 ---- */
+.toast-root{
+  position:fixed; top:calc(100px + var(--safe-t)); left:0; right:0; z-index:90;
+  display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none;
 }
+.toast{
+  background:rgba(20,20,26,0.9); color:#fff; font-family:'Gowun Dodum', sans-serif;
+  font-size:13px; padding:12px 18px; border-radius:16px; max-width:86vw; text-align:center;
+  opacity:0; transform:translateY(-14px) scale(.96);
+  transition:opacity .3s ease, transform .3s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);
+}
+.toast.show{ opacity:1; transform:translateY(0) scale(1); }
+.toast-near{ background:linear-gradient(120deg, #ff4b45, #ff8a3c); font-weight:bold; }
 
-/* ---------- MARKERS PRINT SHEET ---------- */
-.print-wrap{ max-width:900px; margin:0 auto; padding:24px 16px 60px; }
-.print-hint{
-  background:#fff3cd; border:2px solid #e0a800; border-radius:10px; padding:12px 16px;
-  font-size:13px; margin-bottom:20px;
-}
-.marker-grid{
-  display:grid; grid-template-columns:repeat(2,1fr); gap:20px;
-}
-.marker-card{
-  border:3px dashed var(--ink); border-radius:12px; padding:16px; text-align:center; background:#fff;
-}
-.marker-card img{ width:70%; max-width:220px; }
-.marker-card .ep-no{ font-family:'Black Han Sans', sans-serif; font-size:16px; margin-top:8px; }
-.marker-card .ep-item{ font-size:12px; opacity:.7; }
-.marker-card .loc-edit{
-  margin-top:8px; font-size:12px; border:1px solid #ccc; border-radius:6px; padding:6px;
-  width:100%; text-align:center; font-family:'Gowun Dodum', sans-serif;
-}
-@media print{
-  body{ background:#fff; }
-  .print-hint, .no-print{ display:none !important; }
-  .marker-grid{ grid-template-columns:repeat(2,1fr); }
-  .marker-card{ break-inside:avoid; border:2px solid #000; }
-}
-
-.foot-note{
-  text-align:center; font-size:11px; opacity:.5; margin-top:24px;
-  font-family:'Do Hyeon', sans-serif; letter-spacing:1px;
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
 }

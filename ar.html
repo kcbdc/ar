@@ -2,40 +2,61 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>조팸스 원정대 AR - GPS 체크포인트</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>조팸스 원정대 AR</title>
 <link rel="stylesheet" href="assets/style.css">
-<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
+<body class="ar-body">
+
+<video id="cameraVideo" playsinline muted autoplay></video>
+<div class="ar-vignette"></div>
 
 <div class="ar-topbar">
-  <a href="index.html">← 나가기</a>
-  <span class="ep-tag" id="epTag">탐색 중...</span>
+  <a href="index.html" class="back-btn">← 나가기</a>
+  <span class="ep-tag" id="epTag">탐색 준비 중</span>
 </div>
 
-<div class="ar-instructions" id="instructions">
-  위치 권한을 허용하면 근처 체크포인트를 자동으로 찾아드려요
+<div class="status-banner" id="statusBanner">위치를 확인하고 있어요...</div>
+
+<div class="edge-arrow left" id="arrowLeft">◀</div>
+<div class="edge-arrow right" id="arrowRight">▶</div>
+
+<div class="target-wrap" id="targetWrap">
+  <div class="target-ring"></div>
+  <img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터">
+  <div class="target-label" id="targetLabel">🏭 중소기업제품</div>
 </div>
 
-<div class="dist-pill" id="distPill" style="display:none;"></div>
-
-<div class="dwell-ring-wrap" id="dwellRing" style="display:none;">
-  <svg viewBox="0 0 74 74">
-    <circle class="dwell-ring-bg" cx="37" cy="37" r="33"></circle>
-    <circle class="dwell-ring-fg" id="dwellFg" cx="37" cy="37" r="33"></circle>
+<div class="dwell-ring-wrap" id="dwellRing">
+  <svg viewBox="0 0 64 64">
+    <circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle>
+    <circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle>
   </svg>
-  <div class="dwell-icon" id="dwellIcon">📍</div>
+</div>
+
+<div class="radar-hud">
+  <div class="radar-dist" id="radarDist">거리 확인 중...</div>
+  <div class="compass-ring-wrap">
+    <svg viewBox="0 0 96 96">
+      <circle class="compass-bg" cx="48" cy="48" r="46"></circle>
+    </svg>
+    <div class="compass-needle" id="compassNeedle"></div>
+    <div class="compass-center-icon">📍</div>
+  </div>
 </div>
 
 <div id="permGate" class="perm-gate">
   <div class="perm-card">
     <div class="perm-icon">📍✨</div>
-    <h2>위치 & 카메라 권한이 필요해요</h2>
-    <p>본사 곳곳의 체크포인트에 가까워지면 자동으로 캐릭터가 나타나요.<br>
-       마커나 스캔 없이, 그냥 걸어가기만 하면 됩니다!</p>
-    <button id="permStartBtn">AR 탐험 시작하기</button>
+    <h2>AR 탐험을 시작할게요</h2>
+    <p>마커나 스캔 없이, 체크포인트 근처에서 폰을 들고 돌려보면<br>캐릭터가 자동으로 나타나요.</p>
+    <div class="perm-steps">
+      <div class="perm-step" id="stepCam"><span class="icon-badge">1</span> 카메라 권한</div>
+      <div class="perm-step" id="stepLoc"><span class="icon-badge">2</span> 위치 권한</div>
+      <div class="perm-step" id="stepOri"><span class="icon-badge">3</span> 방향센서 권한</div>
+    </div>
+    <button id="permStartBtn">권한 허용하고 시작하기</button>
     <div class="perm-note" id="permNote"></div>
   </div>
 </div>
@@ -47,176 +68,277 @@
     <div class="name" id="cardName">중소기업제품</div>
     <div class="quote" id="cardQuote">"이거 만든 사람이 누구게?"</div>
     <div class="all-done-badge" id="allDoneBadge" style="display:none;">🎉 12개 전체 수집 완료!</div>
-    <button id="cardNextBtn">다음 체크포인트로</button>
+    <button id="cardNextBtn">계속 탐험하기</button>
   </div>
 </div>
 
-<a-scene
-  embedded
-  vr-mode-ui="enabled: false"
-  renderer="logarithmicDepthBuffer: true; alpha: true;"
-  arjs="sourceType: webcam; debugUIEnabled: false; sourceWidth: 480; sourceHeight: 640; displayWidth: 480; displayHeight: 640;">
-
-  <a-assets>
-    <img id="charSunsik" src="assets/img/sunsik.png" crossorigin="anonymous">
-    <img id="charDaim" src="assets/img/daim.png" crossorigin="anonymous">
-    <img id="charHoonmin" src="assets/img/hoonmin.png" crossorigin="anonymous">
-  </a-assets>
-
-  <a-camera gps-camera="gpsMinDistance: 5;" rotation-reader></a-camera>
-
-  <!-- 40개 체크포인트가 여기 JS로 동적 생성됩니다 -->
-  <a-entity id="gpsEntities"></a-entity>
-
-</a-scene>
-
 <script src="assets/app.js"></script>
 <script>
-  const charImgById = { sunsik: '#charSunsik', daim: '#charDaim', hoonmin: '#charHoonmin' };
+  // ================= 상태 =================
+  let curLat = null, curLng = null, curHeading = null;
+  let notifiedIdx = new Set();   // 이미 "근처" 토스트를 보낸 체크포인트
+  let dwellStart = null, dwellTargetEpId = null, dwellRAF = null;
+  let collectingLock = false;
+  const CIRC = 2 * Math.PI * 27;
+
+  const video = document.getElementById('cameraVideo');
+  const epTag = document.getElementById('epTag');
+  const statusBanner = document.getElementById('statusBanner');
+  const targetWrap = document.getElementById('targetWrap');
+  const targetImg = document.getElementById('targetImg');
+  const targetLabel = document.getElementById('targetLabel');
+  const arrowLeft = document.getElementById('arrowLeft');
+  const arrowRight = document.getElementById('arrowRight');
+  const radarDist = document.getElementById('radarDist');
+  const compassNeedle = document.getElementById('compassNeedle');
+  const dwellRing = document.getElementById('dwellRing');
+  const dwellFg = document.getElementById('dwellFg');
+
+  const charImgs = { sunsik: 'assets/img/sunsik.png', daim: 'assets/img/daim.png', hoonmin: 'assets/img/hoonmin.png' };
   const charOrder = ['sunsik','daim','hoonmin'];
 
-  // ---- gps-entity-place 엔티티를 40개 체크포인트에 동적 생성 ----
-  const gpsRoot = document.getElementById('gpsEntities');
-  CHECKPOINTS.forEach((cp, i) => {
-    const ep = getEpisode(cp.episodeId);
-    const charKey = charOrder[i % 3];
-
-    const wrap = document.createElement('a-entity');
-    wrap.setAttribute('gps-entity-place', `latitude: ${cp.lat}; longitude: ${cp.lng};`);
-    wrap.setAttribute('id', 'cp-' + cp.idx);
-
-    const img = document.createElement('a-image');
-    img.setAttribute('src', charImgById[charKey]);
-    img.setAttribute('width', '6');
-    img.setAttribute('height', '9');
-    img.setAttribute('look-at', '[gps-camera]');
-    wrap.appendChild(img);
-
-    const label = document.createElement('a-text');
-    label.setAttribute('value', ep.icon + ' ' + ep.item);
-    label.setAttribute('align', 'center');
-    label.setAttribute('color', '#ffffff');
-    label.setAttribute('width', '14');
-    label.setAttribute('position', '0 5 0');
-    label.setAttribute('look-at', '[gps-camera]');
-    wrap.appendChild(label);
-
-    gpsRoot.appendChild(wrap);
-  });
-
-  // ---- 권한 요청 & 시작 ----
+  // ================= 권한 온보딩 =================
   const permGate = document.getElementById('permGate');
   const permNote = document.getElementById('permNote');
-  const startBtn = document.getElementById('permStartBtn');
+  const permStartBtn = document.getElementById('permStartBtn');
+  const stepCam = document.getElementById('stepCam');
+  const stepLoc = document.getElementById('stepLoc');
+  const stepOri = document.getElementById('stepOri');
 
-  async function requestOrientationPermission(){
-    if(typeof DeviceOrientationEvent !== 'undefined' &&
-       typeof DeviceOrientationEvent.requestPermission === 'function'){
+  function setStep(el, ok){ el.classList.remove('ok','fail'); el.classList.add(ok ? 'ok' : 'fail'); }
+
+  async function startCamera(){
+    const attempts = [
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      { video: { facingMode: 'environment' }, audio: false },
+      { video: true, audio: false },
+    ];
+    let lastErr = null;
+    for(const constraints of attempts){
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        await new Promise((resolve) => {
+          video.onloadedmetadata = resolve;
+          setTimeout(resolve, 1500); // 안전장치: metadata 이벤트가 안 오는 기기 대비
+        });
+        try{ await video.play(); }catch(e){ /* 일부 브라우저는 사용자 제스처 후 자동 재생 */ }
+        return true;
+      }catch(e){ lastErr = e; }
+    }
+    console.warn('카메라 시작 실패', lastErr);
+    return false;
+  }
+
+  async function startGeolocation(){
+    if(!navigator.geolocation) return false;
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        () => resolve(true),
+        () => resolve(false),
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
+
+  async function startOrientation(){
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
       try{
         const res = await DeviceOrientationEvent.requestPermission();
         return res === 'granted';
       }catch(e){ return false; }
     }
-    return true; // Android 등: 별도 권한 요청 불필요
+    return typeof DeviceOrientationEvent !== 'undefined';
   }
 
-  startBtn.addEventListener('click', async () => {
-    permNote.textContent = '권한 요청 중...';
-    const oriOk = await requestOrientationPermission();
+  permStartBtn.addEventListener('click', async () => {
+    permStartBtn.disabled = true;
+    permNote.textContent = '';
+
+    permNote.textContent = '카메라를 켜는 중...';
+    const camOk = await startCamera();
+    setStep(stepCam, camOk);
+    if(!camOk){
+      permNote.textContent = '카메라를 켤 수 없어요. 브라우저의 카메라 권한을 확인하고 새로고침 해주세요.';
+      permStartBtn.disabled = false;
+      return;
+    }
+
+    permNote.textContent = '위치 확인 중...';
+    const locOk = await startGeolocation();
+    setStep(stepLoc, locOk);
+    if(!locOk){
+      permNote.textContent = '위치 권한이 필요해요. 브라우저 설정에서 위치 접근을 허용하고 새로고침 해주세요.';
+      permStartBtn.disabled = false;
+      return;
+    }
+
+    permNote.textContent = '방향센서 확인 중...';
+    const oriOk = await startOrientation();
+    setStep(stepOri, oriOk);
     if(!oriOk){
-      permNote.textContent = '방향 센서 권한이 거부되었어요. 브라우저 설정에서 허용 후 새로고침 해주세요.';
-      return;
+      permNote.textContent = '방향센서 권한이 없으면 캐릭터 탐색 정확도가 떨어질 수 있어요. 계속 진행할게요.';
     }
-    if(!navigator.geolocation){
-      permNote.textContent = '이 브라우저는 위치 정보를 지원하지 않아요.';
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      () => { permGate.style.display = 'none'; startTracking(); },
-      (err) => { permNote.textContent = '위치 권한이 거부되었어요 (' + err.message + '). 브라우저 설정에서 허용 후 새로고침 해주세요.'; },
-      { enableHighAccuracy: true }
-    );
+
+    setTimeout(() => {
+      permGate.style.display = 'none';
+      beginTracking(oriOk);
+    }, oriOk ? 250 : 900);
   });
 
-  // ---- 근접 판정 & 3초 dwell 로직 ----
-  const instructions = document.getElementById('instructions');
-  const distPill = document.getElementById('distPill');
-  const dwellRing = document.getElementById('dwellRing');
-  const dwellFg = document.getElementById('dwellFg');
-  const dwellIcon = document.getElementById('dwellIcon');
-  const epTag = document.getElementById('epTag');
-  const CIRC = 2 * Math.PI * 33;
-
-  let dwellStart = null;
-  let dwellTargetEpId = null;
-  let dwellRAF = null;
-  let watchId = null;
-
-  function tick(){
-    if(dwellStart === null) return;
-    const elapsed = performance.now() - dwellStart;
-    const pct = Math.min(elapsed / DWELL_MS, 1);
-    dwellFg.style.strokeDashoffset = String(CIRC * (1 - pct));
-    if(pct >= 1){ onCollect(dwellTargetEpId); return; }
-    dwellRAF = requestAnimationFrame(tick);
-  }
-
-  function startTracking(){
-    watchId = navigator.geolocation.watchPosition(onPosition, onPosError,
+  // ================= 위치/방향 추적 =================
+  function beginTracking(oriOk){
+    navigator.geolocation.watchPosition(onPosition, onPosError,
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
+
+    if(oriOk){
+      const evName = 'ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation';
+      window.addEventListener(evName, onOrientation, true);
+    } else {
+      statusBanner.textContent = '방향센서 없이 거리 기반으로만 안내할게요.';
+    }
+
+    requestAnimationFrame(renderLoop);
   }
 
   function onPosError(err){
-    instructions.textContent = '위치 신호를 받는 중입니다... (' + err.message + ')';
+    statusBanner.textContent = '위치 신호를 기다리는 중... (' + err.message + ')';
   }
 
   function onPosition(pos){
-    const { latitude, longitude } = pos.coords;
-    const done = getProgress();
+    curLat = pos.coords.latitude;
+    curLng = pos.coords.longitude;
+  }
 
-    if(done.length >= 12){
-      instructions.textContent = '🎉 12개 아이템을 모두 모았어요!';
-      dwellRing.style.display = 'none';
-      distPill.style.display = 'none';
-      epTag.textContent = '원정 완료';
+  function onOrientation(e){
+    const h = extractHeading(e);
+    if(h !== null) curHeading = h;
+  }
+
+  // ================= 메인 렌더 루프 =================
+  function renderLoop(){
+    updateUI();
+    requestAnimationFrame(renderLoop);
+  }
+
+  function updateUI(){
+    if(curLat === null || curLng === null){
+      statusBanner.style.display = 'block';
+      statusBanner.textContent = '위치 신호를 확인하고 있어요...';
+      radarDist.textContent = '거리 확인 중...';
+      targetWrap.classList.remove('visible');
+      arrowLeft.classList.remove('visible');
+      arrowRight.classList.remove('visible');
       return;
     }
 
-    const nearest = nearestUncollectedCheckpoint(latitude, longitude);
-    if(!nearest){ return; }
+    const done = getProgress();
+    if(done.length >= 12){
+      epTag.textContent = '원정 완료 🎉';
+      statusBanner.style.display = 'block';
+      statusBanner.textContent = '12개 아이템을 모두 모았어요! 수고하셨습니다.';
+      radarDist.textContent = '올클리어!';
+      targetWrap.classList.remove('visible');
+      arrowLeft.classList.remove('visible');
+      arrowRight.classList.remove('visible');
+      dwellRing.classList.remove('show');
+      return;
+    }
 
+    const nearest = nearestUncollectedCheckpoint(curLat, curLng);
+    if(!nearest) return;
     const { checkpoint, distance } = nearest;
     const ep = getEpisode(checkpoint.episodeId);
     epTag.textContent = 'EP.' + ep.id + ' · ' + ep.item;
+    radarDist.innerHTML = '가장 가까운 체크포인트까지 <b>' + Math.round(distance) + 'm</b>';
 
-    distPill.style.display = 'block';
-    distPill.textContent = '가장 가까운 체크포인트까지 약 ' + Math.round(distance) + 'm';
+    // ---- 근접 알림 (한 번만) ----
+    if(distance <= NOTIFY_RADIUS_M && !notifiedIdx.has(checkpoint.idx)){
+      notifiedIdx.add(checkpoint.idx);
+      vibrate([80, 60, 80]);
+      playChime('near');
+      showToast('📍 <b>' + ep.item + '</b> 체크포인트가 근처예요!<br>폰을 들고 천천히 둘러보세요', { variant:'near', duration:3800 });
+    }
+    if(distance > NOTIFY_RADIUS_M + 15 && notifiedIdx.has(checkpoint.idx)){
+      notifiedIdx.delete(checkpoint.idx); // 멀어지면 다음에 다시 접근 시 재알림
+    }
 
-    if(distance <= RADIUS_M){
-      dwellRing.style.display = 'block';
-      instructions.textContent = '체크포인트 근처예요! 카메라를 들고 3초간 주변을 비춰보세요';
+    // ---- 상태별 안내 문구 ----
+    if(distance > NOTIFY_RADIUS_M){
+      statusBanner.style.display = 'block';
+      statusBanner.textContent = '체크포인트 방향으로 걸어가보세요';
+    } else if(distance > COLLECT_RADIUS_M){
+      statusBanner.style.display = 'block';
+      statusBanner.textContent = '거의 다 왔어요! 조금만 더 다가가세요';
+    } else {
+      statusBanner.style.display = 'none';
+    }
+
+    // ---- 나침반 바늘 ----
+    let diff = 0;
+    let haveHeading = curHeading !== null;
+    if(haveHeading){
+      const bearing = bearingTo(curLat, curLng, checkpoint.lat, checkpoint.lng);
+      diff = angleDiff(bearing, curHeading);
+      compassNeedle.style.transform = 'translate(-50%,-100%) rotate(' + diff + 'deg)';
+    } else {
+      compassNeedle.style.transform = 'translate(-50%,-100%) rotate(0deg)';
+    }
+
+    // ---- 캐릭터 발견 로직 ----
+    const inCollectRange = distance <= COLLECT_RADIUS_M;
+    const facingTarget = !haveHeading || Math.abs(diff) <= FOV_HALF_DEG;
+    const discoverable = inCollectRange && facingTarget && !collectingLock;
+
+    if(discoverable){
+      const charKey = charOrder[checkpoint.idx % 3];
+      targetImg.setAttribute('src', charImgs[charKey]);
+      targetLabel.textContent = ep.icon + ' ' + ep.item;
+
+      const xRatio = haveHeading ? Math.max(-1, Math.min(1, diff / FOV_HALF_DEG)) : 0;
+      const maxOffset = Math.min(window.innerWidth * 0.32, 130);
+      const scale = 1.35 - Math.min(distance / COLLECT_RADIUS_M, 1) * 0.35;
+      targetWrap.style.transform = 'translate(calc(-50% + ' + (xRatio*maxOffset) + 'px), -50%) scale(' + scale.toFixed(2) + ')';
+      targetWrap.classList.add('visible');
+      arrowLeft.classList.remove('visible');
+      arrowRight.classList.remove('visible');
+
+      dwellRing.classList.add('show');
       if(dwellStart === null || dwellTargetEpId !== ep.id){
         dwellStart = performance.now();
         dwellTargetEpId = ep.id;
-        dwellIcon.textContent = '✨';
-        cancelAnimationFrame(dwellRAF);
-        dwellRAF = requestAnimationFrame(tick);
+      }
+      const elapsed = performance.now() - dwellStart;
+      const pct = Math.min(elapsed / DWELL_MS, 1);
+      dwellFg.style.strokeDashoffset = String(CIRC * (1 - pct));
+      if(pct >= 1 && !collectingLock){
+        onCollect(ep.id);
       }
     } else {
-      dwellRing.style.display = 'none';
+      targetWrap.classList.remove('visible');
+      dwellRing.classList.remove('show');
       dwellStart = null;
       dwellTargetEpId = null;
-      cancelAnimationFrame(dwellRAF);
       dwellFg.style.strokeDashoffset = String(CIRC);
-      instructions.textContent = '체크포인트 방향으로 걸어가 보세요 (' + Math.round(distance) + 'm 남음)';
+
+      if(inCollectRange && haveHeading){
+        // 범위 안인데 방향이 안 맞음 -> 어느 쪽으로 돌아야 하는지 화살표 표시
+        if(diff > 0){ arrowRight.classList.add('visible'); arrowLeft.classList.remove('visible'); }
+        else { arrowLeft.classList.add('visible'); arrowRight.classList.remove('visible'); }
+      } else {
+        arrowLeft.classList.remove('visible');
+        arrowRight.classList.remove('visible');
+      }
     }
   }
 
   function onCollect(epId){
-    dwellStart = null;
-    cancelAnimationFrame(dwellRAF);
+    collectingLock = true;
     const ep = getEpisode(epId);
     const done = markCollected(epId);
+
+    vibrate([40, 40, 40, 40, 120]);
+    playChime('collect');
 
     document.getElementById('cardTag').textContent = 'ITEM ' + String(ep.id).padStart(2,'0') + ' / 12';
     document.getElementById('cardIcon').textContent = ep.icon;
@@ -224,26 +346,24 @@
     document.getElementById('cardQuote').textContent = '"' + ep.quote + '"';
     document.getElementById('cardOverlay').classList.add('show');
 
+    const allDone = document.getElementById('allDoneBadge');
+    const nextBtn = document.getElementById('cardNextBtn');
     if(done.length >= 12){
-      document.getElementById('allDoneBadge').style.display = 'block';
-      document.getElementById('cardNextBtn').textContent = '명예의 전당으로';
+      allDone.style.display = 'block';
+      nextBtn.textContent = '홈으로';
     } else {
-      document.getElementById('allDoneBadge').style.display = 'none';
-      document.getElementById('cardNextBtn').textContent = '다음 체크포인트로';
+      allDone.style.display = 'none';
+      nextBtn.textContent = '계속 탐험하기';
     }
   }
 
   document.getElementById('cardNextBtn').addEventListener('click', () => {
     document.getElementById('cardOverlay').classList.remove('show');
+    dwellStart = null;
+    dwellTargetEpId = null;
+    collectingLock = false;
+    if(getProgress().length >= 12){ window.location.href = 'index.html'; }
   });
-
-  // ---- 초기 확대 표시 버그 방지 (기존 마커 버전과 동일 조치) ----
-  const sceneEl = document.querySelector('a-scene');
-  function forceRelayout(){ window.dispatchEvent(new Event('resize')); }
-  sceneEl.addEventListener('loaded', () => {
-    [100, 400, 900, 1600].forEach(ms => setTimeout(forceRelayout, ms));
-  });
-  window.addEventListener('orientationchange', () => setTimeout(forceRelayout, 300));
 </script>
 
 </body>

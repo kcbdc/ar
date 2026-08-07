@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#14141a">
 <title>조팸스 원정대 AR - 공공구매 대작전</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
@@ -11,7 +12,7 @@
   <div class="masthead">
     <div class="kicker">HQ AR TREASURE HUNT</div>
     <h1>조팸스 원정대 <span>AR</span></h1>
-    <p>본사 곳곳을 걸어다니며 근처에 가면 자동으로 나타나는 12대 공공구매 아이템을 모두 모아보세요!</p>
+    <p>본사 곳곳을 걸어다니다 체크포인트 근처에 오면 알림이 와요.<br>그 자리에서 카메라를 켜고 천천히 돌려 캐릭터를 찾아보세요!</p>
   </div>
 
   <div class="progress-card">
@@ -30,12 +31,19 @@
     <a class="cta secondary" href="checkpoints.html">🗺️ 체크포인트 40곳 목록 보기</a>
   </div>
 
+  <div class="status-row">
+    <div class="status-chip" id="chipCam"><span class="dot"></span>카메라</div>
+    <div class="status-chip" id="chipLoc"><span class="dot"></span>위치</div>
+    <div class="status-chip" id="chipOri"><span class="dot"></span>방향센서</div>
+  </div>
+
   <div class="checklist">
     <h3>진행 방법</h3>
     <ol>
-      <li>마커나 스캔 없이, <b>위치 권한만 허용</b>하면 준비 끝!</li>
-      <li>본사 안을 걸어다니면 화면에 가장 가까운 체크포인트까지 남은 거리가 표시돼요.</li>
-      <li>약 18m 이내로 가까워지면 카메라를 3초간 들고 있어보세요 — 캐릭터가 등장하며 아이템을 자동 획득합니다.</li>
+      <li>"AR 탐험 시작하기"를 누르고 카메라·위치·방향센서 권한을 허용하세요.</li>
+      <li>본사 안을 걸어다니면 체크포인트에 가까워질 때 <b>알림과 진동</b>이 와요.</li>
+      <li>그 자리에서 폰을 들고 천천히 <b>한 바퀴 돌아보세요</b> — 캐릭터가 있는 방향에 다가가면 화면에 등장합니다.</li>
+      <li>화면 중앙에 2초 정도 유지하면 아이템을 자동 획득해요.</li>
       <li>12개를 모두 모으면 원정 완료! 명예의 전당 인증샷을 남겨보세요.</li>
     </ol>
   </div>
@@ -68,17 +76,38 @@
       const nid = nextEpisodeId();
       startBtn.textContent = '📍 AR 탐험 계속하기 (다음: ' + getEpisode(nid).item + ')';
     }
-    startBtn.href = 'ar.html';
+  }
+
+  // 권한 상태를 미리 체크해 홈 화면에서 표시 (가능한 범위 내에서)
+  async function checkStatusChips(){
+    // 카메라 / 위치는 Permissions API가 있으면 조회, 없으면 '?' 표시
+    if(navigator.permissions){
+      try{
+        const cam = await navigator.permissions.query({ name: 'camera' });
+        setChip('chipCam', cam.state === 'granted');
+        cam.onchange = () => setChip('chipCam', cam.state === 'granted');
+      }catch(e){}
+      try{
+        const loc = await navigator.permissions.query({ name: 'geolocation' });
+        setChip('chipLoc', loc.state === 'granted');
+        loc.onchange = () => setChip('chipLoc', loc.state === 'granted');
+      }catch(e){}
+    }
+    const oriSupported = typeof DeviceOrientationEvent !== 'undefined';
+    setChip('chipOri', oriSupported, oriSupported ? undefined : '미지원');
+  }
+
+  function setChip(id, ok){
+    const el = document.getElementById(id);
+    if(ok) el.classList.add('ok');
   }
 
   document.getElementById('resetLink').addEventListener('click', () => {
-    if(confirm('수집 진행 상황을 초기화할까요?')){
-      resetProgress();
-      render();
-    }
+    if(confirm('수집 진행 상황을 초기화할까요?')){ resetProgress(); render(); }
   });
 
   render();
+  checkStatusChips();
 </script>
 </body>
 </html>
