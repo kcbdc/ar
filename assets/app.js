@@ -116,6 +116,10 @@ function setSoundEnabled(v){setPref('sound',!!v);if(!v)stopScannerAmbience();ret
 function installState(){return {standalone:window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches,ios:/iphone|ipad|ipod/i.test(navigator.userAgent)}}
 function registerPWA(){if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
 
+// v10: UI numeric formatter — every value >= 1,000 uses Korean thousands separators.
+function fmtNum(value){const n=Number(value);return Number.isFinite(n)?new Intl.NumberFormat('ko-KR',{maximumFractionDigits:0}).format(n):String(value??'')}
+function fmtMetric(value,suffix=''){return fmtNum(value)+(suffix?(' '+suffix):'')}
+
 const GO_KAKAO_KEY='jopams_go_kakao_js_key_v1';
 function kakaoMapKey(){try{return(localStorage.getItem(GO_KAKAO_KEY)||'').trim()}catch(e){return''}}
 function setKakaoMapKey(v){try{const x=(v||'').trim();if(x)localStorage.setItem(GO_KAKAO_KEY,x);else localStorage.removeItem(GO_KAKAO_KEY);return x}catch(e){return''}}

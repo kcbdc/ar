@@ -344,3 +344,107 @@ body.app-body .battle-info small,body.app-body .profile-card small,body.app-body
 body.ar-body,body.ar-body .ar-stage,body.ar-body .camera-stage{background:#000!important}
 
 @media(max-width:360px){body.app-body .bottom-nav{padding-left:3px!important;padding-right:3px!important}.bottom-nav a b{font-size:9px!important}}
+
+/* ===== v10 visual safe-area system / content breathing room =====
+   Keep the v9 deep-navy tone while ensuring every visual/text element stays
+   comfortably inside card borders on small mobile screens. */
+:root{--card-safe-x:20px;--card-safe-y:19px;--card-safe-gap:12px}
+
+/* Universal card safety: no child should visually touch a rounded border. */
+body.app-body .premium-card{padding:var(--card-safe-y) var(--card-safe-x)!important;overflow:hidden!important}
+body.app-body .premium-card.compact{padding:18px 20px!important}
+body.app-body .mission-card{padding:21px 20px!important}
+body.app-body .season-card{padding:19px 20px!important}
+body.app-body .daily-card{padding:19px 20px!important}
+body.app-body .character-strip{padding:18px 20px!important}
+body.app-body .install-card{padding:18px 20px!important}
+
+/* Page header safe area. */
+body.app-body .page-shell{padding-left:20px!important;padding-right:20px!important}
+body.app-body .page-top{grid-template-columns:48px minmax(0,1fr) auto!important;gap:14px!important;margin-bottom:20px!important;padding:0 2px!important}
+body.app-body .back-btn,body.app-body .icon-btn{width:46px!important;height:46px!important;border-radius:14px!important;margin:0!important}
+body.app-body .page-top>div:nth-child(2){min-width:0;padding:0 2px}
+body.app-body .page-top h1{line-height:1.2!important;overflow-wrap:anywhere}
+body.app-body .counter-pill{margin-left:2px;white-space:nowrap}
+
+/* Home cards / copy spacing. */
+body.app-body .section-head{gap:14px}
+body.app-body .mission-progress{gap:18px!important;margin:20px 0!important}
+body.app-body .mission-copy{padding-right:2px}
+body.app-body .primary-cta{padding:16px 17px!important;gap:14px!important}
+body.app-body .reward-ready{margin-top:14px!important;padding:13px 14px!important}
+body.app-body .daily-list{margin-top:13px}
+body.app-body .daily-item{padding:13px 12px!important;gap:11px!important}
+body.app-body .quick-card{padding:16px 11px!important;min-height:96px}
+body.app-body .crew-row{gap:10px!important}
+body.app-body .crew{padding:9px 8px!important;gap:7px!important;overflow:hidden}
+body.app-body .crew img{width:38px!important;height:44px!important;flex:0 0 auto}
+
+/* Collection cards: modern icon, number, title and microcopy stay well inboard. */
+body.app-body .collection-grid{gap:12px!important;margin-top:15px!important}
+body.app-body .collection-item{padding:18px 17px 17px!important;min-height:168px!important;border-radius:21px!important;overflow:hidden!important}
+body.app-body .collection-no{right:16px!important;top:14px!important}
+body.app-body .modern-collection-icon{margin:13px 0 15px!important}
+body.app-body .collection-item b,body.app-body .collection-item small{max-width:100%;overflow-wrap:break-word}
+body.app-body .collection-hero{gap:18px!important}
+
+/* Ranking: strong insets for medal, identity and score columns. */
+body.app-body .rank-hero{padding:20px 21px!important;gap:18px!important}
+body.app-body .rank-row{grid-template-columns:48px minmax(0,1fr) auto!important;gap:12px!important;padding:16px 17px!important;min-height:78px!important}
+body.app-body .rank-row>strong{padding-left:5px;white-space:nowrap;text-align:right}
+body.app-body .rank-user{min-width:0;padding:0 2px}
+body.app-body .rank-user b,body.app-body .rank-user small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.app-body .rank-tabs button{padding:13px 8px!important}
+body.app-body .impact-card{padding:20px 12px!important}
+body.app-body .server-card{gap:14px!important}
+
+/* Season pass: trophy and every reward tile get their own safe cells. */
+body.app-body .pass-hero{padding:20px 21px!important;gap:18px!important}
+body.app-body .pass-hero>div:first-child{min-width:0;padding-left:1px}
+body.app-body .pass-orb{width:82px!important;height:82px!important;flex:0 0 82px;margin:0 1px 0 8px!important}
+body.app-body .pass-track-wrap{margin:22px 4px!important}
+body.app-body .tier-list{gap:10px!important}
+body.app-body .tier-card{grid-template-columns:46px minmax(0,1fr) auto!important;gap:12px!important;padding:15px 15px!important;min-height:82px;border-radius:18px!important;overflow:hidden}
+body.app-body .tier-no{padding:0 3px}
+body.app-body .tier-reward{gap:11px!important;min-width:0}
+body.app-body .tier-reward>span{font-size:27px!important;width:34px;text-align:center;flex:0 0 34px}
+body.app-body .tier-reward div{min-width:0}
+body.app-body .tier-reward b,body.app-body .tier-reward small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.app-body .tier-card button,body.app-body .tier-state{margin-right:2px;white-space:nowrap}
+
+/* Profile/settings: character buttons and form controls no longer hug card edges. */
+body.app-body .profile-hero{padding:20px 21px!important}
+body.app-body .avatar-select{gap:12px!important;margin:0 2px 18px!important;padding:0 2px}
+body.app-body .avatar-select button{width:78px!important;height:78px!important;padding:7px!important;overflow:hidden}
+body.app-body .avatar-select img{max-width:100%;max-height:100%;object-fit:contain}
+body.app-body .profile-hero label{margin-top:14px!important}
+body.app-body .profile-hero input,body.app-body .profile-hero select,body.app-body .server-setup input{padding:13px 14px!important;margin-top:7px!important}
+body.app-body .profile-hero .sheet-primary{margin-top:14px;width:100%;padding:14px 16px!important}
+body.app-body .settings-list{padding:17px 20px!important}
+body.app-body .setting-row{padding:13px 3px!important;gap:14px}
+body.app-body .setting-row>span{min-width:0;column-gap:7px}
+body.app-body .switch{flex:0 0 auto;margin-left:8px}
+body.app-body .setting-action{margin-top:14px!important;padding:12px 14px!important}
+body.app-body .privacy-grid{gap:10px!important}
+body.app-body .privacy-grid div{padding:12px 11px!important;gap:3px 6px}
+body.app-body .server-buttons{gap:10px!important}
+
+/* Map / battle / achievements generic list safety. */
+body.app-body .spot-row,body.app-body .team-row,body.app-body .badge-card{padding-left:16px!important;padding-right:16px!important;overflow:hidden}
+body.app-body .spot-meta,body.app-body .team-row>div{min-width:0}
+body.app-body .spot-meta b,body.app-body .spot-meta small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Bottom nav remains rigid and its icons/labels have a protected visual cell. */
+body.app-body .bottom-nav{padding-left:10px!important;padding-right:10px!important;column-gap:2px!important}
+body.app-body .bottom-nav a{padding:3px 2px!important;border-radius:14px!important;overflow:hidden!important}
+
+@media(max-width:390px){
+  :root{--card-safe-x:17px;--card-safe-y:17px}
+  body.app-body .page-shell{padding-left:17px!important;padding-right:17px!important}
+  body.app-body .page-top{grid-template-columns:44px minmax(0,1fr) auto!important;gap:11px!important}
+  body.app-body .back-btn,body.app-body .icon-btn{width:44px!important;height:44px!important}
+  body.app-body .tier-card{grid-template-columns:42px minmax(0,1fr) auto!important;padding:14px 12px!important;gap:9px!important}
+  body.app-body .rank-row{grid-template-columns:42px minmax(0,1fr) auto!important;padding:14px 13px!important;gap:9px!important}
+  body.app-body .avatar-select{gap:8px!important}
+  body.app-body .avatar-select button{width:72px!important;height:72px!important}
+}
