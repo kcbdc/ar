@@ -735,3 +735,240 @@ body.app-body .crew small,body.app-body .tier-reward b,body.app-body .tier-rewar
 }
 body.app-body .primary-cta small,body.app-body .sheet-primary small{color:rgba(255,255,255,.96)!important;text-shadow:0 1px 2px rgba(0,0,0,.18)}
 body.app-body .primary-cta b{color:#06142b!important}
+
+/* ==========================================================
+   JOPAMS GO v13 — Alignment / Safe-area / Visual balance pass
+   Focus: centered back controls, pill tabs, safe progress counters,
+   balanced settings icons, profile spacing, and framed-content gutters.
+   ========================================================== */
+:root{
+  --v13-frame-pad:24px;
+  --v13-frame-pad-sm:18px;
+  --v13-section-gap:24px;
+  --v13-item-gap:14px;
+  --v13-control-h:56px;
+  --v13-icon-box:48px;
+}
+
+/* 1) Every back control uses exactly the same geometric center. */
+body.app-body .back-btn,
+body.app-body .icon-btn,
+body.app-body .sub-header>a.back-btn,
+body.ar-body .ar-exit{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  text-indent:0!important;
+  line-height:1!important;
+}
+body.app-body .back-btn::before,
+body.app-body .icon-btn::before,
+body.app-body .sub-header>a.back-btn::before{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  margin:0!important;
+}
+body.ar-body .ar-exit{font-size:0!important;color:transparent!important;position:relative!important}
+body.ar-body .ar-exit::before{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  width:27px;height:27px;background:#d5f1ff;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 12H5m0 0 6-6m-6 6 6 6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 12H5m0 0 6-6m-6 6 6 6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+/* Keep header content vertically balanced around the back button. */
+body.app-body .page-top{min-height:58px!important;align-items:center!important;gap:14px!important;margin-bottom:24px!important}
+body.app-body .page-top>div:nth-child(2){align-self:center!important;min-width:0!important}
+body.app-body .page-top h1{margin-top:3px!important}
+
+/* 2) Ranking tabs: segmented pill instead of hard-edged split buttons. */
+body.app-body .rank-tabs{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:6px!important;
+  margin:22px 0 16px!important;
+  padding:5px!important;
+  border:1px solid rgba(91,177,244,.20)!important;
+  border-radius:18px!important;
+  background:rgba(4,18,39,.72)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+body.app-body .rank-tabs button{
+  min-height:48px!important;
+  border:0!important;
+  border-radius:13px!important;
+  background:transparent!important;
+  color:#91a8bf!important;
+  font-size:13px!important;
+  font-weight:800!important;
+  letter-spacing:-.15px!important;
+  box-shadow:none!important;
+  padding:0 12px!important;
+}
+body.app-body .rank-tabs button.active{
+  color:#e9f9ff!important;
+  background:linear-gradient(180deg,rgba(39,136,204,.32),rgba(13,68,111,.28))!important;
+  box-shadow:inset 0 0 0 1px rgba(87,211,255,.34),0 8px 20px rgba(0,0,0,.14)!important;
+}
+body.app-body .ranking-list{gap:14px!important}
+body.app-body .rank-row{padding:20px 22px!important;column-gap:14px!important;min-height:90px!important}
+body.app-body .rank-no{display:flex!important;align-items:center!important;justify-content:center!important;min-width:42px!important}
+body.app-body .rank-user{padding:0 2px!important}
+body.app-body .rank-row>strong{padding:0!important;margin-left:8px!important}
+
+/* 3) Collection hero: isolate copy and progress ring into protected columns. */
+body.app-body .collection-hero{
+  grid-template-columns:minmax(0,1fr) 104px!important;
+  gap:24px!important;
+  padding:24px!important;
+  overflow:hidden!important;
+}
+body.app-body .collection-hero>div:first-child{min-width:0!important;padding-right:0!important}
+body.app-body .collection-hero h2{margin:14px 0 10px!important;font-size:22px!important;line-height:1.42!important}
+body.app-body .collection-hero p{margin:0!important;padding-right:2px!important}
+body.app-body .mini-ring{
+  position:relative!important;
+  width:96px!important;height:96px!important;min-width:96px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;justify-self:end!important;
+}
+body.app-body .mini-ring b,
+body.app-body .mini-ring small{
+  left:50%!important;right:auto!important;margin:0!important;text-align:center!important;
+  transform:translate(-50%,-50%)!important;white-space:nowrap!important;
+}
+body.app-body .mini-ring b{top:42%!important;font-size:27px!important;line-height:1!important}
+body.app-body .mini-ring small{top:66%!important;font-size:12px!important;line-height:1!important;color:#b8c9da!important}
+body.app-body .collection-grid{margin-top:24px!important;gap:16px!important}
+body.app-body .collection-item{padding:22px!important;min-height:196px!important}
+body.app-body .collection-item .collection-state{top:20px!important;left:22px!important}
+body.app-body .collection-item .collection-no{top:20px!important;right:22px!important}
+
+/* 4) AR 4/12: one centered unit, regardless of digit width. */
+body.ar-body .ar-progress{
+  width:58px!important;height:58px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  gap:2px!important;padding:0 5px!important;line-height:1!important;
+}
+body.ar-body .ar-progress span,
+body.ar-body .ar-progress small{display:block!important;margin:0!important;line-height:1!important;position:static!important;transform:none!important}
+body.ar-body .ar-progress span{font-size:19px!important}
+body.ar-body .ar-progress small{font-size:10px!important;align-self:center!important;margin-top:5px!important}
+body.ar-body .ar-topbar{align-items:center!important}
+body.ar-body .ar-sound{display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important}
+
+/* 5) Settings icon boxes: optical and geometric center are identical. */
+body.app-body .settings-list{padding:20px 24px!important}
+body.app-body .setting-row{
+  grid-template-columns:var(--v13-icon-box) minmax(0,1fr) auto!important;
+  min-height:90px!important;
+  gap:18px!important;
+  padding:18px 8px!important;
+}
+body.app-body .setting-icon{
+  width:var(--v13-icon-box)!important;height:var(--v13-icon-box)!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:0!important;margin:0!important;
+}
+body.app-body .setting-icon .ui-svg{width:25px!important;height:25px!important;margin:auto!important}
+body.app-body .setting-copy{justify-content:center!important;min-width:0!important}
+body.app-body .setting-copy b{line-height:1.3!important;margin:0!important}
+body.app-body .setting-copy small{margin-top:3px!important;line-height:1.4!important}
+body.app-body .switch{margin-left:6px!important;align-self:center!important}
+body.app-body .setting-action{margin-top:16px!important;min-height:50px!important}
+
+/* 6) Profile: cards are separate sections, inputs have breathing room. */
+body.app-body .profile-character{padding:24px!important;margin-bottom:26px!important}
+body.app-body .profile-fields{padding:24px!important;margin-bottom:26px!important}
+body.app-body .profile-character .profile-help{margin:10px 0 20px!important}
+body.app-body .profile-character .avatar-select{gap:14px!important;margin-top:4px!important;margin-bottom:0!important}
+body.app-body .profile-character .avatar-select button{
+  min-height:166px!important;
+  padding:14px 10px!important;
+  border-radius:20px!important;
+}
+body.app-body .profile-character .avatar-select img{width:74px!important;height:74px!important;margin-bottom:3px!important}
+body.app-body .profile-fields .section-kicker{margin-bottom:16px!important}
+body.app-body .profile-fields label{
+  display:flex!important;flex-direction:column!important;gap:8px!important;
+  margin:0 0 18px!important;color:#b6c8da!important;font-size:12px!important;font-weight:700!important;
+}
+body.app-body .profile-fields input,
+body.app-body .profile-fields select{
+  width:100%!important;min-height:var(--v13-control-h)!important;
+  margin:0!important;padding:0 18px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(91,181,249,.24)!important;
+  background:rgba(6,24,49,.72)!important;
+  color:#f7fbff!important;font-size:15px!important;font-weight:700!important;
+  outline:none!important;
+}
+body.app-body .profile-fields input:focus,
+body.app-body .profile-fields select:focus{border-color:#58cdfd!important;box-shadow:0 0 0 3px rgba(73,199,255,.10)!important}
+body.app-body .profile-fields .sheet-primary{width:100%!important;min-height:58px!important;margin-top:2px!important}
+
+/* 7) Universal framed-content safe area / visual breathing room. */
+body.app-body .premium-card:not(.profile-character):not(.profile-fields):not(.settings-list){padding:var(--v13-frame-pad)!important}
+body.app-body .rank-motivation{gap:12px!important;margin:16px 0 22px!important}
+body.app-body .rank-motivation>div{padding:16px 10px!important;min-height:76px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+body.app-body .privacy-center,body.app-body .device-check,body.app-body .server-setup{margin-top:24px!important}
+body.app-body .privacy-grid,body.app-body .device-grid{gap:14px!important;margin-top:18px!important}
+body.app-body .privacy-grid>div,body.app-body .device-grid>div{padding:18px!important;min-height:116px!important}
+body.app-body .privacy-grid .ui-svg,body.app-body .device-grid .ui-svg{margin-bottom:10px!important}
+body.app-body .server-setup input{min-height:52px!important;padding:0 16px!important;margin-top:12px!important}
+body.app-body .server-buttons{gap:10px!important;margin-top:12px!important}
+body.app-body .server-buttons button{min-height:48px!important;padding:0 16px!important}
+
+/* 8) Season: clean 3-column grid and safe outer padding. */
+body.app-body .pass-hero{padding:26px!important;min-height:174px!important}
+body.app-body .pass-track-wrap{margin:28px 6px 22px!important}
+body.app-body .tier-list{gap:14px!important}
+body.app-body .tier-card{
+  grid-template-columns:58px minmax(0,1fr) 72px!important;
+  gap:16px!important;min-height:104px!important;padding:20px 22px!important;
+}
+body.app-body .tier-no{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important}
+body.app-body .tier-reward{gap:14px!important;align-items:center!important}
+body.app-body .tier-reward>span{min-width:52px!important;width:52px!important;text-align:center!important;font-size:34px!important}
+body.app-body .tier-state,body.app-body .tier-card>button{justify-self:end!important;align-self:center!important;margin:0!important;text-align:center!important}
+
+/* 9) Bottom nav also keeps icon and label optically centered. */
+body.app-body .bottom-nav a{padding:4px 2px!important;overflow:visible!important}
+body.app-body .bottom-nav a span{display:flex!important;align-items:center!important;justify-content:center!important;margin:0 auto!important}
+body.app-body .bottom-nav a b{text-align:center!important;width:100%!important}
+
+/* 10) Avoid visual collision between successive framed sections. */
+body.app-body main.page-shell>section+section:not(.rank-motivation):not(.rank-tabs):not(.ranking-list):not(.pass-track-wrap):not(.tier-list){margin-top:24px}
+body.app-body .ranking-list+.impact-card{margin-top:22px!important}
+body.app-body .impact-card+.server-card{margin-top:22px!important}
+
+@media(max-width:390px){
+  :root{--v13-frame-pad:18px;--v13-item-gap:12px}
+  body.app-body .page-shell{padding-left:14px!important;padding-right:14px!important}
+  body.app-body .page-top{gap:11px!important;margin-bottom:20px!important}
+  body.app-body .collection-hero{grid-template-columns:minmax(0,1fr) 88px!important;gap:14px!important;padding:18px!important}
+  body.app-body .collection-hero h2{font-size:20px!important}
+  body.app-body .mini-ring{width:84px!important;height:84px!important;min-width:84px!important}
+  body.app-body .mini-ring b{top:41%!important;font-size:24px!important}
+  body.app-body .mini-ring small{top:66%!important;font-size:11px!important}
+  body.app-body .collection-item{padding:18px!important;min-height:184px!important}
+  body.app-body .collection-item .collection-state{top:17px!important;left:18px!important}
+  body.app-body .collection-item .collection-no{top:17px!important;right:18px!important}
+  body.app-body .rank-row{padding:18px!important;grid-template-columns:38px minmax(0,1fr) auto!important;gap:10px!important}
+  body.app-body .rank-row>strong{margin-left:2px!important}
+  body.app-body .profile-character,body.app-body .profile-fields{padding:18px!important;margin-bottom:22px!important}
+  body.app-body .profile-character .avatar-select{gap:8px!important}
+  body.app-body .profile-character .avatar-select button{min-height:158px!important;padding:12px 6px!important}
+  body.app-body .profile-character .avatar-select img{width:66px!important;height:66px!important}
+  body.app-body .settings-list{padding:16px 18px!important}
+  body.app-body .setting-row{grid-template-columns:44px minmax(0,1fr) auto!important;gap:12px!important;padding:16px 2px!important}
+  body.app-body .setting-icon{width:44px!important;height:44px!important}
+  body.app-body .tier-card{grid-template-columns:50px minmax(0,1fr) 60px!important;padding:18px!important;gap:12px!important}
+  body.app-body .tier-reward{gap:10px!important}
+  body.app-body .tier-reward>span{min-width:44px!important;width:44px!important;font-size:30px!important}
+}
