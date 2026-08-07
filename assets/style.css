@@ -120,3 +120,99 @@ body.app-body .brand-line{color:#4b86bd}body.app-body .go-logo{color:#112741}bod
 body.app-body .privacy-pill{background:#eaf9f6;border-color:#cdeee6;color:#2c8875}
 body.app-body .character-strip,body.app-body .status-card{color:var(--v7-ink)}
 @media(max-width:360px){body.app-body .bottom-nav{padding-left:3px!important;padding-right:3px!important}body.app-body .bottom-nav a b{font-size:8px!important}.collection-item{padding:13px!important}.modern-collection-icon{width:52px;height:52px}.pp-icon{width:38px;height:38px}}
+
+/* ===== v8 balanced-dark accessibility / commercial readability =====
+   Mid-tone theme between v6 dark and v7 bright. WCAG-oriented contrast,
+   larger microcopy, stronger icon/card separation and fixed 5-item nav. */
+:root{
+  --v8-bg:#101e31;--v8-bg2:#152942;--v8-panel:#1a304a;--v8-panel2:#203a57;
+  --v8-panel-soft:#27425f;--v8-text:#f7fbff;--v8-text2:#e4edf7;--v8-muted:#b5c5d7;
+  --v8-dim:#91a7bd;--v8-line:rgba(143,190,232,.24);--v8-line-strong:rgba(104,196,255,.40);
+  --v8-cyan:#65dcff;--v8-blue:#56a9ff;--v8-gold:#ffd369;--v8-green:#6ee5bf;
+}
+body.app-body{
+  background:radial-gradient(circle at 88% 0,rgba(47,124,199,.24),transparent 28%),
+             radial-gradient(circle at 0 36%,rgba(51,102,162,.16),transparent 32%),
+             linear-gradient(180deg,var(--v8-bg2),var(--v8-bg) 42%,#0d1929 100%)!important;
+  color:var(--v8-text)!important;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+body.app-body:before{background:radial-gradient(circle at 84% 2%,rgba(82,180,255,.10),transparent 23%),radial-gradient(circle at 5% 26%,rgba(132,110,255,.06),transparent 21%)!important}
+body.app-body .page-top h1,body.app-body .section-head h2,body.app-body .collection-item b,
+body.app-body .quick-card b,body.app-body .crew b,body.app-body .status-title b,
+body.app-body .rank-user b,body.app-body .rank-row>strong,body.app-body .server-card b,
+body.app-body .item-detail h2,body.app-body .mission-copy strong{color:var(--v8-text)!important}
+body.app-body .section-kicker,body.app-body .eyebrow{color:var(--v8-cyan)!important;text-shadow:0 0 16px rgba(101,220,255,.12)}
+body.app-body .premium-card{
+  background:linear-gradient(155deg,rgba(32,58,87,.97),rgba(22,42,66,.98))!important;
+  border-color:var(--v8-line)!important;box-shadow:0 14px 36px rgba(0,8,20,.22),inset 0 1px rgba(255,255,255,.045)!important;
+}
+body.app-body .premium-card p,body.app-body .collection-item small,body.app-body .quick-card small,
+body.app-body .crew small,body.app-body .mission-copy p,body.app-body .collection-hero p,body.app-body .map-hero p,
+body.app-body .item-detail>p{color:var(--v8-muted)!important}
+body.app-body .icon-btn,body.app-body .back-btn{
+  background:#1c3551!important;border-color:var(--v8-line-strong)!important;color:#bfeaff!important;
+  box-shadow:0 7px 18px rgba(0,8,20,.22)!important;
+}
+body.app-body .counter-pill,body.app-body .level-chip{background:#214461!important;border-color:rgba(101,220,255,.32)!important;color:#b9edff!important}
+body.app-body .collection-hero{background:linear-gradient(145deg,#203b59,#172c46)!important}
+body.app-body .mini-ring,body.app-body .progress-ring{background:conic-gradient(var(--v8-blue) var(--p),rgba(188,216,241,.16) 0)!important}
+body.app-body .mini-ring:after,body.app-body .progress-ring:after{background:#172b44!important}
+body.app-body .mini-ring b,body.app-body .mini-ring small,body.app-body .progress-ring span{color:var(--v8-text)!important}
+body.app-body .progress-ring small{color:var(--v8-muted)!important}
+body.app-body .collection-item{
+  background:linear-gradient(155deg,#203a57,#182d47)!important;border:1px solid var(--v8-line)!important;
+  box-shadow:0 10px 24px rgba(0,8,20,.16)!important;color:var(--v8-text)!important;
+}
+body.app-body .collection-item.unlocked{border-color:rgba(98,190,255,.34)!important;box-shadow:0 11px 28px rgba(0,9,23,.20),inset 0 1px rgba(255,255,255,.035)!important}
+body.app-body .collection-item.locked{opacity:.78!important;background:#182b43!important}
+body.app-body .collection-no{color:#9bb3ca!important;font-size:10px!important}
+.modern-collection-icon{background:linear-gradient(145deg,#2a4c6b,#263d62)!important;box-shadow:inset 0 0 0 1px rgba(129,203,255,.18),0 8px 20px rgba(0,0,0,.12)!important}
+.modern-detail-icon{background:linear-gradient(145deg,#2a4c6b,#263d62)!important;box-shadow:inset 0 0 0 1px rgba(129,203,255,.18)!important}
+body.app-body .sheet-dim{background:rgba(3,11,22,.62)!important}
+body.app-body .sheet-card{background:linear-gradient(180deg,#203a56,#13263d)!important;border-color:var(--v8-line)!important;box-shadow:0 -24px 70px rgba(0,5,15,.46)!important}
+body.app-body .sheet-handle{background:#7898b7!important}
+body.app-body .learning-box{background:#203d59!important;border-color:rgba(101,220,255,.24)!important}
+body.app-body .learning-box b{color:#82e3ff!important}body.app-body .learning-box p{color:#c3d3e2!important}
+body.app-body .sheet-primary{background:linear-gradient(120deg,#58d4ee,#448fff 62%,#8276f8)!important;color:#07182b!important;box-shadow:0 12px 25px rgba(22,99,184,.30)!important}
+body.app-body .quick-card,body.app-body .status-card,body.app-body .spot-row,body.app-body .rank-row,
+body.app-body .team-row,body.app-body .server-card{
+  background:linear-gradient(145deg,rgba(31,55,82,.98),rgba(23,43,67,.98))!important;
+  border-color:var(--v8-line)!important;color:var(--v8-text)!important;
+}
+body.app-body .quick-card{box-shadow:0 8px 20px rgba(0,8,20,.12)!important}
+body.app-body .qicon{box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+body.app-body .status-chip{color:#b6c8d9!important;border-color:rgba(155,197,233,.18)!important;background:rgba(8,24,40,.26)!important}
+body.app-body .status-chip.ok{color:#aaf1d9!important;border-color:rgba(110,229,191,.32)!important;background:rgba(42,133,106,.12)!important}
+body.app-body .hero-panel{background:linear-gradient(180deg,rgba(27,52,80,.62),rgba(18,35,57,.96)),radial-gradient(circle at 80% 20%,rgba(65,159,255,.18),transparent 35%)!important;border-bottom-color:var(--v8-line)!important}
+body.app-body .brand-line{color:#8fc8f3!important}body.app-body .go-logo{color:var(--v8-text)!important}body.app-body .hero-sub{color:#c1d1e1!important}body.app-body .hero-sub b{color:#fff!important}
+body.app-body .privacy-pill{background:rgba(38,119,102,.19)!important;border-color:rgba(95,224,190,.28)!important;color:#9cebd5!important}
+body.app-body .character-strip,body.app-body .status-card{color:var(--v8-text)!important}
+body.app-body .crew{background:rgba(8,23,39,.30)!important;border-color:rgba(161,199,231,.14)!important}body.app-body .crew.active{background:rgba(135,102,28,.18)!important;border-color:rgba(255,211,105,.35)!important}
+/* Ranking: remove washed-out white cards and maximize numeric/name legibility. */
+body.app-body .rank-hero{background:radial-gradient(circle at 15% 50%,rgba(255,211,105,.12),transparent 28%),linear-gradient(145deg,#243f5c,#172c46)!important}
+body.app-body .rank-hero span{color:#b8c8d8!important;font-size:9px!important}body.app-body .rank-hero b{color:var(--v8-gold)!important;font-size:25px!important}body.app-body .rank-hero small{color:#afc0d1!important;font-size:9px!important}
+body.app-body .rank-tabs{border-bottom-color:rgba(157,197,231,.20)!important}body.app-body .rank-tabs button{color:#afc1d3!important;font-size:11px!important}body.app-body .rank-tabs button.active{color:#73ddff!important;border-bottom-color:#5bcaff!important}
+body.app-body .rank-row{padding:14px 13px!important;border-radius:17px!important;min-height:72px}
+body.app-body .rank-no{color:#a9bdd0!important;font-size:11px!important}.rank-user b{font-size:13px!important}.rank-user small{font-size:10px!important;color:#aebfd0!important;margin-top:3px!important}
+body.app-body .rank-row>strong{font-size:14px!important;color:#f5f9ff!important}body.app-body .rank-row>strong small{font-size:9px!important;color:#71dcff!important}
+body.app-body .rank-row.me{background:linear-gradient(120deg,rgba(39,112,165,.42),rgba(62,72,139,.30))!important;border-color:rgba(92,205,255,.50)!important}
+body.app-body .rank-row.top1{border-color:rgba(255,211,105,.46)!important}body.app-body .rank-row.top2{border-color:rgba(205,224,242,.33)!important}body.app-body .rank-row.top3{border-color:rgba(224,145,86,.35)!important}
+body.app-body .impact-card{border-top-color:rgba(157,197,231,.18)!important}body.app-body .impact-card span,body.app-body .impact-card small{color:#a9bdcf!important;font-size:9px!important}body.app-body .impact-card b{color:#6ee1ff!important}
+body.app-body .server-card span{color:#72ddff!important;font-size:9px!important}body.app-body .server-card small{color:#a9bdcf!important;font-size:9px!important}body.app-body .server-card button{background:#244c6b!important;border-color:rgba(101,220,255,.30)!important;color:#c8efff!important;font-size:9px!important}
+/* Map, battle, profile and utility microcopy */
+body.app-body .spot-row small,body.app-body .team-row small,body.app-body .battle-info span,body.app-body .battle-info small,
+body.app-body .profile-card small,body.app-body .settings-row small{color:#afc1d2!important}
+body.app-body select,body.app-body input{background:#132b45!important;color:#f7fbff!important;border-color:rgba(105,196,255,.28)!important}
+/* Bottom navigation: fixed geometry + dark translucent surface + high-contrast labels/icons. */
+body.app-body .bottom-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;width:min(100%,560px)!important;height:calc(74px + var(--safe-b))!important;overflow:hidden!important;padding:7px 8px max(7px,var(--safe-b))!important;background:rgba(14,29,48,.96)!important;border-top:1px solid rgba(128,189,235,.24)!important;box-shadow:0 -10px 30px rgba(0,8,20,.28)!important;backdrop-filter:blur(22px)!important;contain:layout paint!important}
+body.app-body .bottom-nav a{min-width:0!important;width:auto!important;height:58px!important;color:#9fb4c8!important;background:transparent!important;overflow:visible!important;transform:none!important}
+body.app-body .bottom-nav a span{width:30px!important;height:30px!important;font-size:21px!important;color:inherit!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));transform:none!important;animation:none!important}
+body.app-body .bottom-nav a b{font-size:10px!important;font-weight:800!important;color:inherit!important;transform:none!important;animation:none!important}
+body.app-body .bottom-nav a.active{color:#72dcff!important;background:linear-gradient(180deg,rgba(58,158,222,.22),rgba(35,91,135,.06))!important;box-shadow:inset 0 1px rgba(117,219,255,.10)!important}
+/* Raise formerly tiny UI text one step for real-device readability. */
+body.app-body .collection-item small{font-size:10px!important;line-height:1.35}.collection-item b{font-size:14px!important}.collection-no{font-size:10px!important}
+body.app-body .quick-card small,body.app-body .crew small{font-size:9px!important}.quick-card b{font-size:13px!important}.crew b{font-size:12px!important}
+body.app-body .app-footer{color:#8198ae!important;font-size:10px!important}
+body.app-body .xp-row{color:#a9bccf!important;font-size:10px!important}.xp-track{background:rgba(214,231,247,.13)!important}
+@media(max-width:360px){body.app-body .bottom-nav{padding-left:3px!important;padding-right:3px!important}body.app-body .bottom-nav a b{font-size:9px!important}}
