@@ -43,3 +43,31 @@
 .ar-privacy-badge{position:fixed;z-index:32;top:calc(70px + var(--safe-t));left:50%;transform:translate(-50%,-8px) scale(.96);display:flex;align-items:center;gap:6px;max-width:calc(100vw - 32px);padding:7px 11px;border-radius:999px;background:rgba(2,12,25,.64);border:1px solid rgba(99,229,196,.28);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);color:#c8fff1;font-size:9px;letter-spacing:.1px;opacity:0;pointer-events:none;white-space:nowrap;box-shadow:0 5px 18px rgba(0,0,0,.18);transition:opacity .28s ease,transform .28s ease}
 .ar-privacy-badge span{font-size:11px}.ar-privacy-badge b{font-weight:750}.ar-privacy-badge.show{opacity:1;transform:translate(-50%,0) scale(1)}.ar-privacy-badge.show.hide{opacity:0;transform:translate(-50%,-5px) scale(.98)}
 @media (max-height:700px){.ar-privacy-badge{top:calc(62px + var(--safe-t))}}
+
+/* v5.2 AR camera-clear hotfix
+   Mobile regression fix: .signal-panel inherited bottom while @media added top,
+   stretching the fixed element across most of the camera viewport. */
+@media (max-width:420px){
+  .ar-body .signal-panel{
+    top:auto!important;
+    bottom:calc(28px + var(--safe-b))!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    width:min(78vw,310px)!important;
+    padding:8px 11px!important;
+    border-radius:14px!important;
+    background:rgba(3,14,32,.54)!important;
+    -webkit-backdrop-filter:blur(7px)!important;
+    backdrop-filter:blur(7px)!important;
+  }
+  .ar-body .status-banner{
+    bottom:calc(78px + var(--safe-b))!important;
+  }
+  .ar-body .accuracy-chip{
+    bottom:calc(78px + var(--safe-b))!important;
+  }
+  .ar-body .target-reticle{
+    opacity:.32!important;
+  }
+}
