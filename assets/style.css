@@ -1052,3 +1052,208 @@ body.app-body .premium-card h1,body.app-body .premium-card h2,body.app-body .pre
  .cosmetic-row{gap:8px}.cosmetic-slot{min-height:108px;padding:12px 7px}.invite-card{align-items:flex-start;flex-wrap:wrap}.invite-btn{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.ambient-layer i,.camera-shake,.camera-shake-strong{animation:none!important}}
+
+
+/* ==========================================================================\n   JOPAMS GO v15 — Icon / Typography Balance & Visual Rhythm Pass\n   Goal: icon -> title -> description hierarchy, larger readable copy, and\n   consistent inner safe areas across cards.\n   ========================================================================== */
+:root{
+  --v15-icon-box:52px;
+  --v15-icon-size:25px;
+  --v15-title:14px;
+  --v15-body:12px;
+  --v15-meta:11px;
+  --v15-tile-pad-x:18px;
+  --v15-tile-pad-y:17px;
+  --v15-row-gap:14px;
+}
+
+/* Universal card breathing room and readable secondary copy */
+body.app-body .premium-card{box-sizing:border-box}
+body.app-body .premium-card p,
+body.app-body .premium-card small{line-height:1.55}
+body.app-body .premium-card small{font-size:max(11px, .72rem)}
+body.app-body .section-kicker{font-size:11px!important;line-height:1.2!important}
+
+/* Icon container: never float above copy; optically center the SVG */
+body.app-body .icon-orb,
+body.app-body .setting-icon,
+body.app-body .info-tile-icon,
+body.ar-body .privacy-note>span{
+  box-sizing:border-box;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex:0 0 auto!important;
+}
+body.app-body .icon-orb .ui-svg,
+body.app-body .setting-icon .ui-svg,
+body.app-body .info-tile-icon .ui-svg,
+body.ar-body .privacy-note .ui-svg{
+  display:block!important;
+  margin:0!important;
+  transform:none!important;
+}
+
+/* Home: reward buttons are horizontal icon -> copy compositions. */
+body.app-body .reward-duo{gap:12px!important;margin-top:15px!important}
+body.app-body .daily-reward{
+  min-height:82px!important;
+  margin-top:0!important;
+  padding:15px 16px!important;
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  column-gap:13px!important;
+  row-gap:3px!important;
+  align-items:center!important;
+  text-align:left!important;
+  overflow:hidden!important;
+}
+body.app-body .daily-reward>.icon-orb{
+  grid-column:1!important;grid-row:1 / span 2!important;
+  width:48px!important;height:48px!important;
+  align-self:center!important;justify-self:center!important;
+  border-radius:14px!important;
+}
+body.app-body .daily-reward>.icon-orb .ui-svg{width:24px!important;height:24px!important}
+body.app-body .daily-reward>b{
+  grid-column:2!important;grid-row:1!important;
+  align-self:end!important;margin:0!important;
+  font-size:13px!important;line-height:1.3!important;
+  white-space:normal!important;word-break:keep-all!important;
+}
+body.app-body .daily-reward>small{
+  grid-column:2!important;grid-row:2!important;
+  align-self:start!important;margin:0!important;
+  font-size:11px!important;line-height:1.35!important;
+  color:#a9b7c6!important;
+}
+
+/* Profile settings rows: icon -> copy -> switch, with readable hierarchy. */
+body.app-body .settings-list{padding:22px 24px!important}
+body.app-body .setting-row{
+  grid-template-columns:52px minmax(0,1fr) auto!important;
+  gap:16px!important;
+  min-height:88px!important;
+  padding:16px 2px!important;
+  align-items:center!important;
+}
+body.app-body .setting-icon{
+  width:52px!important;height:52px!important;border-radius:15px!important;
+}
+body.app-body .setting-icon .ui-svg{width:25px!important;height:25px!important}
+body.app-body .setting-copy{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:4px!important}
+body.app-body .setting-copy b{font-size:14px!important;line-height:1.3!important;color:#f3f8ff!important}
+body.app-body .setting-copy small{font-size:11.5px!important;line-height:1.45!important;color:#9fb2c5!important;margin:0!important}
+
+/* Privacy / device cards: stop stacking icon above unrelated text. */
+body.app-body .privacy-grid,
+body.app-body .device-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;
+  margin-top:18px!important;
+}
+body.app-body .privacy-grid>.info-tile,
+body.app-body .device-grid>.info-tile{
+  min-width:0!important;
+  min-height:126px!important;
+  padding:18px!important;
+  display:grid!important;
+  grid-template-columns:46px minmax(0,1fr)!important;
+  grid-template-rows:auto!important;
+  column-gap:13px!important;
+  align-items:center!important;
+  border-radius:18px!important;
+  background:rgba(3,24,50,.64)!important;
+  border:1px solid rgba(87,181,239,.13)!important;
+}
+body.app-body .info-tile-icon{
+  width:46px!important;height:46px!important;
+  border-radius:14px!important;
+  background:rgba(48,156,220,.10)!important;
+  color:#e8f7ff!important;
+}
+body.app-body .info-tile-icon .ui-svg{width:24px!important;height:24px!important}
+body.app-body .info-tile-copy{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:7px!important;
+}
+body.app-body .info-tile-copy b{
+  font-size:13px!important;line-height:1.25!important;color:#f5f8fc!important;
+  word-break:keep-all!important;
+}
+body.app-body .info-tile-copy small{
+  margin:0!important;
+  font-size:11.5px!important;line-height:1.5!important;color:#a8b8c8!important;
+  word-break:keep-all!important;overflow-wrap:normal!important;
+}
+body.app-body .device-grid>.info-tile.ok{border-color:rgba(80,210,178,.18)!important}
+body.app-body .device-grid>.info-tile.ok .info-tile-icon{color:#8be9d0!important;background:rgba(54,181,149,.10)!important}
+
+/* AR permission privacy notice: icon and copy read as one sentence. */
+body.ar-body .privacy-note{
+  min-height:58px!important;
+  padding:14px 16px!important;
+  display:grid!important;
+  grid-template-columns:32px minmax(0,1fr)!important;
+  gap:12px!important;
+  align-items:center!important;
+  text-align:left!important;
+  font-size:12px!important;
+  line-height:1.5!important;
+  word-break:keep-all!important;
+}
+body.ar-body .privacy-note>span{width:32px!important;height:32px!important;align-self:center!important}
+body.ar-body .privacy-note .ui-svg{width:22px!important;height:22px!important}
+
+/* Quest/live-ops balance: icons smaller than copy block; copy never 9px-ish. */
+body.app-body .quest-line{
+  grid-template-columns:48px minmax(0,1fr) auto!important;
+  gap:14px!important;
+  min-height:86px!important;
+  padding:17px 18px!important;
+}
+body.app-body .quest-line .icon-orb{width:48px!important;height:48px!important}
+body.app-body .quest-copy b{font-size:14px!important}
+body.app-body .quest-copy small{font-size:11.5px!important}
+body.app-body .quest-side strong{font-size:12px!important}
+body.app-body .quest-side em{font-size:11px!important}
+
+/* Chest / growth / cosmetic components use the same visual rhythm. */
+body.app-body .chest-panel,
+body.app-body .growth-card{gap:16px!important;padding:19px!important}
+body.app-body .chest-panel b,
+body.app-body .growth-copy b{font-size:14px!important;line-height:1.35!important}
+body.app-body .chest-panel small,
+body.app-body .growth-copy small{font-size:11.5px!important;line-height:1.45!important}
+body.app-body .rare-card b{font-size:12.5px!important}
+body.app-body .rare-card small,
+body.app-body .cosmetic-slot small{font-size:10.5px!important;line-height:1.45!important}
+body.app-body .cosmetic-slot b{font-size:12px!important}
+
+/* Global label floor: prevent visually tiny text on phone screens. */
+body.app-body .live-stat small,
+body.app-body .growth-level small,
+body.app-body .reward-top,
+body.app-body .env-chip,
+body.app-body .player-title-badge{font-size:10.5px!important}
+
+/* Small phones: keep horizontal relationship but reduce container, not type. */
+@media(max-width:390px){
+  :root{--v15-icon-box:48px;--v15-icon-size:23px;--v15-tile-pad-x:15px}
+  body.app-body .settings-list{padding:18px 18px!important}
+  body.app-body .setting-row{grid-template-columns:48px minmax(0,1fr) auto!important;gap:13px!important}
+  body.app-body .setting-icon{width:48px!important;height:48px!important}
+  body.app-body .privacy-grid>.info-tile,
+  body.app-body .device-grid>.info-tile{
+    grid-template-columns:42px minmax(0,1fr)!important;
+    column-gap:11px!important;padding:15px!important;min-height:122px!important;
+  }
+  body.app-body .info-tile-icon{width:42px!important;height:42px!important}
+  body.app-body .info-tile-copy b{font-size:12.5px!important}
+  body.app-body .info-tile-copy small{font-size:11px!important}
+  body.app-body .daily-reward{grid-template-columns:44px minmax(0,1fr)!important;padding:14px!important;column-gap:11px!important}
+  body.app-body .daily-reward>.icon-orb{width:44px!important;height:44px!important}
+}
