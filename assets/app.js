@@ -99,3 +99,19 @@ function privacySummary(){return {camera:'영상 저장 안 함',location:'실�
 async function testServerConnection(url){const base=(url||serverConfig()).trim().replace(/\/$/,'');if(!base)return {ok:false,message:'서버 URL이 비어 있습니다.'};try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)return {ok:false,message:'HTTP '+r.status};return {ok:true,message:'랭킹 서버와 정상 연결되었습니다.'}}catch(e){return {ok:false,message:'연결할 수 없습니다. URL/CORS/배포 상태를 확인하세요.'}}}
 function applyRuntimePrefs(){const v=getV4();document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion)}
 applyRuntimePrefs();
+
+
+// ===== 조팸스 GO v5 : 상용 체감 품질 / 사운드스케이프 / 설치 UX =====
+let _ambientNodes=null;
+function ensureAudio(){try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(_audioCtx.state==='suspended')_audioCtx.resume();return _audioCtx}catch(e){return null}}
+function playSfx(kind='tap'){
+  if(!getV4().sound)return;
+  const c=ensureAudio(); if(!c)return; const n=c.currentTime;
+  const packs={tap:[[420,.035,.07]],near:[[520,.06,.12],[760,.045,.16]],spawn:[[250,.035,.08],[520,.055,.18],[1040,.035,.28]],success:[[660,.06,.12],[880,.07,.18],[1320,.055,.30]],chest:[[330,.055,.10],[495,.06,.18],[740,.065,.26],[990,.05,.38]],error:[[180,.04,.12],[140,.035,.2]]};
+  (packs[kind]||packs.tap).forEach(([f,gain,dur],i)=>{const o=c.createOscillator(),g=c.createGain();o.type=kind==='error'?'sawtooth':'sine';o.frequency.value=f;g.gain.setValueAtTime(.001,n+i*.055);g.gain.exponentialRampToValueAtTime(gain,n+i*.055+.012);g.gain.exponentialRampToValueAtTime(.001,n+i*.055+dur);o.connect(g).connect(c.destination);o.start(n+i*.055);o.stop(n+i*.055+dur+.03)});
+}
+function startScannerAmbience(){if(!getV4().sound||_ambientNodes)return;const c=ensureAudio();if(!c)return;try{const o=c.createOscillator(),g=c.createGain(),lfo=c.createOscillator(),lg=c.createGain();o.type='sine';o.frequency.value=92;g.gain.value=.006;lfo.frequency.value=.22;lg.gain.value=.004;lfo.connect(lg).connect(g.gain);o.connect(g).connect(c.destination);o.start();lfo.start();_ambientNodes={o,g,lfo,lg}}catch(e){}}
+function stopScannerAmbience(){if(!_ambientNodes)return;try{_ambientNodes.o.stop();_ambientNodes.lfo.stop()}catch(e){} _ambientNodes=null}
+function setSoundEnabled(v){setPref('sound',!!v);if(!v)stopScannerAmbience();return getV4()}
+function installState(){return {standalone:window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches,ios:/iphone|ipad|ipod/i.test(navigator.userAgent)}}
+function registerPWA(){if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
