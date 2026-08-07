@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#06142b"><title>조팸스 GO | 컬렉션</title><link rel="stylesheet" href="assets/style.css">
+<meta name="theme-color" content="#eef7ff"><title>조팸스 GO | 컬렉션</title><link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="app-body">
 <main class="app-shell page-shell">
@@ -11,8 +11,8 @@
   <section class="collection-grid" id="collectionGrid"></section>
   <div class="bottom-spacer"></div>
 </main>
-<nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a class="active" href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a></nav>
-<div class="sheet" id="itemSheet" aria-hidden="true"><button class="sheet-dim" data-close-sheet></button><div class="sheet-card"><div class="sheet-handle"></div><div class="item-detail"><div class="detail-icon" id="detailIcon">🏭</div><span class="section-kicker" id="detailTag">ITEM 01 / 12</span><h2 id="detailName">중소기업제품</h2><p id="detailQuote"></p><div class="learning-box"><b>10초 핵심</b><p id="detailLearn"></p></div></div><button class="sheet-primary" data-close-sheet>컬렉션으로 돌아가기</button></div></div>
+<nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a class="active" href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="ranking.html"><span>♛</span><b>랭킹</b></a></nav>
+<div class="sheet" id="itemSheet" aria-hidden="true"><button class="sheet-dim" data-close-sheet></button><div class="sheet-card"><div class="sheet-handle"></div><div class="item-detail"><div class="detail-icon modern-detail-icon" id="detailIcon"></div><span class="section-kicker" id="detailTag">ITEM 01 / 12</span><h2 id="detailName">중소기업제품</h2><p id="detailQuote"></p><div class="learning-box"><b>10초 핵심</b><p id="detailLearn"></p></div></div><button class="sheet-primary" data-close-sheet>컬렉션으로 돌아가기</button></div></div>
 <script src="assets/app.js"></script>
 <script>
 const learn = {
@@ -31,8 +31,8 @@ const learn = {
 const done=getProgress(); document.getElementById('counter').textContent=done.length+'/12'; document.getElementById('miniCount').textContent=done.length; document.getElementById('miniRing').style.setProperty('--p',(done.length/12*360)+'deg');
 document.getElementById('collectionHeadline').textContent=done.length?done.length+'개의 제도를 발견했어요':'첫 발견을 시작해보세요';
 const grid=document.getElementById('collectionGrid');
-EPISODES.forEach(ep=>{ const got=done.includes(ep.id); const b=document.createElement('button'); b.className='collection-item '+(got?'unlocked':'locked'); b.innerHTML=`<span class="collection-no">${String(ep.id).padStart(2,'0')}</span><div class="collection-icon">${got?ep.icon:'?'}</div><b>${got?ep.item:'미발견 아이템'}</b><small>${got?'다시 보기':'AR 탐험에서 발견하세요'}</small>`; if(got)b.onclick=()=>openDetail(ep); grid.appendChild(b); });
-const sheet=document.getElementById('itemSheet'); function openDetail(ep){ document.getElementById('detailIcon').textContent=ep.icon;document.getElementById('detailTag').textContent='ITEM '+String(ep.id).padStart(2,'0')+' / 12';document.getElementById('detailName').textContent=ep.item;document.getElementById('detailQuote').textContent='“'+ep.quote+'”';document.getElementById('detailLearn').textContent=learn[ep.id];sheet.classList.add('show');sheet.setAttribute('aria-hidden','false'); }
+EPISODES.forEach(ep=>{ const got=done.includes(ep.id); const b=document.createElement('button'); b.className='collection-item '+(got?'unlocked':'locked'); b.innerHTML=`<span class="collection-no">${String(ep.id).padStart(2,'0')}</span><div class="collection-icon modern-collection-icon">${publicPurchaseIcon(ep.id,got)}</div><b>${got?ep.item:'미발견 아이템'}</b><small>${got?'핵심 제도 다시 보기':'AR 탐험에서 발견하세요'}</small>`; if(got)b.onclick=()=>openDetail(ep); grid.appendChild(b); });
+const sheet=document.getElementById('itemSheet'); function openDetail(ep){ document.getElementById('detailIcon').innerHTML=publicPurchaseIcon(ep.id,true);document.getElementById('detailTag').textContent='ITEM '+String(ep.id).padStart(2,'0')+' / 12';document.getElementById('detailName').textContent=ep.item;document.getElementById('detailQuote').textContent='“'+ep.quote+'”';document.getElementById('detailLearn').textContent=learn[ep.id];sheet.classList.add('show');sheet.setAttribute('aria-hidden','false'); }
 document.querySelectorAll('[data-close-sheet]').forEach(el=>el.onclick=()=>{sheet.classList.remove('show');sheet.setAttribute('aria-hidden','true');});
 </script>
 <script>document.addEventListener('click',e=>{const t=e.target.closest('.collection-card,.episode-card,.learn-card,button,a');if(t&&t.closest('main')){pushEvent('learn',{source:'collection'});}});</script>
