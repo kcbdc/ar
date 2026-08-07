@@ -3,111 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#14141a">
-<title>조팸스 원정대 AR - 공공구매 대작전</title>
+<meta name="theme-color" content="#06142b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>조팸스 GO | 공공구매 AR 어드벤처</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
-<div class="hub-wrap">
-  <div class="masthead">
-    <div class="kicker">HQ AR TREASURE HUNT</div>
-    <h1>조팸스 원정대 <span>AR</span></h1>
-    <p>본사 곳곳을 걸어다니다 체크포인트 근처에 오면 알림이 와요.<br>그 자리에서 카메라를 켜고 천천히 돌려 캐릭터를 찾아보세요!</p>
-  </div>
-
-  <div class="progress-card">
-    <div class="progress-top">
-      <span>내 수집 현황</span>
-      <span class="num" id="progressNum">0 / 12</span>
+<body class="app-body">
+<main class="app-shell hub-shell">
+  <header class="hero-panel">
+    <div class="brand-line"><span class="brand-mark">✦</span><span>KOMSCO PLAY LAB</span></div>
+    <div class="hero-copy">
+      <div>
+        <div class="eyebrow">LOCATION × AR × LEARNING</div>
+        <h1 class="go-logo">조팸스 <em>GO</em></h1>
+        <p class="hero-sub">현실 공간을 탐험하며 배우는<br><b>공공구매 AR 어드벤처</b></p>
+      </div>
+      <div class="hero-orb" aria-hidden="true">
+        <img src="assets/img/daim.png" alt="">
+        <span class="scan-ring r1"></span><span class="scan-ring r2"></span>
+      </div>
     </div>
-    <div class="progress-bar-track">
-      <div class="progress-bar-fill" id="progressBar" style="width:0%;"></div>
+    <div class="privacy-pill">🔒 카메라 영상·실시간 위치는 서버에 저장하지 않아요</div>
+  </header>
+
+  <section class="mission-card premium-card">
+    <div class="section-head">
+      <div>
+        <span class="section-kicker">TODAY'S EXPEDITION</span>
+        <h2>오늘의 탐험</h2>
+      </div>
+      <div class="level-chip">LV. <span id="playerLevel">1</span></div>
     </div>
-    <div class="badge-grid" id="badgeGrid"></div>
-  </div>
 
-  <div class="cta-row">
-    <a class="cta" id="startBtn" href="ar.html">📍 AR 탐험 시작하기</a>
-    <a class="cta secondary" href="checkpoints.html">🗺️ 체크포인트 40곳 목록 보기</a>
-  </div>
+    <div class="mission-progress">
+      <div class="progress-ring" id="progressRing"><span id="progressNum">0<small>/12</small></span></div>
+      <div class="mission-copy">
+        <strong id="missionTitle">첫 번째 아이템을 찾아보세요</strong>
+        <p id="missionDesc">가까운 체크포인트까지 이동하면 AR 탐색이 시작됩니다.</p>
+        <div class="xp-row"><span>EXP</span><div class="xp-track"><i id="xpFill"></i></div><b id="xpText">0 XP</b></div>
+      </div>
+    </div>
 
-  <div class="status-row">
-    <div class="status-chip" id="chipCam"><span class="dot"></span>카메라</div>
-    <div class="status-chip" id="chipLoc"><span class="dot"></span>위치</div>
-    <div class="status-chip" id="chipOri"><span class="dot"></span>방향센서</div>
-  </div>
+    <a class="primary-cta" id="startBtn" href="ar.html">
+      <span class="cta-icon">◎</span>
+      <span><b>AR 탐험 시작</b><small id="startHint">주변 아이템 탐색하기</small></span>
+      <span class="cta-arrow">→</span>
+    </a>
+  </section>
 
-  <div class="checklist">
-    <h3>진행 방법</h3>
-    <ol>
-      <li>"AR 탐험 시작하기"를 누르고 카메라·위치·방향센서 권한을 허용하세요.</li>
-      <li>본사 안을 걸어다니면 체크포인트에 가까워질 때 <b>알림과 진동</b>이 와요.</li>
-      <li>그 자리에서 폰을 들고 천천히 <b>한 바퀴 돌아보세요</b> — 캐릭터가 있는 방향에 다가가면 화면에 등장합니다.</li>
-      <li>화면 중앙에 2초 정도 유지하면 아이템을 자동 획득해요.</li>
-      <li>12개를 모두 모으면 원정 완료! 명예의 전당 인증샷을 남겨보세요.</li>
-    </ol>
-  </div>
+  <section class="daily-card premium-card compact">
+    <div class="section-head mini"><div><span class="section-kicker">DAILY OPS</span><h2>오늘의 미션</h2></div><div class="daily-badge"><span id="dailyDone">0</span>/3</div></div>
+    <div class="daily-list" id="dailyList"></div>
+    <button class="daily-reward" id="dailyReward" disabled><span>🎁</span><b>올 클리어 보상 +200 XP</b><small>3개 미션 완료 시 획득</small></button>
+  </section>
 
-  <span class="reset-link" id="resetLink">진행 상황 초기화 (테스트용)</span>
-  <div class="foot-note">조팸스 원정대 · 공공구매 12대 우선구매 제도 AR 체험</div>
+  <section class="quick-grid">
+    <a class="quick-card" href="collection.html"><span class="qicon violet">◈</span><b>컬렉션</b><small><span id="collectionCount">0</span>/12 발견</small></a>
+    <a class="quick-card" href="checkpoints.html"><span class="qicon cyan">⌖</span><b>탐험 지도</b><small>힌트로 위치 찾기</small></a>
+    <a class="quick-card" href="ranking.html"><span class="qicon gold">♛</span><b>랭킹</b><small>원정대 기록</small></a>
+    <button class="quick-card" id="howBtn"><span class="qicon gold">?</span><b>플레이 가이드</b><small>30초 사용법</small></button>
+  </section>
+
+  <section class="character-strip premium-card compact">
+    <div class="section-head mini"><div><span class="section-kicker">EXPEDITION CREW</span><h2>조팸스 원정대</h2></div></div>
+    <div class="crew-row">
+      <div class="crew"><img src="assets/img/hoonmin.png" alt="훈민"><span><b>훈민</b><small>제도 가이드</small></span></div>
+      <div class="crew active"><img src="assets/img/daim.png" alt="다임"><span><b>다임</b><small>미션 리더</small></span></div>
+      <div class="crew"><img src="assets/img/sunsik.png" alt="순식"><span><b>순식</b><small>탐색 전문가</small></span></div>
+    </div>
+  </section>
+
+  <section class="status-card">
+    <div class="status-title"><span>DEVICE CHECK</span><b>탐험 준비 상태</b></div>
+    <div class="status-row">
+      <div class="status-chip" id="chipCam"><span class="dot"></span>카메라</div>
+      <div class="status-chip" id="chipLoc"><span class="dot"></span>위치</div>
+      <div class="status-chip" id="chipOri"><span class="dot"></span>방향센서</div>
+    </div>
+  </section>
+
+  <footer class="app-footer">조팸스 GO · 공공구매 12대 제도 AR 체험</footer>
+</main>
+
+<nav class="bottom-nav" aria-label="주요 메뉴">
+  <a class="active" href="index.html"><span>⌂</span><b>홈</b></a>
+  <a href="ar.html"><span>◎</span><b>탐험</b></a>
+  <a href="collection.html"><span>◇</span><b>컬렉션</b></a>
+  <a href="ranking.html"><span>♛</span><b>랭킹</b></a>
+  <a href="checkpoints.html"><span>⌖</span><b>지도</b></a>
+</nav>
+
+<div class="sheet" id="howSheet" aria-hidden="true">
+  <button class="sheet-dim" data-close-sheet aria-label="닫기"></button>
+  <div class="sheet-card">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title"><span class="qicon gold">◎</span><div><small>30 SECOND GUIDE</small><h2>조팸스 GO 플레이 방법</h2></div></div>
+    <div class="guide-steps">
+      <div><i>1</i><span><b>탐험 시작</b><small>카메라·위치·방향 권한의 용도를 확인하고 허용해요.</small></span></div>
+      <div><i>2</i><span><b>신호 따라 이동</b><small>가까워질수록 신호 강도가 올라가요.</small></span></div>
+      <div><i>3</i><span><b>AR로 발견</b><small>화살표 방향으로 폰을 돌려 캐릭터를 찾아요.</small></span></div>
+      <div><i>4</i><span><b>수집하고 학습</b><small>아이템을 획득하고 공공구매 핵심을 10초 만에 익혀요.</small></span></div>
+    </div>
+    <button class="sheet-primary" data-close-sheet>확인했어요</button>
+  </div>
 </div>
 
 <script src="assets/app.js"></script>
 <script>
-  function render(){
-    const done = getProgress();
-    document.getElementById('progressNum').textContent = done.length + ' / 12';
-    document.getElementById('progressBar').style.width = (done.length/12*100) + '%';
-
-    const grid = document.getElementById('badgeGrid');
-    grid.innerHTML = '';
-    EPISODES.forEach(ep => {
-      const div = document.createElement('div');
-      div.className = 'badge' + (done.includes(ep.id) ? ' got' : '');
-      div.textContent = done.includes(ep.id) ? ep.icon : '❓';
-      div.title = 'EP.' + ep.id + ' ' + ep.item;
-      grid.appendChild(div);
-    });
-
-    const startBtn = document.getElementById('startBtn');
-    if(done.length >= 12){
-      startBtn.textContent = '🎉 전체 완료! 다시 체험하기';
-    } else {
-      const nid = nextEpisodeId();
-      startBtn.textContent = '📍 AR 탐험 계속하기 (다음: ' + getEpisode(nid).item + ')';
-    }
+function renderHome(){
+  const done = getProgress();
+  const count = done.length;
+  const xp = totalXP();
+  const level = playerLevel();
+  const levelXp = xp % 300;
+  document.getElementById('progressNum').innerHTML = count + '<small>/12</small>';
+  document.getElementById('progressRing').style.setProperty('--p', (count/12*360)+'deg');
+  document.getElementById('collectionCount').textContent = count;
+  document.getElementById('playerLevel').textContent = level;
+  document.getElementById('xpFill').style.width = (levelXp/300*100)+'%';
+  document.getElementById('xpText').textContent = levelXp+' / 300 XP';
+  renderDaily();
+  const startBtn = document.getElementById('startBtn');
+  if(count >= 12){
+    document.getElementById('missionTitle').textContent = '원정 완료! 컬렉션을 확인하세요';
+    document.getElementById('missionDesc').textContent = '12개 공공구매 아이템을 모두 발견했습니다.';
+    document.getElementById('startHint').textContent = '다시 탐험하기';
+  }else{
+    const ep = getEpisode(nextEpisodeId());
+    document.getElementById('missionTitle').textContent = ep.item + '을 찾아보세요';
+    document.getElementById('missionDesc').textContent = '주변 체크포인트를 탐색해 '+ep.icon+' 아이템을 발견하세요.';
+    document.getElementById('startHint').textContent = '다음 목표 · '+ep.item;
   }
-
-  // 권한 상태를 미리 체크해 홈 화면에서 표시 (가능한 범위 내에서)
-  async function checkStatusChips(){
-    // 카메라 / 위치는 Permissions API가 있으면 조회, 없으면 '?' 표시
-    if(navigator.permissions){
-      try{
-        const cam = await navigator.permissions.query({ name: 'camera' });
-        setChip('chipCam', cam.state === 'granted');
-        cam.onchange = () => setChip('chipCam', cam.state === 'granted');
-      }catch(e){}
-      try{
-        const loc = await navigator.permissions.query({ name: 'geolocation' });
-        setChip('chipLoc', loc.state === 'granted');
-        loc.onchange = () => setChip('chipLoc', loc.state === 'granted');
-      }catch(e){}
-    }
-    const oriSupported = typeof DeviceOrientationEvent !== 'undefined';
-    setChip('chipOri', oriSupported, oriSupported ? undefined : '미지원');
+}
+function renderDaily(){
+  const missions=getDailyMissions(), done=dailyCompletion();
+  document.getElementById('dailyDone').textContent=done;
+  document.getElementById('dailyList').innerHTML=missions.map(m=>`<div class="daily-item ${m.now>=m.goal?'done':''}"><span class="daily-icon">${m.icon}</span><span><b>${m.title}</b><small>${m.desc}</small></span><em>${Math.min(m.now,m.goal)}/${m.goal}</em></div>`).join('');
+  const btn=document.getElementById('dailyReward'), p=syncDaily();
+  btn.disabled=done<3||!!p.dailyBonus;
+  if(p.dailyBonus){btn.classList.add('claimed');btn.innerHTML='<span>✓</span><b>오늘의 보상 획득 완료</b><small>내일 다시 도전하세요</small>'}
+}
+document.getElementById('dailyReward').onclick=()=>{if(claimDailyBonus()){playChime('collect');showToast('올 클리어! <b>+200 XP</b>를 획득했어요',{variant:'near'});renderHome();}};
+async function checkStatusChips(){
+  if(navigator.permissions){
+    try{ const cam=await navigator.permissions.query({name:'camera'}); setChip('chipCam',cam.state==='granted'); cam.onchange=()=>setChip('chipCam',cam.state==='granted'); }catch(e){}
+    try{ const loc=await navigator.permissions.query({name:'geolocation'}); setChip('chipLoc',loc.state==='granted'); loc.onchange=()=>setChip('chipLoc',loc.state==='granted'); }catch(e){}
   }
-
-  function setChip(id, ok){
-    const el = document.getElementById(id);
-    if(ok) el.classList.add('ok');
-  }
-
-  document.getElementById('resetLink').addEventListener('click', () => {
-    if(confirm('수집 진행 상황을 초기화할까요?')){ resetProgress(); render(); }
-  });
-
-  render();
-  checkStatusChips();
+  setChip('chipOri', typeof DeviceOrientationEvent!=='undefined');
+}
+function setChip(id,ok){ const el=document.getElementById(id); el.classList.toggle('ok',!!ok); }
+const sheet=document.getElementById('howSheet');
+document.getElementById('howBtn').onclick=()=>{sheet.classList.add('show');sheet.setAttribute('aria-hidden','false');};
+document.querySelectorAll('[data-close-sheet]').forEach(el=>el.onclick=()=>{sheet.classList.remove('show');sheet.setAttribute('aria-hidden','true');});
+renderHome(); checkStatusChips();
 </script>
 </body>
 </html>

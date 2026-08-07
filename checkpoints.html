@@ -1,39 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>조팸스 원정대 - 체크포인트 목록</title>
-<link rel="stylesheet" href="assets/style.css">
-</head>
-<body>
-<div class="cp-wrap">
-  <div class="masthead">
-    <div class="kicker">CHECKPOINT LIST</div>
-    <h1>체크포인트 <span>40곳</span></h1>
-    <p>제공해주신 좌표에 아이템 12종을 순환 배정했습니다. 지도 링크를 눌러 실제 위치를 확인해보세요.</p>
-  </div>
-  <div class="cp-list" id="cpList"></div>
-  <div class="foot-note"><a href="index.html" style="color:inherit;">← 게임 허브로 돌아가기</a></div>
-</div>
-
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 탐험 지도</title><link rel="stylesheet" href="assets/style.css"></head>
+<body class="app-body">
+<main class="app-shell page-shell">
+<header class="page-top"><a href="index.html" class="icon-btn">←</a><div><span class="section-kicker">EXPEDITION MAP</span><h1>탐험 지도</h1></div><span class="counter-pill">40 SPOT</span></header>
+<section class="map-hero premium-card compact"><div class="map-radar"><i></i><i></i><i></i><span>⌖</span></div><div><h2>정확한 좌표 대신 힌트로 탐험해요</h2><p>발견 전에는 번호와 거리만 보여 탐색의 재미를 유지합니다. AR 화면에서는 가장 가까운 목표를 자동 안내해요.</p></div></section>
+<div class="filter-row"><button class="filter active" data-filter="all">전체</button><button class="filter" data-filter="open">미발견</button><button class="filter" data-filter="done">발견</button></div>
+<section class="spot-list" id="cpList"></section><div class="bottom-spacer"></div>
+</main>
+<nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="collection.html"><span>◇</span><b>컬렉션</b></a><a class="active" href="checkpoints.html"><span>⌖</span><b>지도</b></a></nav>
 <script src="assets/app.js"></script>
 <script>
-  const list = document.getElementById('cpList');
-  CHECKPOINTS.forEach(cp => {
-    const ep = getEpisode(cp.episodeId);
-    const row = document.createElement('div');
-    row.className = 'cp-row';
-    row.innerHTML = `
-      <div class="icon">${ep.icon}</div>
-      <div class="meta">
-        <div class="item-name">#${cp.idx+1} · ${ep.item}</div>
-        <div class="coord">${cp.lat.toFixed(6)}, ${cp.lng.toFixed(6)}</div>
-      </div>
-      <a href="https://www.google.com/maps?q=${cp.lat},${cp.lng}" target="_blank" rel="noopener">지도 보기</a>
-    `;
-    list.appendChild(row);
-  });
+const list=document.getElementById('cpList'); const done=getProgress(); let mode='all';
+function render(){list.innerHTML='';CHECKPOINTS.forEach(cp=>{const ep=getEpisode(cp.episodeId),got=done.includes(ep.id);if(mode==='open'&&got)return;if(mode==='done'&&!got)return;const row=document.createElement('div');row.className='spot-row '+(got?'done':'');row.innerHTML=`<div class="spot-index">${got?'✓':String(cp.idx+1).padStart(2,'0')}</div><div class="spot-meta"><b>${got?ep.item:'미발견 체크포인트'}</b><small>${got?'컬렉션 등록 완료':'AR 탐험에서 가까운 목표로 자동 연결됩니다'}</small></div><span class="spot-state">${got?'FOUND':'HIDDEN'}</span>`;list.appendChild(row);});}
+document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.filter;render();});render();
 </script>
-</body>
-</html>
+</body></html>

@@ -1,370 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#000000">
-<title>조팸스 원정대 AR</title>
-<link rel="stylesheet" href="assets/style.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#000000"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css">
 </head>
 <body class="ar-body">
-
-<video id="cameraVideo" playsinline muted autoplay></video>
-<div class="ar-vignette"></div>
-
-<div class="ar-topbar">
-  <a href="index.html" class="back-btn">← 나가기</a>
-  <span class="ep-tag" id="epTag">탐색 준비 중</span>
-</div>
-
+<video id="cameraVideo" playsinline muted autoplay></video><div class="ar-vignette"></div><div class="ar-grid"></div>
+<div class="ar-topbar"><a href="index.html" class="ar-exit">←</a><div class="ar-brand"><small>JOPAMS</small><b>GO</b></div><div class="ar-progress"><span id="arCount">0</span><small>/12</small></div></div>
+<div class="quest-chip" id="epTag"><span>◈</span><b>탐색 준비 중</b></div>
+<div class="signal-panel"><span class="signal-label">TARGET SIGNAL</span><div class="signal-bars" id="signalBars"><i></i><i></i><i></i><i></i><i></i></div><b id="radarDist">거리 확인 중...</b></div>
 <div class="status-banner" id="statusBanner">위치를 확인하고 있어요...</div>
-
-<div class="edge-arrow left" id="arrowLeft">◀</div>
-<div class="edge-arrow right" id="arrowRight">▶</div>
-
-<div class="target-wrap" id="targetWrap">
-  <div class="target-ring"></div>
-  <img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터">
-  <div class="target-label" id="targetLabel">🏭 중소기업제품</div>
-</div>
-
-<div class="dwell-ring-wrap" id="dwellRing">
-  <svg viewBox="0 0 64 64">
-    <circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle>
-    <circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle>
-  </svg>
-</div>
-
-<div class="radar-hud">
-  <div class="radar-dist" id="radarDist">거리 확인 중...</div>
-  <div class="compass-ring-wrap">
-    <svg viewBox="0 0 96 96">
-      <circle class="compass-bg" cx="48" cy="48" r="46"></circle>
-    </svg>
-    <div class="compass-needle" id="compassNeedle"></div>
-    <div class="compass-center-icon">📍</div>
-  </div>
-</div>
-
-<div id="permGate" class="perm-gate">
-  <div class="perm-card">
-    <div class="perm-icon">📍✨</div>
-    <h2>AR 탐험을 시작할게요</h2>
-    <p>마커나 스캔 없이, 체크포인트 근처에서 폰을 들고 돌려보면<br>캐릭터가 자동으로 나타나요.</p>
-    <div class="perm-steps">
-      <div class="perm-step" id="stepCam"><span class="icon-badge">1</span> 카메라 권한</div>
-      <div class="perm-step" id="stepLoc"><span class="icon-badge">2</span> 위치 권한</div>
-      <div class="perm-step" id="stepOri"><span class="icon-badge">3</span> 방향센서 권한</div>
-    </div>
-    <button id="permStartBtn">권한 허용하고 시작하기</button>
-    <div class="perm-note" id="permNote"></div>
-  </div>
-</div>
-
-<div class="card-overlay" id="cardOverlay">
-  <div class="get-card">
-    <div class="tag" id="cardTag">ITEM 01 / 12</div>
-    <div class="icon" id="cardIcon">🏭</div>
-    <div class="name" id="cardName">중소기업제품</div>
-    <div class="quote" id="cardQuote">"이거 만든 사람이 누구게?"</div>
-    <div class="all-done-badge" id="allDoneBadge" style="display:none;">🎉 12개 전체 수집 완료!</div>
-    <button id="cardNextBtn">계속 탐험하기</button>
-  </div>
-</div>
-
+<div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
+<div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
+<div class="target-wrap" id="targetWrap"><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터"><div class="target-label" id="targetLabel">🏭 중소기업제품</div></div>
+<div class="dwell-ring-wrap" id="dwellRing"><svg viewBox="0 0 64 64"><circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle><circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle></svg><span>HOLD</span></div>
+<div class="accuracy-chip" id="accuracyChip">GPS 정확도 확인 중</div>
+<div id="permGate" class="perm-gate"><div class="perm-card commercial"><div class="perm-logo">◎</div><span class="section-kicker">READY TO EXPLORE</span><h2>조팸스 GO를 시작할까요?</h2><p>현실 공간에 숨은 공공구매 아이템을 찾기 위해 아래 기능을 사용합니다.</p><div class="perm-steps"><div class="perm-step" id="stepCam"><span class="perm-symbol">▣</span><span><b>카메라</b><small>AR 캐릭터를 화면에 표시</small></span><i>필수</i></div><div class="perm-step" id="stepLoc"><span class="perm-symbol">⌖</span><span><b>위치</b><small>가까운 체크포인트 탐색</small></span><i>필수</i></div><div class="perm-step" id="stepOri"><span class="perm-symbol">◇</span><span><b>방향센서</b><small>캐릭터가 있는 방향 안내</small></span><i>권장</i></div></div><div class="privacy-note">🔒 카메라 영상과 실시간 위치는 서버에 저장하지 않습니다.</div><button id="permStartBtn" class="sheet-primary">탐험 시작하기</button><div class="perm-note" id="permNote"></div></div></div>
+<div class="capture-flash" id="captureFlash"></div><div class="particle-field" id="particleField"></div><div class="card-overlay" id="cardOverlay"><div class="get-card commercial"><span class="discovery-kicker">NEW DISCOVERY</span><div class="reward-burst"><div class="icon" id="cardIcon">🏭</div></div><div class="tag" id="cardTag">ITEM 01 / 12</div><div class="name" id="cardName">중소기업제품</div><div class="xp-award">+100 XP</div><div class="quote" id="cardQuote">“이거 만든 사람이 누구게?”</div><div class="all-done-badge" id="allDoneBadge" style="display:none;">🏆 12개 전체 수집 완료!</div><button id="cardNextBtn">계속 탐험하기 <span>→</span></button><a class="card-link" href="collection.html">컬렉션에서 다시 보기</a></div></div>
 <script src="assets/app.js"></script>
 <script>
-  // ================= 상태 =================
-  let curLat = null, curLng = null, curHeading = null;
-  let notifiedIdx = new Set();   // 이미 "근처" 토스트를 보낸 체크포인트
-  let dwellStart = null, dwellTargetEpId = null, dwellRAF = null;
-  let collectingLock = false;
-  const CIRC = 2 * Math.PI * 27;
-
-  const video = document.getElementById('cameraVideo');
-  const epTag = document.getElementById('epTag');
-  const statusBanner = document.getElementById('statusBanner');
-  const targetWrap = document.getElementById('targetWrap');
-  const targetImg = document.getElementById('targetImg');
-  const targetLabel = document.getElementById('targetLabel');
-  const arrowLeft = document.getElementById('arrowLeft');
-  const arrowRight = document.getElementById('arrowRight');
-  const radarDist = document.getElementById('radarDist');
-  const compassNeedle = document.getElementById('compassNeedle');
-  const dwellRing = document.getElementById('dwellRing');
-  const dwellFg = document.getElementById('dwellFg');
-
-  const charImgs = { sunsik: 'assets/img/sunsik.png', daim: 'assets/img/daim.png', hoonmin: 'assets/img/hoonmin.png' };
-  const charOrder = ['sunsik','daim','hoonmin'];
-
-  // ================= 권한 온보딩 =================
-  const permGate = document.getElementById('permGate');
-  const permNote = document.getElementById('permNote');
-  const permStartBtn = document.getElementById('permStartBtn');
-  const stepCam = document.getElementById('stepCam');
-  const stepLoc = document.getElementById('stepLoc');
-  const stepOri = document.getElementById('stepOri');
-
-  function setStep(el, ok){ el.classList.remove('ok','fail'); el.classList.add(ok ? 'ok' : 'fail'); }
-
-  async function startCamera(){
-    const attempts = [
-      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
-      { video: { facingMode: 'environment' }, audio: false },
-      { video: true, audio: false },
-    ];
-    let lastErr = null;
-    for(const constraints of attempts){
-      try{
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        video.srcObject = stream;
-        await new Promise((resolve) => {
-          video.onloadedmetadata = resolve;
-          setTimeout(resolve, 1500); // 안전장치: metadata 이벤트가 안 오는 기기 대비
-        });
-        try{ await video.play(); }catch(e){ /* 일부 브라우저는 사용자 제스처 후 자동 재생 */ }
-        return true;
-      }catch(e){ lastErr = e; }
-    }
-    console.warn('카메라 시작 실패', lastErr);
-    return false;
-  }
-
-  async function startGeolocation(){
-    if(!navigator.geolocation) return false;
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        () => resolve(true),
-        () => resolve(false),
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    });
-  }
-
-  async function startOrientation(){
-    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
-      try{
-        const res = await DeviceOrientationEvent.requestPermission();
-        return res === 'granted';
-      }catch(e){ return false; }
-    }
-    return typeof DeviceOrientationEvent !== 'undefined';
-  }
-
-  permStartBtn.addEventListener('click', async () => {
-    permStartBtn.disabled = true;
-    permNote.textContent = '';
-
-    permNote.textContent = '카메라를 켜는 중...';
-    const camOk = await startCamera();
-    setStep(stepCam, camOk);
-    if(!camOk){
-      permNote.textContent = '카메라를 켤 수 없어요. 브라우저의 카메라 권한을 확인하고 새로고침 해주세요.';
-      permStartBtn.disabled = false;
-      return;
-    }
-
-    permNote.textContent = '위치 확인 중...';
-    const locOk = await startGeolocation();
-    setStep(stepLoc, locOk);
-    if(!locOk){
-      permNote.textContent = '위치 권한이 필요해요. 브라우저 설정에서 위치 접근을 허용하고 새로고침 해주세요.';
-      permStartBtn.disabled = false;
-      return;
-    }
-
-    permNote.textContent = '방향센서 확인 중...';
-    const oriOk = await startOrientation();
-    setStep(stepOri, oriOk);
-    if(!oriOk){
-      permNote.textContent = '방향센서 권한이 없으면 캐릭터 탐색 정확도가 떨어질 수 있어요. 계속 진행할게요.';
-    }
-
-    setTimeout(() => {
-      permGate.style.display = 'none';
-      beginTracking(oriOk);
-    }, oriOk ? 250 : 900);
-  });
-
-  // ================= 위치/방향 추적 =================
-  function beginTracking(oriOk){
-    navigator.geolocation.watchPosition(onPosition, onPosError,
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 });
-
-    if(oriOk){
-      const evName = 'ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation';
-      window.addEventListener(evName, onOrientation, true);
-    } else {
-      statusBanner.textContent = '방향센서 없이 거리 기반으로만 안내할게요.';
-    }
-
-    requestAnimationFrame(renderLoop);
-  }
-
-  function onPosError(err){
-    statusBanner.textContent = '위치 신호를 기다리는 중... (' + err.message + ')';
-  }
-
-  function onPosition(pos){
-    curLat = pos.coords.latitude;
-    curLng = pos.coords.longitude;
-  }
-
-  function onOrientation(e){
-    const h = extractHeading(e);
-    if(h !== null) curHeading = h;
-  }
-
-  // ================= 메인 렌더 루프 =================
-  function renderLoop(){
-    updateUI();
-    requestAnimationFrame(renderLoop);
-  }
-
-  function updateUI(){
-    if(curLat === null || curLng === null){
-      statusBanner.style.display = 'block';
-      statusBanner.textContent = '위치 신호를 확인하고 있어요...';
-      radarDist.textContent = '거리 확인 중...';
-      targetWrap.classList.remove('visible');
-      arrowLeft.classList.remove('visible');
-      arrowRight.classList.remove('visible');
-      return;
-    }
-
-    const done = getProgress();
-    if(done.length >= 12){
-      epTag.textContent = '원정 완료 🎉';
-      statusBanner.style.display = 'block';
-      statusBanner.textContent = '12개 아이템을 모두 모았어요! 수고하셨습니다.';
-      radarDist.textContent = '올클리어!';
-      targetWrap.classList.remove('visible');
-      arrowLeft.classList.remove('visible');
-      arrowRight.classList.remove('visible');
-      dwellRing.classList.remove('show');
-      return;
-    }
-
-    const nearest = nearestUncollectedCheckpoint(curLat, curLng);
-    if(!nearest) return;
-    const { checkpoint, distance } = nearest;
-    const ep = getEpisode(checkpoint.episodeId);
-    epTag.textContent = 'EP.' + ep.id + ' · ' + ep.item;
-    radarDist.innerHTML = '가장 가까운 체크포인트까지 <b>' + Math.round(distance) + 'm</b>';
-
-    // ---- 근접 알림 (한 번만) ----
-    if(distance <= NOTIFY_RADIUS_M && !notifiedIdx.has(checkpoint.idx)){
-      notifiedIdx.add(checkpoint.idx);
-      vibrate([80, 60, 80]);
-      playChime('near');
-      showToast('📍 <b>' + ep.item + '</b> 체크포인트가 근처예요!<br>폰을 들고 천천히 둘러보세요', { variant:'near', duration:3800 });
-    }
-    if(distance > NOTIFY_RADIUS_M + 15 && notifiedIdx.has(checkpoint.idx)){
-      notifiedIdx.delete(checkpoint.idx); // 멀어지면 다음에 다시 접근 시 재알림
-    }
-
-    // ---- 상태별 안내 문구 ----
-    if(distance > NOTIFY_RADIUS_M){
-      statusBanner.style.display = 'block';
-      statusBanner.textContent = '체크포인트 방향으로 걸어가보세요';
-    } else if(distance > COLLECT_RADIUS_M){
-      statusBanner.style.display = 'block';
-      statusBanner.textContent = '거의 다 왔어요! 조금만 더 다가가세요';
-    } else {
-      statusBanner.style.display = 'none';
-    }
-
-    // ---- 나침반 바늘 ----
-    let diff = 0;
-    let haveHeading = curHeading !== null;
-    if(haveHeading){
-      const bearing = bearingTo(curLat, curLng, checkpoint.lat, checkpoint.lng);
-      diff = angleDiff(bearing, curHeading);
-      compassNeedle.style.transform = 'translate(-50%,-100%) rotate(' + diff + 'deg)';
-    } else {
-      compassNeedle.style.transform = 'translate(-50%,-100%) rotate(0deg)';
-    }
-
-    // ---- 캐릭터 발견 로직 ----
-    const inCollectRange = distance <= COLLECT_RADIUS_M;
-    const facingTarget = !haveHeading || Math.abs(diff) <= FOV_HALF_DEG;
-    const discoverable = inCollectRange && facingTarget && !collectingLock;
-
-    if(discoverable){
-      const charKey = charOrder[checkpoint.idx % 3];
-      targetImg.setAttribute('src', charImgs[charKey]);
-      targetLabel.textContent = ep.icon + ' ' + ep.item;
-
-      const xRatio = haveHeading ? Math.max(-1, Math.min(1, diff / FOV_HALF_DEG)) : 0;
-      const maxOffset = Math.min(window.innerWidth * 0.32, 130);
-      const scale = 1.35 - Math.min(distance / COLLECT_RADIUS_M, 1) * 0.35;
-      targetWrap.style.transform = 'translate(calc(-50% + ' + (xRatio*maxOffset) + 'px), -50%) scale(' + scale.toFixed(2) + ')';
-      targetWrap.classList.add('visible');
-      arrowLeft.classList.remove('visible');
-      arrowRight.classList.remove('visible');
-
-      dwellRing.classList.add('show');
-      if(dwellStart === null || dwellTargetEpId !== ep.id){
-        dwellStart = performance.now();
-        dwellTargetEpId = ep.id;
-      }
-      const elapsed = performance.now() - dwellStart;
-      const pct = Math.min(elapsed / DWELL_MS, 1);
-      dwellFg.style.strokeDashoffset = String(CIRC * (1 - pct));
-      if(pct >= 1 && !collectingLock){
-        onCollect(ep.id);
-      }
-    } else {
-      targetWrap.classList.remove('visible');
-      dwellRing.classList.remove('show');
-      dwellStart = null;
-      dwellTargetEpId = null;
-      dwellFg.style.strokeDashoffset = String(CIRC);
-
-      if(inCollectRange && haveHeading){
-        // 범위 안인데 방향이 안 맞음 -> 어느 쪽으로 돌아야 하는지 화살표 표시
-        if(diff > 0){ arrowRight.classList.add('visible'); arrowLeft.classList.remove('visible'); }
-        else { arrowLeft.classList.add('visible'); arrowRight.classList.remove('visible'); }
-      } else {
-        arrowLeft.classList.remove('visible');
-        arrowRight.classList.remove('visible');
-      }
-    }
-  }
-
-  function onCollect(epId){
-    collectingLock = true;
-    const ep = getEpisode(epId);
-    const done = markCollected(epId);
-
-    vibrate([40, 40, 40, 40, 120]);
-    playChime('collect');
-
-    document.getElementById('cardTag').textContent = 'ITEM ' + String(ep.id).padStart(2,'0') + ' / 12';
-    document.getElementById('cardIcon').textContent = ep.icon;
-    document.getElementById('cardName').textContent = ep.item;
-    document.getElementById('cardQuote').textContent = '"' + ep.quote + '"';
-    document.getElementById('cardOverlay').classList.add('show');
-
-    const allDone = document.getElementById('allDoneBadge');
-    const nextBtn = document.getElementById('cardNextBtn');
-    if(done.length >= 12){
-      allDone.style.display = 'block';
-      nextBtn.textContent = '홈으로';
-    } else {
-      allDone.style.display = 'none';
-      nextBtn.textContent = '계속 탐험하기';
-    }
-  }
-
-  document.getElementById('cardNextBtn').addEventListener('click', () => {
-    document.getElementById('cardOverlay').classList.remove('show');
-    dwellStart = null;
-    dwellTargetEpId = null;
-    collectingLock = false;
-    if(getProgress().length >= 12){ window.location.href = 'index.html'; }
-  });
+let curLat=null,curLng=null,curHeading=null,curAccuracy=null;let notifiedIdx=new Set();let dwellStart=null,dwellTargetEpId=null;let collectingLock=false;const CIRC=2*Math.PI*27;let headingSamples=[];
+const video=document.getElementById('cameraVideo'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmin:'assets/img/hoonmin.png'},charOrder=['sunsik','daim','hoonmin'];
+const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
+document.getElementById('arCount').textContent=getProgress().length;
+function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
+async function startCamera(){for(const constraints of [{video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},{video:{facingMode:'environment'},audio:false},{video:true,audio:false}]){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;await new Promise(r=>{video.onloadedmetadata=r;setTimeout(r,1200)});try{await video.play()}catch(e){}return true}catch(e){}}return false;}
+async function startGeolocation(){if(!navigator.geolocation)return false;return new Promise(r=>navigator.geolocation.getCurrentPosition(()=>r(true),()=>r(false),{enableHighAccuracy:true,timeout:8000}));}
+async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
+permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라를 연결하고 있어요…';const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}permNote.textContent='위치 신호를 확인하고 있어요…';const locOk=await startGeolocation();setStep(stepLoc,locOk);if(!locOk){permNote.textContent='위치 권한이 필요합니다. 브라우저 설정에서 위치 접근을 허용해 주세요.';permStartBtn.disabled=false;return;}permNote.textContent='방향센서를 준비하고 있어요…';const oriOk=await startOrientation();setStep(stepOri,oriOk);if(!oriOk)permNote.textContent='방향센서 없이 거리 중심으로 탐험을 계속합니다.';setTimeout(()=>{permGate.style.display='none';beginTracking(oriOk)},oriOk?200:700);};
+function beginTracking(oriOk){navigator.geolocation.watchPosition(onPosition,onPosError,{enableHighAccuracy:true,maximumAge:700,timeout:15000});if(oriOk){const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true)}else{statusBanner.textContent='거리 신호를 따라 목표에 가까이 이동하세요.'}requestAnimationFrame(renderLoop);}
+function onPosError(){statusBanner.textContent='위치 신호를 보정하고 있어요. 열린 공간에서 잠시 기다려 주세요.';}
+function onPosition(pos){curLat=pos.coords.latitude;curLng=pos.coords.longitude;curAccuracy=Number(pos.coords.accuracy||0);accuracyChip.textContent=curAccuracy?('GPS ±'+Math.round(curAccuracy)+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>25);}
+function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
+function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);}}
+function renderLoop(){updateUI();requestAnimationFrame(renderLoop);}
+function setSignal(distance){const pct=Math.max(0,Math.min(1,1-distance/NOTIFY_RADIUS_M));const bars=Math.max(1,Math.ceil(pct*5));document.querySelectorAll('#signalBars i').forEach((el,i)=>el.classList.toggle('on',i<bars));}
+function updateUI(){if(curLat===null||curLng===null){statusBanner.classList.add('show');statusBanner.textContent='위치 신호를 확인하고 있어요…';targetWrap.classList.remove('visible');return;}const done=getProgress();document.getElementById('arCount').textContent=done.length;if(done.length>=12){epTag.innerHTML='<span>🏆</span><b>원정 완료</b>';statusBanner.classList.add('show');statusBanner.textContent='12개 아이템을 모두 발견했습니다!';radarDist.textContent='ALL CLEAR';targetWrap.classList.remove('visible');dwellRing.classList.remove('show');return;}const nearest=nearestUncollectedCheckpoint(curLat,curLng);if(!nearest)return;const {checkpoint,distance}=nearest,ep=getEpisode(checkpoint.episodeId);epTag.innerHTML='<span>'+ep.icon+'</span><b>'+ep.item+'</b>';radarDist.textContent=Math.round(distance)+'m';setSignal(distance);if(distance<=NOTIFY_RADIUS_M&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast('신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>NOTIFY_RADIUS_M+15)notifiedIdx.delete(checkpoint.idx);const effectiveCollectRadius=Math.max(COLLECT_RADIUS_M,Math.min(30,(curAccuracy||0)*0.65));if(distance>NOTIFY_RADIUS_M){statusBanner.classList.add('show');statusBanner.textContent='신호를 따라 체크포인트 방향으로 이동하세요';}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else{statusBanner.classList.remove('show');}
+let diff=0,haveHeading=curHeading!==null;if(haveHeading){const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);diff=angleDiff(bearing,curHeading);}const inCollectRange=distance<=effectiveCollectRadius,facingTarget=!haveHeading||Math.abs(diff)<=FOV_HALF_DEG,discoverable=inCollectRange&&facingTarget&&!collectingLock;
+if(discoverable){const charKey=charOrder[checkpoint.idx%3];targetImg.src=charImgs[charKey];targetLabel.textContent=ep.icon+' '+ep.item;const xRatio=haveHeading?Math.max(-1,Math.min(1,diff/FOV_HALF_DEG)):0,maxOffset=Math.min(innerWidth*.28,105),scale=1.38-Math.min(distance/effectiveCollectRadius,1)*.28;targetWrap.style.transform='translate(calc(-50% + '+(xRatio*maxOffset)+'px), -50%) scale('+scale.toFixed(2)+')';targetWrap.classList.add('visible');arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');dwellRing.classList.add('show');if(dwellStart===null||dwellTargetEpId!==ep.id){dwellStart=performance.now();dwellTargetEpId=ep.id;}const pct=Math.min((performance.now()-dwellStart)/DWELL_MS,1);dwellFg.style.strokeDashoffset=String(CIRC*(1-pct));if(pct>=1&&!collectingLock)onCollect(ep.id);}else{targetWrap.classList.remove('visible');dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;dwellFg.style.strokeDashoffset=String(CIRC);if(inCollectRange&&haveHeading){if(diff>0){arrowRight.classList.add('visible');arrowLeft.classList.remove('visible')}else{arrowLeft.classList.add('visible');arrowRight.classList.remove('visible')}}else{arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible')}}}
+function onCollect(epId){collectingLock=true;const ep=getEpisode(epId),before=getProgress().length,done=markCollected(epId);if(done.length>before){awardXP(100,'AR 발견');pushEvent('collect',{episodeId:epId});}triggerCaptureFX();vibrate([40,30,50,30,120]);playChime('collect');document.getElementById('cardTag').textContent='ITEM '+String(ep.id).padStart(2,'0')+' / 12';document.getElementById('cardIcon').textContent=ep.icon;document.getElementById('cardName').textContent=ep.item;document.getElementById('cardQuote').textContent='“'+ep.quote+'”';document.getElementById('cardOverlay').classList.add('show');const allDone=document.getElementById('allDoneBadge'),nextBtn=document.getElementById('cardNextBtn');if(done.length>=12){allDone.style.display='block';nextBtn.innerHTML='원정 결과 보기 <span>→</span>'}else{allDone.style.display='none';nextBtn.innerHTML='계속 탐험하기 <span>→</span>'}}
+function triggerCaptureFX(){const f=document.getElementById('captureFlash'),pf=document.getElementById('particleField');f.classList.remove('go');void f.offsetWidth;f.classList.add('go');pf.innerHTML='';for(let i=0;i<18;i++){const x=document.createElement('i');x.style.setProperty('--a',(i*20)+'deg');x.style.setProperty('--d',(55+Math.random()*95)+'px');x.style.setProperty('--delay',(Math.random()*.15)+'s');pf.appendChild(x)}setTimeout(()=>pf.innerHTML='',1100)}
+document.getElementById('cardNextBtn').onclick=()=>{document.getElementById('cardOverlay').classList.remove('show');dwellStart=null;dwellTargetEpId=null;collectingLock=false;if(getProgress().length>=12)location.href='collection.html';};
 </script>
-
-</body>
-</html>
+</body></html>
