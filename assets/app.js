@@ -115,3 +115,11 @@ function stopScannerAmbience(){if(!_ambientNodes)return;try{_ambientNodes.o.stop
 function setSoundEnabled(v){setPref('sound',!!v);if(!v)stopScannerAmbience();return getV4()}
 function installState(){return {standalone:window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches,ios:/iphone|ipad|ipod/i.test(navigator.userAgent)}}
 function registerPWA(){if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+
+const GO_KAKAO_KEY='jopams_go_kakao_js_key_v1';
+function kakaoMapKey(){try{return(localStorage.getItem(GO_KAKAO_KEY)||'').trim()}catch(e){return''}}
+function setKakaoMapKey(v){try{const x=(v||'').trim();if(x)localStorage.setItem(GO_KAKAO_KEY,x);else localStorage.removeItem(GO_KAKAO_KEY);return x}catch(e){return''}}
+function kakaoMapLink(lat,lng,label='조팸스 GO 체크포인트'){return 'https://map.kakao.com/link/map/'+encodeURIComponent(label)+','+Number(lat).toFixed(6)+','+Number(lng).toFixed(6)}
+function avatarMeta(key){const k=['hoonmin','daim','sunsik'].includes(key)?key:'daim';return {key:k,path:avatarPath(k),name:k==='hoonmin'?'훈민':k==='sunsik'?'순식':'다임'}}
+function syncAvatarUI(root=document){const p=getProfile(),a=avatarMeta(p.avatar);root.querySelectorAll('[data-player-avatar]').forEach(img=>{if(img.getAttribute('src')!==a.path)img.setAttribute('src',a.path);img.setAttribute('alt',a.name)});root.querySelectorAll('[data-crew-avatar]').forEach(el=>el.classList.toggle('active',el.dataset.crewAvatar===a.key));root.querySelectorAll('[data-player-character-name]').forEach(el=>el.textContent=a.name);return a}
+window.addEventListener('pageshow',()=>syncAvatarUI());window.addEventListener('storage',e=>{if(e.key===GO_PROFILE_KEY)syncAvatarUI()});
