@@ -77,7 +77,42 @@ body{
   font-family:'Do Hyeon', sans-serif; text-decoration:underline; cursor:pointer;
 }
 
+.dist-pill{
+  position:fixed; top:56px; left:50%; transform:translateX(-50%); z-index:50;
+  background:rgba(22,22,22,0.75); color:#fff; font-family:'Do Hyeon', sans-serif;
+  font-size:12px; padding:5px 14px; border-radius:20px;
+}
+
+.perm-gate{
+  position:fixed; inset:0; z-index:200;
+  background:var(--paper);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.perm-card{
+  max-width:340px; text-align:center; background:#fff;
+  border:4px solid var(--ink); border-radius:18px; padding:28px 22px;
+  box-shadow:6px 6px 0 var(--ink);
+}
+.perm-icon{ font-size:40px; margin-bottom:10px; }
+.perm-card h2{ font-family:'Black Han Sans', sans-serif; font-size:18px; margin:0 0 10px; }
+.perm-card p{ font-size:13px; line-height:1.6; opacity:.8; margin-bottom:18px; }
+.perm-card button{
+  font-family:'Black Han Sans', sans-serif; font-size:15px;
+  background:var(--ink); color:#fff; border:none; border-radius:14px;
+  padding:14px 22px; cursor:pointer; width:100%;
+}
+.perm-note{ font-size:12px; color:var(--red); margin-top:10px; min-height:16px; }
+
 /* ---------- AR SCREEN (ar.html) ---------- */
+/* AR.js가 초기 로드시 비디오/캔버스 크기를 잘못 계산해 확대되어 보이는
+   현상을 막기 위해 항상 뷰포트 전체를 올바른 비율로 덮도록 강제 */
+video, .a-canvas, #arjs-video{
+  position:fixed !important;
+  top:0 !important; left:0 !important;
+  width:100vw !important; height:100vh !important;
+  max-width:none !important; max-height:none !important;
+  object-fit:cover !important;
+}
 .ar-topbar{
   position:fixed; top:0; left:0; right:0; z-index:50;
   display:flex; align-items:center; justify-content:space-between;

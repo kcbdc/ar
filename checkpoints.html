@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조팸스 원정대 - 체크포인트 목록</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .cp-wrap{ max-width:640px; margin:0 auto; padding:24px 16px 60px; }
+  .cp-list{ display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .cp-row{
+    display:flex; align-items:center; gap:10px;
+    background:#fff; border:3px solid var(--ink); border-radius:10px;
+    padding:10px 12px;
+  }
+  .cp-row .icon{ font-size:20px; width:28px; text-align:center; }
+  .cp-row .meta{ flex:1; }
+  .cp-row .item-name{ font-family:'Black Han Sans', sans-serif; font-size:13px; }
+  .cp-row .coord{ font-size:11px; opacity:.6; }
+  .cp-row a{
+    font-family:'Do Hyeon', sans-serif; font-size:11px; color:var(--blue);
+    text-decoration:none; border:1px solid var(--blue); border-radius:14px; padding:4px 10px;
+    white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+<div class="cp-wrap">
+  <div class="masthead">
+    <div class="kicker">CHECKPOINT LIST</div>
+    <h1>체크포인트 <span>40곳</span></h1>
+    <p>제공해주신 좌표에 아이템 12종을 순환 배정했습니다. 지도 링크를 눌러 실제 위치를 확인해보세요.</p>
+  </div>
+  <div class="cp-list" id="cpList"></div>
+  <div class="foot-note"><a href="index.html" style="color:inherit;">← 게임 허브로 돌아가기</a></div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  const list = document.getElementById('cpList');
+  CHECKPOINTS.forEach(cp => {
+    const ep = getEpisode(cp.episodeId);
+    const row = document.createElement('div');
+    row.className = 'cp-row';
+    row.innerHTML = `
+      <div class="icon">${ep.icon}</div>
+      <div class="meta">
+        <div class="item-name">#${cp.idx+1} · ${ep.item}</div>
+        <div class="coord">${cp.lat.toFixed(6)}, ${cp.lng.toFixed(6)}</div>
+      </div>
+      <a href="https://www.google.com/maps?q=${cp.lat},${cp.lng}" target="_blank" rel="noopener">지도 보기</a>
+    `;
+    list.appendChild(row);
+  });
+</script>
+</body>
+</html>
