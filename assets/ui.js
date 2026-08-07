@@ -20,10 +20,26 @@
   location:'<path d="M12 21s6-5 6-11a6 6 0 1 0-12 0c0 6 6 11 6 11z"/><circle cx="12" cy="10" r="2"/>',
   compass:'<circle cx="12" cy="12" r="8"/><path d="m15 9-2 5-4 2 2-5z"/>',
   battle:'<path d="m6 5 12 14M18 5 6 19M5 4l4 1-3 3zM19 4l-4 1 3 3z"/>',
-  profile:'<circle cx="12" cy="8" r="3"/><path d="M6 20c.5-5 3-7 6-7s5.5 2 6 7"/>'
+  profile:'<circle cx="12" cy="8" r="3"/><path d="M6 20c.5-5 3-7 6-7s5.5 2 6 7"/>',
+  book:'<path d="M4 5h6a2 2 0 0 1 2 2v12a3 3 0 0 0-3-3H4z"/><path d="M20 5h-6a2 2 0 0 0-2 2v12a3 3 0 0 1 3-3h5z"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/>',
+  chest:'<path d="M4 9h16v10H4zM5 6h14l1 3H4z"/><path d="M10 9h4v4h-4z"/>',
+  coin:'<circle cx="12" cy="12" r="8"/><path d="M9 8h6M12 8v8M9 16h6"/>',
+  growth:'<path d="M5 18 10 13l3 3 6-8"/><path d="M14 8h5v5"/>',
+  rare:'<path d="m12 3 2.4 4.8 5.3.8-3.8 3.7.9 5.2-4.8-2.5-4.8 2.5.9-5.2-3.8-3.7 5.3-.8z"/><circle cx="12" cy="12" r="2"/>',
+  frame:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8v8H8z"/>',
+  title:'<path d="M5 6h14v12H5zM8 10h8M8 14h5"/>',
+  sticker:'<path d="M6 4h9l3 3v9a4 4 0 0 1-4 4H6z"/><path d="M14 20v-5h5M9 9h6M9 12h4"/>',
+  friend:'<circle cx="9" cy="9" r="3"/><path d="M3 20c.5-5 3-7 6-7 2 0 4 1 5 3M16 8h5M18.5 5.5v5"/>',
+  calendar:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M8 13h3M13 13h3M8 16h3"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+  moon:'<path d="M18 15a7 7 0 0 1-9-9 7 7 0 1 0 9 9z"/>',
+  cloud:'<path d="M6 17h11a4 4 0 0 0 0-8 6 6 0 0 0-11-1A4.5 4.5 0 0 0 6 17z"/>',
+  rain:'<path d="M6 14h11a4 4 0 0 0 0-8 6 6 0 0 0-11-1A4.5 4.5 0 0 0 6 14zM8 17l-1 3M13 17l-1 3M18 17l-1 3"/>',
+  lock:'<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'
  };
  function icon(name,cls=''){const body=p[name]||p.spark;return `<svg class="ui-svg ${cls}" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`}
- const hrefMap={'index.html':'home','ar.html':'explore','checkpoints.html':'map','collection.html':'collection','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings'};
+ const hrefMap={'index.html':'home','ar.html':'explore','checkpoints.html':'map','collection.html':'collection','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings','expedition.html':'growth'};
  function formatNumericText(root=document.body){
    if(!root)return;const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
    nodes.forEach(n=>{const parent=n.parentElement;if(!parent||/^(SCRIPT|STYLE|INPUT|TEXTAREA|OPTION)$/.test(parent.tagName))return;const before=n.nodeValue;const after=before.replace(/(?<![\d.])\d{4,}(?![\d.])/g,m=>Number(m).toLocaleString('ko-KR'));if(after!==before)n.nodeValue=after;});
@@ -32,7 +48,7 @@
    document.querySelectorAll('.bottom-nav a').forEach(a=>{const href=(a.getAttribute('href')||'').split('/').pop(),s=a.querySelector('span');if(s)s.innerHTML=icon(hrefMap[href]||'spark')});
    document.querySelectorAll('.back-btn,.ar-exit').forEach(a=>{a.innerHTML=icon('back');a.setAttribute('aria-label','뒤로가기')});
    document.querySelectorAll('[data-ui-icon]').forEach(el=>el.innerHTML=icon(el.dataset.uiIcon));
-   const quick={'collection.html':'collection','checkpoints.html':'map','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings'};
+   const quick={'collection.html':'collection','checkpoints.html':'map','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings','expedition.html':'growth'};
    document.querySelectorAll('.quick-card').forEach(a=>{const q=a.querySelector('.qicon'),h=(a.getAttribute('href')||'').split('/').pop();if(q)q.innerHTML=icon(quick[h]||'spark')});
    formatNumericText();
  }

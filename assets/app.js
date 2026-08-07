@@ -1,6 +1,6 @@
 // 조팸스 GO - 공통 데이터/로직
 const EPISODES=[
-{id:1,icon:'🏭',item:'중소기업제품',kicker:'중소기업제품 편',quote:'이거 만든 사람이 누구게?'},{id:2,icon:'🔬',item:'기술개발제품',kicker:'기술개발제품 편',quote:'이 반짝이는 스티커의 정체'},{id:3,icon:'👩‍💼',item:'여성기업제품',kicker:'여성기업 편',quote:'사장님이 누구실까요 게임'},{id:4,icon:'💪',item:'장애인기업제품',kicker:'장애인기업 편',quote:'조다임, 방패를 내려놓다'},{id:5,icon:'✨',item:'중증장애인생산품',kicker:'중증장애인생산품 편',quote:'혜안으로도 못 본 정성'},{id:6,icon:'🤝',item:'사회적기업제품',kicker:'사회적기업 편',quote:'이익보다 중요한 게 있다고?'},{id:7,icon:'🔥',item:'자활기업제품',kicker:'자활기업 편',quote:'다시 일어서는 법'},{id:8,icon:'🧩',item:'협동조합제품',kicker:'협동조합 편',quote:'셋이 힘을 합치면'},{id:9,icon:'🌾',item:'마을기업제품',kicker:'마을기업 편',quote:'우리 동네 특산품 자랑'},{id:10,icon:'💡',item:'창업기업제품',kicker:'창업기업 편',quote:'이 아이디어 실화냐'},{id:11,icon:'🌱',item:'녹색제품',kicker:'녹색제품 편',quote:'지구가 보내는 신호'},{id:12,icon:'🏆',item:'신제품(NEP)인증',kicker:'신제품 인증 편',quote:'원정의 마지막 조각'}];
+{id:1,icon:'collection',item:'중소기업제품',kicker:'중소기업제품 편',quote:'이거 만든 사람이 누구게?'},{id:2,icon:'collection',item:'기술개발제품',kicker:'기술개발제품 편',quote:'이 반짝이는 스티커의 정체'},{id:3,icon:'collection',item:'여성기업제품',kicker:'여성기업 편',quote:'사장님이 누구실까요 게임'},{id:4,icon:'collection',item:'장애인기업제품',kicker:'장애인기업 편',quote:'조다임, 방패를 내려놓다'},{id:5,icon:'collection',item:'중증장애인생산품',kicker:'중증장애인생산품 편',quote:'혜안으로도 못 본 정성'},{id:6,icon:'collection',item:'사회적기업제품',kicker:'사회적기업 편',quote:'이익보다 중요한 게 있다고?'},{id:7,icon:'collection',item:'자활기업제품',kicker:'자활기업 편',quote:'다시 일어서는 법'},{id:8,icon:'collection',item:'협동조합제품',kicker:'협동조합 편',quote:'셋이 힘을 합치면'},{id:9,icon:'collection',item:'마을기업제품',kicker:'마을기업 편',quote:'우리 동네 특산품 자랑'},{id:10,icon:'collection',item:'창업기업제품',kicker:'창업기업 편',quote:'이 아이디어 실화냐'},{id:11,icon:'collection',item:'녹색제품',kicker:'녹색제품 편',quote:'지구가 보내는 신호'},{id:12,icon:'collection',item:'신제품(NEP)인증',kicker:'신제품 인증 편',quote:'원정의 마지막 조각'}];
 const RAW_COORDS=[[36.3773307,127.3705299],[36.3777765,127.3698604],[36.3775195,127.3696512],[36.3776728,127.3690397],[36.3780464,127.3693870],[36.3776755,127.3696418],[36.3778040,127.3700254],[36.3782651,127.3700388],[36.3782748,127.3706316],[36.3782737,127.3690880],[36.3782726,127.3683075],[36.3778223,127.3683155],[36.3774627,127.3685676],[36.3770211,127.3693428],[36.3764607,127.3698162],[36.3767663,127.3681733],[36.3761724,127.3692515],[36.3758139,127.3695077],[36.3757642,127.3690839],[36.3767436,127.3695023],[36.3768235,127.3705457],[36.377169,127.3708595],[36.3776322,127.3709561],[36.3782207,127.3709682],[36.3779832,127.3705538],[36.3778223,127.3701877],[36.3784961,127.3700522],[36.3785058,127.3690343],[36.3784021,127.3684335],[36.3786353,127.3684187],[36.3781527,127.3694902],[36.3780717,127.3697075],[36.3779443,127.3696472],[36.3779027,127.3696519],[36.3778903,127.3695808],[36.3779211,127.369607],[36.3779638,127.3695084],[36.3780162,127.3691128],[36.3771632,127.3695527],[36.3771178,127.3695473],[36.3771464,127.3695748]];
 const CHECKPOINTS=RAW_COORDS.map((c,i)=>({idx:i,lat:c[0],lng:c[1],episodeId:(i%12)+1}));
 const NOTIFY_RADIUS_M=45,COLLECT_RADIUS_M=20,FOV_HALF_DEG=38,DWELL_MS=2200,STORAGE_KEY='jopams_ar_progress_v3';
@@ -41,13 +41,13 @@ function claimDailyBonus(){const p=syncDaily();if(dailyCompletion()<3||p.dailyBo
 // ===== 조팸스 GO v3 : 미니게임/업적/대항전/서버동기화 =====
 const GO_V3_KEY='jopams_go_v3';
 const ACHIEVEMENTS=[
- {id:'first',icon:'🌟',name:'첫 발견',desc:'첫 AR 아이템 발견',test:()=>getProgress().length>=1},
- {id:'collector3',icon:'🧭',name:'신입 원정대원',desc:'아이템 3종 수집',test:()=>getProgress().length>=3},
- {id:'collector6',icon:'💎',name:'공공구매 탐험가',desc:'아이템 6종 수집',test:()=>getProgress().length>=6},
- {id:'all12',icon:'🏆',name:'공공구매 마스터',desc:'12종 전체 수집',test:()=>getProgress().length>=12},
- {id:'learn3',icon:'📚',name:'지식 수집가',desc:'컬렉션 학습 3회',test:()=>getEvents().filter(e=>e.type==='learn').length>=3},
- {id:'mini3',icon:'🎯',name:'AR 플레이어',desc:'미니게임 3회 성공',test:()=>getEvents().filter(e=>e.type==='minigame_success').length>=3},
- {id:'daily',icon:'🔥',name:'오늘도 클리어',desc:'일일미션 올클리어',test:()=>getEvents().some(e=>e.type==='daily_bonus')}
+ {id:'first',icon:'spark',name:'첫 발견',desc:'첫 AR 아이템 발견',test:()=>getProgress().length>=1},
+ {id:'collector3',icon:'compass',name:'신입 원정대원',desc:'아이템 3종 수집',test:()=>getProgress().length>=3},
+ {id:'collector6',icon:'rare',name:'공공구매 탐험가',desc:'아이템 6종 수집',test:()=>getProgress().length>=6},
+ {id:'all12',icon:'trophy',name:'공공구매 마스터',desc:'12종 전체 수집',test:()=>getProgress().length>=12},
+ {id:'learn3',icon:'book',name:'지식 수집가',desc:'컬렉션 학습 3회',test:()=>getEvents().filter(e=>e.type==='learn').length>=3},
+ {id:'mini3',icon:'target',name:'AR 플레이어',desc:'미니게임 3회 성공',test:()=>getEvents().filter(e=>e.type==='minigame_success').length>=3},
+ {id:'daily',icon:'calendar',name:'오늘도 클리어',desc:'일일미션 올클리어',test:()=>getEvents().some(e=>e.type==='daily_bonus')}
 ];
 function getV3(){const d={org:'본사',badges:[],serverUrl:'',lastBadgeCheck:0};try{return Object.assign(d,window.JopamsState?JopamsState.get('team',d):JSON.parse(localStorage.getItem(GO_V3_KEY)||'{}'))}catch(e){return d}}
 function saveV3(v){try{if(window.JopamsState)JopamsState.set('team',v);else localStorage.setItem(GO_V3_KEY,JSON.stringify(v))}catch(e){}}
@@ -74,14 +74,14 @@ const QUIZ_BANK=[
 // ===== 조팸스 GO v4 : 출시형 UX / 시즌 / 프로필 / PWA / 설정 =====
 const GO_V4_KEY='jopams_go_v4';
 const SEASON_TIERS=[
- {tier:1,xp:0,icon:'🎟️',name:'원정대 입장권',reward:'START'},
- {tier:2,xp:300,icon:'🪙',name:'GO 코인 100',reward:'+100 XP'},
- {tier:3,xp:600,icon:'📦',name:'블루 보급상자',reward:'+150 XP'},
- {tier:4,xp:900,icon:'⚡',name:'순식 배지 프레임',reward:'+180 XP'},
- {tier:5,xp:1200,icon:'🛡️',name:'다임 배지 프레임',reward:'+200 XP'},
- {tier:6,xp:1500,icon:'🧠',name:'훈민 배지 프레임',reward:'+220 XP'},
- {tier:7,xp:1800,icon:'💎',name:'프리미엄 보급상자',reward:'+250 XP'},
- {tier:8,xp:2100,icon:'🏆',name:'SEASON 01 마스터',reward:'+300 XP'}
+ {tier:1,xp:0,icon:'title',name:'원정대 입장권',reward:'START'},
+ {tier:2,xp:300,icon:'coin',name:'GO 코인 100',reward:'+100 XP'},
+ {tier:3,xp:600,icon:'chest',name:'블루 보급상자',reward:'+150 XP'},
+ {tier:4,xp:900,icon:'speed',name:'순식 배지 프레임',reward:'+180 XP'},
+ {tier:5,xp:1200,icon:'shield',name:'다임 배지 프레임',reward:'+200 XP'},
+ {tier:6,xp:1500,icon:'quiz',name:'훈민 배지 프레임',reward:'+220 XP'},
+ {tier:7,xp:1800,icon:'rare',name:'프리미엄 보급상자',reward:'+250 XP'},
+ {tier:8,xp:2100,icon:'trophy',name:'SEASON 01 마스터',reward:'+300 XP'}
 ];
 function getV4(){const d={onboarded:false,sound:true,haptics:true,reducedMotion:false,seasonClaims:[],coins:0,lastChest:'',installDismissed:false};try{return Object.assign(d,window.JopamsState?JopamsState.get('settings',d):JSON.parse(localStorage.getItem(GO_V4_KEY)||'{}'))}catch(e){return d}}
 function saveV4(v){try{if(window.JopamsState)JopamsState.set('settings',v);else localStorage.setItem(GO_V4_KEY,JSON.stringify(v))}catch(e){}}
