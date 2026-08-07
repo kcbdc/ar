@@ -216,3 +216,131 @@ body.app-body .quick-card small,body.app-body .crew small{font-size:9px!importan
 body.app-body .app-footer{color:#8198ae!important;font-size:10px!important}
 body.app-body .xp-row{color:#a9bccf!important;font-size:10px!important}.xp-track{background:rgba(214,231,247,.13)!important}
 @media(max-width:360px){body.app-body .bottom-nav{padding-left:3px!important;padding-right:3px!important}body.app-body .bottom-nav a b{font-size:9px!important}}
+
+/* ==========================================================
+   JOPAMS GO v9 — ORIGINAL PREMIUM DARK TONE RESTORE
+   Goal: match AR start screen tone across all non-camera pages,
+   while keeping v7/v8 usability fixes (5-item nav, modern icons).
+   ========================================================== */
+:root{
+  --v9-bg:#020919;--v9-bg2:#06142b;--v9-panel:#091d3a;--v9-panel2:#0d2446;
+  --v9-line:rgba(92,179,255,.22);--v9-line-strong:rgba(92,190,255,.36);
+  --v9-text:#f5f8ff;--v9-muted:#9aadc4;--v9-blue:#2faaff;--v9-cyan:#58d7ff;
+  --v9-gold:#f6bd4a;--v9-green:#49dfb9;
+}
+html,body{background:#020919!important;color:var(--v9-text)!important}
+body.app-body{
+  background:radial-gradient(circle at 82% -8%,rgba(18,58,114,.82) 0,transparent 34%),
+             radial-gradient(circle at 0 38%,rgba(5,42,82,.68) 0,transparent 31%),#020919!important;
+  color:var(--v9-text)!important;
+}
+body.app-body:before{background:radial-gradient(circle at 82% 2%,rgba(36,167,255,.10),transparent 25%),radial-gradient(circle at 4% 29%,rgba(56,215,255,.045),transparent 23%)!important}
+
+/* Typography: strong hierarchy and minimum contrast on real phones */
+body.app-body h1,body.app-body h2,body.app-body h3,body.app-body strong,body.app-body b,
+body.app-body .page-top h1,body.app-body .section-head h2,body.app-body .collection-item b,
+body.app-body .quick-card b,body.app-body .crew b,body.app-body .status-title b,
+body.app-body .rank-user b,body.app-body .rank-row>strong,body.app-body .server-card b,
+body.app-body .item-detail h2,body.app-body .mission-copy strong{color:#f7f9ff!important}
+body.app-body p,body.app-body small,body.app-body .muted,
+body.app-body .premium-card p,body.app-body .collection-item small,body.app-body .quick-card small,
+body.app-body .crew small,body.app-body .mission-copy p,body.app-body .collection-hero p,
+body.app-body .map-hero p,body.app-body .item-detail>p{color:var(--v9-muted)!important}
+body.app-body .section-kicker,body.app-body .eyebrow{color:var(--v9-cyan)!important;text-shadow:0 0 18px rgba(56,215,255,.12)!important}
+
+/* Cards / panels — same family as AR permission/start card */
+body.app-body .premium-card,
+body.app-body .collection-hero,
+body.app-body .rank-hero{
+  background:linear-gradient(160deg,rgba(16,45,85,.96),rgba(5,17,38,.98))!important;
+  border:1px solid rgba(70,159,255,.25)!important;
+  box-shadow:0 18px 46px rgba(0,0,0,.27),inset 0 1px rgba(255,255,255,.035)!important;
+}
+body.app-body .quick-card,body.app-body .status-card,body.app-body .spot-row,
+body.app-body .rank-row,body.app-body .team-row,body.app-body .server-card,
+body.app-body .collection-item{
+  background:linear-gradient(160deg,rgba(11,32,62,.94),rgba(5,17,37,.96))!important;
+  border:1px solid rgba(72,153,235,.19)!important;
+  color:var(--v9-text)!important;
+  box-shadow:0 10px 26px rgba(0,0,0,.18)!important;
+}
+body.app-body .collection-item.unlocked{border-color:rgba(76,177,255,.30)!important;box-shadow:0 12px 28px rgba(0,0,0,.20),inset 0 0 28px rgba(25,116,221,.045)!important}
+body.app-body .collection-item.locked{opacity:.68!important;background:linear-gradient(160deg,rgba(9,26,51,.91),rgba(4,15,32,.96))!important}
+body.app-body .collection-no{color:#6685a5!important}
+
+/* Modern collection pictograms retained, recolored for premium dark UI */
+.modern-collection-icon,.modern-detail-icon{
+  background:linear-gradient(145deg,rgba(28,72,111,.72),rgba(18,48,82,.86))!important;
+  box-shadow:inset 0 0 0 1px rgba(93,202,255,.18),0 9px 22px rgba(0,0,0,.20)!important;
+}
+.modern-collection-icon svg,.modern-detail-icon svg{filter:drop-shadow(0 2px 5px rgba(0,0,0,.18))}
+
+/* Ranking — high readability but no white/grey wash */
+body.app-body .rank-hero{background:radial-gradient(circle at 14% 50%,rgba(246,189,74,.10),transparent 28%),linear-gradient(145deg,rgba(16,45,85,.97),rgba(5,17,38,.98))!important}
+body.app-body .rank-hero span{color:#8fa5bc!important;font-size:10px!important;letter-spacing:1.5px!important}
+body.app-body .rank-hero b{color:#ffd166!important;font-size:27px!important;text-shadow:0 0 18px rgba(246,189,74,.12)!important}
+body.app-body .rank-hero small{color:#93a9bf!important;font-size:10px!important}
+body.app-body .rank-tabs{border-bottom-color:rgba(81,157,230,.20)!important}
+body.app-body .rank-tabs button{color:#8da5bd!important;font-size:12px!important;font-weight:750!important}
+body.app-body .rank-tabs button.active{color:#65d7ff!important;border-bottom-color:#43c8ff!important}
+body.app-body .rank-row{min-height:74px!important;padding:15px 14px!important;border-radius:18px!important}
+body.app-body .rank-no{color:#91a8bf!important;font-size:12px!important}
+body.app-body .rank-user b{font-size:14px!important}.rank-user small{font-size:10px!important;color:#91a6bc!important;margin-top:4px!important}
+body.app-body .rank-row>strong{font-size:15px!important;color:#f7f9ff!important}.rank-row>strong small{font-size:9px!important;color:#62d6ff!important}
+body.app-body .rank-row.me{background:linear-gradient(120deg,rgba(21,83,137,.58),rgba(39,53,111,.46))!important;border-color:rgba(76,196,255,.46)!important}
+body.app-body .rank-row.top1{border-color:rgba(246,189,74,.40)!important}.rank-row.top2{border-color:rgba(170,199,226,.30)!important}.rank-row.top3{border-color:rgba(206,130,77,.33)!important}
+body.app-body .impact-card span,body.app-body .impact-card small{color:#89a2ba!important;font-size:10px!important}
+body.app-body .impact-card b{color:#67ddff!important}
+
+/* Controls */
+body.app-body .icon-btn,body.app-body .back-btn{
+  background:rgba(11,42,79,.88)!important;border-color:rgba(65,165,255,.25)!important;
+  color:#a7e4ff!important;box-shadow:0 8px 20px rgba(0,0,0,.20)!important;
+}
+body.app-body .counter-pill,body.app-body .level-chip{background:rgba(14,91,142,.32)!important;border-color:rgba(57,192,255,.27)!important;color:#7bd9ff!important}
+body.app-body .sheet-dim{background:rgba(0,5,15,.74)!important}
+body.app-body .sheet-card{background:linear-gradient(180deg,#0b2445,#06142b)!important;border-color:rgba(72,159,255,.25)!important;box-shadow:0 -22px 70px rgba(0,0,0,.52)!important}
+body.app-body .sheet-handle{background:#315274!important}
+body.app-body .learning-box{background:rgba(9,50,74,.56)!important;border-color:rgba(56,215,255,.20)!important}
+body.app-body .learning-box b{color:#6de2ff!important}.learning-box p{color:#a8bed2!important}
+body.app-body .sheet-primary,body.app-body .primary-cta{background:linear-gradient(120deg,#5ce1ff,#2d9cff 62%,#7b73ff)!important;color:#06142b!important;box-shadow:0 12px 28px rgba(28,133,255,.24)!important}
+body.app-body select,body.app-body input{background:#071b35!important;color:#f7fbff!important;border-color:rgba(80,175,255,.28)!important}
+
+/* Home/hero details */
+body.app-body .hero-panel{background:linear-gradient(180deg,rgba(6,20,43,.20),rgba(6,20,43,.93)),radial-gradient(circle at 80% 20%,rgba(43,143,255,.27),transparent 34%)!important;border-bottom-color:rgba(68,157,255,.18)!important}
+body.app-body .brand-line{color:#7ebee8!important}.go-logo{color:#f5f8ff!important}.go-logo em{color:#f6bd4a!important}.hero-sub{color:#c4d2e4!important}.hero-sub b{color:#fff!important}
+body.app-body .privacy-pill{background:rgba(9,63,67,.35)!important;border-color:rgba(43,213,177,.20)!important;color:#91e6d4!important}
+body.app-body .crew{background:rgba(0,0,0,.13)!important;border-color:rgba(255,255,255,.055)!important}.crew.active{background:rgba(111,79,18,.16)!important;border-color:rgba(246,189,74,.29)!important}
+body.app-body .status-chip{color:#91a5bb!important;border-color:rgba(255,255,255,.08)!important;background:rgba(0,0,0,.12)!important}
+body.app-body .status-chip.ok{color:#9ee5d5!important;border-color:rgba(39,223,173,.21)!important;background:rgba(39,223,173,.055)!important}
+
+/* Rings */
+body.app-body .mini-ring,body.app-body .progress-ring{background:conic-gradient(#24a7ff var(--p),rgba(255,255,255,.08) 0)!important}
+body.app-body .mini-ring:after,body.app-body .progress-ring:after{background:#07172f!important}
+body.app-body .mini-ring b,body.app-body .progress-ring span{color:#f7f9ff!important}
+body.app-body .mini-ring small,body.app-body .progress-ring small{color:#94a7c0!important}
+
+/* Fixed 5-item nav — keep geometry bug fix, restore original dark tone */
+body.app-body .bottom-nav{
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  width:min(100%,560px)!important;height:calc(74px + var(--safe-b))!important;
+  overflow:hidden!important;padding:7px 8px max(7px,var(--safe-b))!important;
+  background:rgba(3,14,33,.965)!important;border-top:1px solid rgba(59,137,216,.18)!important;
+  box-shadow:0 -10px 32px rgba(0,0,0,.32)!important;backdrop-filter:blur(22px)!important;contain:layout paint!important;
+}
+body.app-body .bottom-nav a{min-width:0!important;width:auto!important;height:58px!important;color:#7187a1!important;background:transparent!important;transform:none!important;animation:none!important}
+body.app-body .bottom-nav a span{width:30px!important;height:30px!important;font-size:21px!important;color:inherit!important;transform:none!important;animation:none!important;filter:none!important}
+body.app-body .bottom-nav a b{font-size:10px!important;font-weight:800!important;color:inherit!important;transform:none!important;animation:none!important}
+body.app-body .bottom-nav a.active{color:#59cfff!important;background:linear-gradient(180deg,rgba(37,139,230,.15),transparent)!important;box-shadow:none!important}
+
+/* Microcopy readability floor */
+body.app-body .collection-item small{font-size:10px!important;line-height:1.45!important}.collection-item b{font-size:14px!important}.collection-no{font-size:10px!important}
+body.app-body .quick-card small,body.app-body .crew small{font-size:9.5px!important;line-height:1.35!important}.quick-card b{font-size:13px!important}.crew b{font-size:12px!important}
+body.app-body .app-footer{color:#607994!important;font-size:10px!important}.xp-row{color:#8ea4bb!important;font-size:10px!important}.xp-track{background:rgba(255,255,255,.08)!important}
+body.app-body .spot-row small,body.app-body .team-row small,body.app-body .battle-info span,
+body.app-body .battle-info small,body.app-body .profile-card small,body.app-body .settings-row small{color:#91a7bd!important}
+
+/* AR camera itself must remain transparent/clear; only its chrome uses dark premium tone. */
+body.ar-body,body.ar-body .ar-stage,body.ar-body .camera-stage{background:#000!important}
+
+@media(max-width:360px){body.app-body .bottom-nav{padding-left:3px!important;padding-right:3px!important}.bottom-nav a b{font-size:9px!important}}
