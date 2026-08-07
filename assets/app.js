@@ -11,15 +11,15 @@ function resetProgress(){saveProgress([])}function nextEpisodeId(){const d=getPr
 function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}function distMeters(a,b,c,d){const R=6371000,x=toRad(c-a),y=toRad(d-b),v=Math.sin(x/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(v),Math.sqrt(1-v))}function bearingTo(a,b,c,d){const p1=toRad(a),p2=toRad(c),dl=toRad(d-b),y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return(toDeg(Math.atan2(y,x))+360)%360}function angleDiff(t,c){return((t-c+540)%360)-180}
 function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
 function extractHeading(e){if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))return e.webkitCompassHeading;if(e.alpha!==null&&e.alpha!==undefined)return(360-e.alpha)%360;return null}
-function vibrate(p){if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
-let _audioCtx=null;function playChime(kind){try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();const c=_audioCtx,n=c.currentTime,f=kind==='collect'?[660,880,1320]:[520,720];f.forEach((v,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=v;g.gain.setValueAtTime(0,n+i*.09);g.gain.linearRampToValueAtTime(.14,n+i*.09+.02);g.gain.exponentialRampToValueAtTime(.001,n+i*.09+.27);o.connect(g).connect(c.destination);o.start(n+i*.09);o.stop(n+i*.09+.3)})}catch(e){}}
+function vibrate(p){if(!getV4().haptics)return;if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
+let _audioCtx=null;function playChime(kind){if(!getV4().sound)return;try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();const c=_audioCtx,n=c.currentTime,f=kind==='collect'?[660,880,1320]:[520,720];f.forEach((v,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=v;g.gain.setValueAtTime(0,n+i*.09);g.gain.linearRampToValueAtTime(.14,n+i*.09+.02);g.gain.exponentialRampToValueAtTime(.001,n+i*.09+.27);o.connect(g).connect(c.destination);o.start(n+i*.09);o.stop(n+i*.09+.3)})}catch(e){}}
 function showToast(msg,opts={}){let root=document.getElementById('toastRoot');if(!root){root=document.createElement('div');root.id='toastRoot';root.className='toast-root';document.body.appendChild(root)}const el=document.createElement('div');el.className='toast'+(opts.variant?' toast-'+opts.variant:'');el.innerHTML=msg;root.appendChild(el);requestAnimationFrame(()=>el.classList.add('show'));setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300)},opts.duration||3000)}
 
 // ===== 조팸스 GO v2 : 성장/일일미션/로컬 랭킹 =====
 const GO_EVENT_KEY='jopams_go_events_v2', GO_PROFILE_KEY='jopams_go_profile_v2';
 function getEvents(){try{return JSON.parse(localStorage.getItem(GO_EVENT_KEY)||'[]')}catch(e){return[]}}
 function pushEvent(type,data={}){const a=getEvents();a.push({type,at:new Date().toISOString(),...data});try{localStorage.setItem(GO_EVENT_KEY,JSON.stringify(a.slice(-300)))}catch(e){}}
-function getProfile(){try{return Object.assign({name:'원정대원',xp:0,streak:1,lastDay:'',dailyBonus:0},JSON.parse(localStorage.getItem(GO_PROFILE_KEY)||'{}'))}catch(e){return{name:'원정대원',xp:0,streak:1,lastDay:'',dailyBonus:0}}}
+function getProfile(){try{return Object.assign({name:'원정대원',xp:0,streak:1,lastDay:'',dailyBonus:0,avatar:'daim'},JSON.parse(localStorage.getItem(GO_PROFILE_KEY)||'{}'))}catch(e){return{name:'원정대원',xp:0,streak:1,lastDay:'',dailyBonus:0,avatar:'daim'}}}
 function saveProfile(p){try{localStorage.setItem(GO_PROFILE_KEY,JSON.stringify(p))}catch(e){}}
 function todayKey(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 function syncDaily(){const p=getProfile(),t=todayKey();if(p.lastDay!==t){p.lastDay=t;p.dailyBonus=0;saveProfile(p)}return p}
@@ -36,3 +36,66 @@ function localLeaderboard(){const me=Math.max(1200,totalXP()*37+getProgress().le
 {name:'윤수호',dept:'제지본부',score:4861800},{name:'유호연',dept:'제지본부',score:3847911},{name:'이현',dept:'화폐본부',score:3249200},{name:'김경아',dept:'제지본부',score:2565300},{name:'황지수',dept:'ID본부',score:1997600},{name:'나',dept:'조팸스 GO',score:me,isMe:true}
 ].sort((a,b)=>b.score-a.score)}
 function claimDailyBonus(){const p=syncDaily();if(dailyCompletion()<3||p.dailyBonus)return false;p.dailyBonus=1;p.xp=(p.xp||0)+200;saveProfile(p);pushEvent('daily_bonus',{amount:200});return true}
+
+
+// ===== 조팸스 GO v3 : 미니게임/업적/대항전/서버동기화 =====
+const GO_V3_KEY='jopams_go_v3';
+const ACHIEVEMENTS=[
+ {id:'first',icon:'🌟',name:'첫 발견',desc:'첫 AR 아이템 발견',test:()=>getProgress().length>=1},
+ {id:'collector3',icon:'🧭',name:'신입 원정대원',desc:'아이템 3종 수집',test:()=>getProgress().length>=3},
+ {id:'collector6',icon:'💎',name:'공공구매 탐험가',desc:'아이템 6종 수집',test:()=>getProgress().length>=6},
+ {id:'all12',icon:'🏆',name:'공공구매 마스터',desc:'12종 전체 수집',test:()=>getProgress().length>=12},
+ {id:'learn3',icon:'📚',name:'지식 수집가',desc:'컬렉션 학습 3회',test:()=>getEvents().filter(e=>e.type==='learn').length>=3},
+ {id:'mini3',icon:'🎯',name:'AR 플레이어',desc:'미니게임 3회 성공',test:()=>getEvents().filter(e=>e.type==='minigame_success').length>=3},
+ {id:'daily',icon:'🔥',name:'오늘도 클리어',desc:'일일미션 올클리어',test:()=>getEvents().some(e=>e.type==='daily_bonus')}
+];
+function getV3(){try{return Object.assign({org:'본사',badges:[],serverUrl:'',lastBadgeCheck:0},JSON.parse(localStorage.getItem(GO_V3_KEY)||'{}'))}catch(e){return{org:'본사',badges:[],serverUrl:'',lastBadgeCheck:0}}}
+function saveV3(v){try{localStorage.setItem(GO_V3_KEY,JSON.stringify(v))}catch(e){}}
+function setOrganization(org){const v=getV3();v.org=org;saveV3(v);return v}
+function checkAchievements(show=true){const v=getV3();const newly=[];ACHIEVEMENTS.forEach(a=>{if(!v.badges.includes(a.id)&&a.test()){v.badges.push(a.id);newly.push(a)}});v.lastBadgeCheck=Date.now();saveV3(v);if(show&&newly.length&&typeof showToast==='function'){newly.forEach((a,i)=>setTimeout(()=>{playChime('collect');showToast('배지 획득! <b>'+a.icon+' '+a.name+'</b>',{variant:'near',duration:3300})},i*500))}return newly}
+function earnedAchievements(){const ids=getV3().badges;return ACHIEVEMENTS.map(a=>({...a,earned:ids.includes(a.id)}))}
+function missionScore(){return totalXP()*37+getProgress().length*250+getEvents().filter(e=>e.type==='minigame_success').length*180}
+function organizationLeaderboard(){const mine=getV3().org||'본사';const base=[{name:'본사',score:12750},{name:'화폐본부',score:11920},{name:'제지본부',score:10840},{name:'ID본부',score:10130},{name:'기술연구원',score:9460}];const me=base.find(x=>x.name===mine);if(me)me.score+=Math.round(missionScore()/40);return base.sort((a,b)=>b.score-a.score)}
+function serverConfig(){return getV3().serverUrl||''}
+function setServerUrl(url){const v=getV3();v.serverUrl=(url||'').trim().replace(/\/$/,'');saveV3(v)}
+async function syncScoreToServer(){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};const p=getProfile(),v=getV3();try{const r=await fetch(base+'/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:p.name||'원정대원',org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length})});if(!r.ok)throw new Error('HTTP '+r.status);return {ok:true,data:await r.json()}}catch(e){return {ok:false,reason:String(e)}}}
+async function fetchServerLeaderboard(){const base=serverConfig();if(!base)return null;try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)throw new Error();const j=await r.json();return Array.isArray(j)?j:(j.items||null)}catch(e){return null}}
+function miniGameForCheckpoint(cp){return ['speed','shield','quiz'][cp.idx%3]}
+function miniGameCharacter(cp){return ['sunsik','daim','hoonmin'][cp.idx%3]}
+const QUIZ_BANK=[
+ {q:'중소기업제품 구매 실적은 공공구매의 대표 관리 항목이다.',a:true},
+ {q:'여성기업제품은 대표자가 여성이라는 사실만으로 언제나 실적 인정된다.',a:false},
+ {q:'공공구매 제도에는 장애인기업제품 관련 제도가 포함된다.',a:true},
+ {q:'녹색제품 구매는 친환경 소비 촉진과 관련이 있다.',a:true},
+ {q:'창업기업제품은 공공구매와 전혀 관계없는 제도다.',a:false}
+];
+
+
+// ===== 조팸스 GO v4 : 출시형 UX / 시즌 / 프로필 / PWA / 설정 =====
+const GO_V4_KEY='jopams_go_v4';
+const SEASON_TIERS=[
+ {tier:1,xp:0,icon:'🎟️',name:'원정대 입장권',reward:'START'},
+ {tier:2,xp:300,icon:'🪙',name:'GO 코인 100',reward:'+100 XP'},
+ {tier:3,xp:600,icon:'📦',name:'블루 보급상자',reward:'+150 XP'},
+ {tier:4,xp:900,icon:'⚡',name:'순식 배지 프레임',reward:'+180 XP'},
+ {tier:5,xp:1200,icon:'🛡️',name:'다임 배지 프레임',reward:'+200 XP'},
+ {tier:6,xp:1500,icon:'🧠',name:'훈민 배지 프레임',reward:'+220 XP'},
+ {tier:7,xp:1800,icon:'💎',name:'프리미엄 보급상자',reward:'+250 XP'},
+ {tier:8,xp:2100,icon:'🏆',name:'SEASON 01 마스터',reward:'+300 XP'}
+];
+function getV4(){try{return Object.assign({onboarded:false,sound:true,haptics:true,reducedMotion:false,seasonClaims:[],coins:0,lastChest:'',installDismissed:false},JSON.parse(localStorage.getItem(GO_V4_KEY)||'{}'))}catch(e){return{onboarded:false,sound:true,haptics:true,reducedMotion:false,seasonClaims:[],coins:0,lastChest:'',installDismissed:false}}}
+function saveV4(v){try{localStorage.setItem(GO_V4_KEY,JSON.stringify(v))}catch(e){}}
+function setPref(key,value){const v=getV4();v[key]=value;saveV4(v);document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion);return v}
+function updatePlayer({name,org,avatar}={}){const p=getProfile();if(typeof name==='string'&&name.trim())p.name=name.trim().slice(0,14);if(avatar)p.avatar=avatar;saveProfile(p);if(org)setOrganization(org);return p}
+function avatarPath(key){return 'assets/img/'+({daim:'daim.png',sunsik:'sunsik.png',hoonmin:'hoonmin.png'}[key]||'daim.png')}
+function seasonState(){const xp=totalXP(),v=getV4();return {xp,level:playerLevel(),claims:v.seasonClaims||[],tiers:SEASON_TIERS.map(t=>({...t,unlocked:xp>=t.xp,claimed:(v.seasonClaims||[]).includes(t.tier)}))}}
+function claimSeasonTier(tier){const state=seasonState(),t=state.tiers.find(x=>x.tier===Number(tier));if(!t||!t.unlocked||t.claimed)return false;const v=getV4();v.seasonClaims=[...(v.seasonClaims||[]),t.tier];const bonus={2:100,3:150,4:180,5:200,6:220,7:250,8:300}[t.tier]||0;if(t.tier===2)v.coins=(v.coins||0)+100;saveV4(v);if(bonus)awardXP(bonus,'시즌패스 보상');pushEvent('season_claim',{tier:t.tier,bonus});return true}
+function availableSeasonRewards(){return seasonState().tiers.filter(t=>t.unlocked&&!t.claimed&&t.tier>1).length}
+function chestAvailable(){const v=getV4();return v.lastChest!==todayKey()&&dailyCompletion()>=2}
+function claimDailyChest(){if(!chestAvailable())return false;const v=getV4();v.lastChest=todayKey();v.coins=(v.coins||0)+50;saveV4(v);awardXP(80,'일일 보급상자');pushEvent('daily_chest',{xp:80,coins:50});return true}
+function markOnboarded(){const v=getV4();v.onboarded=true;saveV4(v)}
+function resetOnboarding(){const v=getV4();v.onboarded=false;saveV4(v)}
+function privacySummary(){return {camera:'영상 저장 안 함',location:'실시간 좌표 서버 전송 안 함',sensor:'방향값 기기 내 처리',ranking:'닉네임·소속·점수만 선택 전송'}}
+async function testServerConnection(url){const base=(url||serverConfig()).trim().replace(/\/$/,'');if(!base)return {ok:false,message:'서버 URL이 비어 있습니다.'};try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)return {ok:false,message:'HTTP '+r.status};return {ok:true,message:'랭킹 서버와 정상 연결되었습니다.'}}catch(e){return {ok:false,message:'연결할 수 없습니다. URL/CORS/배포 상태를 확인하세요.'}}}
+function applyRuntimePrefs(){const v=getV4();document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion)}
+applyRuntimePrefs();
