@@ -106,7 +106,10 @@ async function organizationLeaderboardServer(){
   const list=Object.entries(byOrg).map(([name,score])=>({name,score}));
   return list.length?list.sort((a,b)=>b.score-a.score):null;
 }
-function serverConfig(){return getV3().serverUrl||''}
+// v21: 배포된 랭킹 서버 주소를 기본값으로 내장. 사용자가 프로필에서 별도로
+// 저장한 값이 있으면 그 값이 우선 적용된다 (카카오맵 키와 동일한 패턴).
+const DEFAULT_SERVER_URL='https://jofams-go.junewoopark16.workers.dev';
+function serverConfig(){return getV3().serverUrl||DEFAULT_SERVER_URL}
 function setServerUrl(url){const v=getV3();v.serverUrl=(url||'').trim().replace(/\/$/,'');saveV3(v)}
 async function syncScoreToServer(){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};const p=getProfile(),v=getV3();try{const r=await fetch(base+'/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:p.name||'원정대원',org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length})});if(!r.ok)throw new Error('HTTP '+r.status);return {ok:true,data:await r.json()}}catch(e){return {ok:false,reason:String(e)}}}
 async function fetchServerLeaderboard(){const base=serverConfig();if(!base)return null;try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)throw new Error();const j=await r.json();return Array.isArray(j)?j:(j.items||null)}catch(e){return null}}
