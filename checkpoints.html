@@ -43,4 +43,45 @@ async function updatePosition(pos){cur={lat:pos.coords.latitude,lng:pos.coords.l
 loadKakaoWithRetry().then(ok=>{if(ok)initMap();else if(kakaoMapKey())setMapStatus('카카오맵 연결 실패','JavaScript 키와 등록 도메인(jofams.pages.dev)을 확인해 주세요. 도메인을 방금 등록했다면 반영까지 1~2분 걸릴 수 있어요.',true,true)});
 if(navigator.geolocation)navigator.geolocation.watchPosition(updatePosition,()=>{gpsState.textContent='GPS OFF';setMapStatus('위치 권한 확인 필요','브라우저에서 위치 접근을 허용하면 현재 위치를 표시합니다.');renderList()},{enableHighAccuracy:true,maximumAge:3000,timeout:8000});else gpsState.textContent='GPS N/A';
 recenterBtn.onclick=()=>{if(map&&cur&&window.kakao)map.panTo(new kakao.maps.LatLng(cur.lat,cur.lng))};renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.filter;renderList()});
+
+// ===== v22 진단 코드 =====
+// "collection" 텍스트가 예상치 못한 곳에 나타나는 현상의 정확한 원인을 잡기 위한
+// 실시간 감시 코드. 발견되면 화면 상단에 빨간 배너로 정확한 위치(태그/클래스/id/
+// HTML 조각)를 표시한다. 이 배너가 뜨면 스크린샷을 찍어 보내주시면 원인을
+// 100% 특정할 수 있다.
+(function(){
+  let reported = new Set();
+  function scan(){
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while(node = walker.nextNode()){
+      if(!node.parentElement) continue;
+      if(node.parentElement.closest('script,style,#debugBanner')) continue;
+      if(/collection/i.test(node.textContent)){
+        const key = node.parentElement.outerHTML.slice(0,120);
+        if(reported.has(key)) continue;
+        reported.add(key);
+        const info = {
+          text: node.textContent.trim(),
+          tag: node.parentElement.tagName,
+          cls: node.parentElement.className,
+          id: node.parentElement.id,
+          parentOfParent: node.parentElement.parentElement ? node.parentElement.parentElement.tagName+'.'+node.parentElement.parentElement.className : '',
+          html: node.parentElement.outerHTML.slice(0,400)
+        };
+        console.error('[collection 진단] 발견:', info);
+        let banner = document.getElementById('debugBanner');
+        if(!banner){
+          banner = document.createElement('div');
+          banner.id = 'debugBanner';
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:#e2001a;color:#fff;padding:12px;font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-all;font-family:monospace;max-height:50vh;overflow:auto;';
+          document.body.appendChild(banner);
+        }
+        banner.textContent += '[진단] 텍스트:"'+info.text+'" / 태그:<'+info.tag+'> / class="'+info.cls+'" / id="'+info.id+'" / 부모:'+info.parentOfParent+' / HTML: '+info.html+'\n\n';
+      }
+    }
+  }
+  let n=0;
+  const t=setInterval(()=>{ scan(); n++; if(n>60) clearInterval(t); }, 250); // 15초간 0.25초 간격 감시
+})();
 </script></body></html>
