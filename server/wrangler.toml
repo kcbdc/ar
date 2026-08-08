@@ -7,5 +7,8 @@ binding = "DB"
 database_name = "jofams"
 database_id = "7bbd1b2d-27e4-49fe-945d-f84b915dd173"
 
+[ai]
+binding = "AI"
+
 [vars]
 ALLOWED_ORIGIN = "https://jofams.pages.dev"
