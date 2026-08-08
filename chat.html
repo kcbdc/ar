@@ -113,7 +113,8 @@ async function sendMessage(text){
       addBubble('assistant', data.reply, currentChar);
       history.push({role:'assistant', content:data.reply});
     } else {
-      addBubble('assistant', '음... 지금은 대답하기 어렵네요. 잠시 후 다시 물어봐 주세요.', currentChar);
+      const detail = data && data.detail ? ('\n\n[진단] ' + data.error + ': ' + data.detail) : (data && data.error ? ('\n\n[진단] ' + data.error) : '');
+      addBubble('assistant', '음... 지금은 대답하기 어렵네요. 잠시 후 다시 물어봐 주세요.' + detail, currentChar);
     }
   } catch(e){
     removeTyping();
