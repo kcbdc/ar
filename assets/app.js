@@ -163,6 +163,13 @@ async function testServerConnection(url){const base=(url||serverConfig()).trim()
 function applyRuntimePrefs(){const v=getV4();document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion)}
 applyRuntimePrefs();
 reconcileLegacyXP();
+// v38: 게임 전체에서 텍스트 선택·길게 눌러 복사하기 메뉴를 막는다.
+// input/textarea는 정상 입력이 필요하므로 예외로 둔다.
+(function(){
+  const isEditable=el=>el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable);
+  document.addEventListener('contextmenu',e=>{if(!isEditable(e.target))e.preventDefault()});
+  document.addEventListener('selectstart',e=>{if(!isEditable(e.target))e.preventDefault()});
+})();
 
 
 // ===== 조팸스 GO v5 : 상용 체감 품질 / 사운드스케이프 / 설치 UX =====
