@@ -9,10 +9,17 @@ function saveProgress(a){try{if(window.JopamsState)JopamsState.set('progress',a)
 function markCollected(id){const a=getProgress();if(!a.includes(id)){a.push(id);saveProgress(a)}return a}
 function resetProgress(){saveProgress([])}function nextEpisodeId(){const d=getProgress();for(const e of EPISODES)if(!d.includes(e.id))return e.id;return 12}function getEpisode(id){return EPISODES.find(e=>e.id===Number(id))||EPISODES[0]}
 function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}function distMeters(a,b,c,d){const R=6371000,x=toRad(c-a),y=toRad(d-b),v=Math.sin(x/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(v),Math.sqrt(1-v))}function bearingTo(a,b,c,d){const p1=toRad(a),p2=toRad(c),dl=toRad(d-b),y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return(toDeg(Math.atan2(y,x))+360)%360}function angleDiff(t,c){return((t-c+540)%360)-180}
-function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
-// v17: 12개를 모두 모은 뒤에도 AR 탐험이 완전히 끝나버리지 않도록, 이미 수집한
-// 체크포인트를 포함해 "가장 가까운 지점"을 찾는 함수. 재방문 미니게임에 사용된다.
-function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
+// v37: 같은 물리적 지점에서 살짝 움직였다가 돌아오는 것만으로 아이템을 반복
+// 획득하는 것을 막기 위한 지점별 쿨다운. 한 번 보상을 받은 체크포인트는
+// 3일간 다시 발견/재방문 대상에서 제외된다.
+const CHECKPOINT_COOLDOWN_MS=3*24*60*60*1000;
+function getCPCooldowns(){try{return window.JopamsState?JopamsState.get('cpCooldowns',{}):{}}catch(e){return{}}}
+function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m)}catch(e){}}
+function isCPCoolingDown(idx){const m=getCPCooldowns();const t=m[idx];return !!(t&&(Date.now()-t)<CHECKPOINT_COOLDOWN_MS)}
+
+function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
+// v37: 재방문 모드에서도 쿨다운 중인 지점은 대상에서 제외
+function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
 function extractHeading(e){if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))return e.webkitCompassHeading;if(e.alpha!==null&&e.alpha!==undefined)return(360-e.alpha)%360;return null}
 function vibrate(p){if(!getV4().haptics)return;if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
 let _audioCtx=null;function playChime(kind){if(!getV4().sound)return;try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();const c=_audioCtx,n=c.currentTime,f=kind==='collect'?[660,880,1320]:[520,720];f.forEach((v,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=v;g.gain.setValueAtTime(0,n+i*.09);g.gain.linearRampToValueAtTime(.14,n+i*.09+.02);g.gain.exponentialRampToValueAtTime(.001,n+i*.09+.27);o.connect(g).connect(c.destination);o.start(n+i*.09);o.stop(n+i*.09+.3)})}catch(e){}}
