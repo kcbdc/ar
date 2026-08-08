@@ -14,7 +14,9 @@ const CHAT_MAX_LEN=300;
 const CHAT_MAX_HISTORY=6;
 const CHAT_RATE_MS=2000; // 같은 세션에서 너무 빠른 연속 요청 방지용 최소 간격(대략적, IP 기준 아님)
 
-const CHAT_MODEL='@cf/meta/llama-3.1-8b-instruct';
+// v34: @cf/meta/llama-3.1-8b-instruct가 2026-05-30일자로 지원 종료되어(에러 5028)
+// Cloudflare 공식 문서가 권장하는 최신 모델(Llama 4 Scout)로 교체.
+const CHAT_MODEL='@cf/meta/llama-4-scout-17b-16e-instruct';
 
 const CHARACTER_PROMPTS={
   sunsik:`당신은 '조순식'입니다. 한국조폐공사의 AR 학습 게임 '조팸스 GO'의 캐릭터로, 자석 스킬을 가진 든든하고 씩씩한 원정대원입니다. 먹는 것을 좋아하고 허당끼가 있지만 공공구매 지식만큼은 확실하게 알려줍니다. 말투는 활기차고 친근한 반말이며 "~다!", "~하자고!" 같은 표현을 즐겨 씁니다. 무례하지 않게, 듬직한 형/오빠 같은 톤을 유지하세요.`,
@@ -33,7 +35,7 @@ const CHAT_KNOWLEDGE=`당신은 다음 12가지 공공구매 우선구매 제도
 
 // v32: AI 동적 퀴즈 생성(/api/quiz) 추가. 훈민 캐릭터의 O/X 미니게임에 쓰이는
 // 문제를 매번 새로 생성해, 같은 5문제가 반복되던 문제를 해소한다.
-const QUIZ_MODEL='@cf/meta/llama-3.1-8b-instruct';
+const QUIZ_MODEL='@cf/meta/llama-4-scout-17b-16e-instruct';
 const QUIZ_ITEMS=['중소기업제품','기술개발제품','여성기업제품','장애인기업제품','중증장애인생산품','사회적기업제품','자활기업제품','협동조합제품','마을기업제품','창업기업제품','녹색제품','신제품(NEP)인증'];
 
 function extractJSON(text){
@@ -46,7 +48,24 @@ function extractJSON(text){
 
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=UTF-8',...headers}});
 
-export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v17',ai:!!env.AI},200,h);
+// v33: 에러 메시지가 비어있는 경우(일부 AiError는 message가 빈 문자열)까지 대응해
+// 최대한 진단 가능한 문자열을 뽑아낸다.
+function describeError(err){
+  try{
+    if(!err)return '(빈 에러 객체)';
+    const parts=[];
+    if(err.name)parts.push('name='+err.name);
+    if(err.message)parts.push('message='+err.message);
+    if(typeof err.code!=='undefined')parts.push('code='+err.code);
+    if(err.cause)parts.push('cause='+String(err.cause));
+    if(parts.length)return parts.join(' / ');
+    const s=String(err);
+    if(s&&s!=='[object Object]')return s;
+    try{return JSON.stringify(err)}catch(e){return '(직렬화 불가 에러: '+Object.prototype.toString.call(err)+')'}
+  }catch(e){return '(에러 설명 생성 실패)'}
+}
+
+export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v34-llama4',ai:!!env.AI,hasChat:true,hasQuiz:true},200,h);
 if(u.pathname==='/api/score'&&req.method==='POST'){
   let b;try{b=await req.json()}catch{return json({ok:false,error:'invalid_json'},400,h)}
   const name=String(b.name||'원정대원').replace(/[<>]/g,'').trim().slice(0,30)||'원정대원';
@@ -106,8 +125,8 @@ if(u.pathname==='/api/quiz'&&req.method==='POST'){
       topic
     },200,h);
   }catch(err){
-    console.error('AI quiz error:',err);
-    return json({ok:false,error:'ai_error',detail:String((err&&err.message)||err)},502,h);
+    console.error('AI quiz error:',describeError(err));
+    return json({ok:false,error:'ai_error',detail:describeError(err)},502,h);
   }
 }
 
@@ -131,8 +150,8 @@ if(u.pathname==='/api/chat'&&req.method==='POST'){
     const reply=(result&&result.response)?String(result.response).trim():'음... 지금은 대답하기가 어렵네요. 다시 한번 물어봐 주실래요?';
     return json({ok:true,reply,character},200,h);
   }catch(err){
-    console.error('AI chat error:',err);
-    return json({ok:false,error:'ai_error',detail:String((err&&err.message)||err)},502,h);
+    console.error('AI chat error:',describeError(err));
+    return json({ok:false,error:'ai_error',detail:describeError(err)},502,h);
   }
 }
 
