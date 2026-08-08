@@ -1,0 +1,11 @@
+name = "jopams-go-ranking"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jofams"
+database_id = "7bbd1b2d-27e4-49fe-945d-f84b915dd173"
+
+[vars]
+ALLOWED_ORIGIN = "https://jofams.pages.dev"
