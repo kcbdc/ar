@@ -1,0 +1,138 @@
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AI 도우미</title><link rel="stylesheet" href="assets/style.css"></head>
+<body class="app-body chat-body">
+<main class="app-shell page-shell chat-shell">
+<header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">ASK THE CREW</span><h1>AI 도우미</h1></div></header>
+
+<div class="chat-avatar-row" id="avatarRow">
+  <button data-character="sunsik"><img src="assets/img/sunsik.png" alt="순식"><b>순식</b></button>
+  <button data-character="daim" class="active"><img src="assets/img/daim.png" alt="다임"><b>다임</b></button>
+  <button data-character="hoonmin"><img src="assets/img/hoonmin.png" alt="훈민"><b>훈민</b></button>
+</div>
+
+<p class="chat-help">공공구매 12대 제도가 궁금하면 무엇이든 물어보세요. 캐릭터마다 말투가 달라요!</p>
+
+<div class="chat-log" id="chatLog"></div>
+
+<div class="chat-suggest" id="chatSuggest">
+  <button data-q="여성기업제품이 뭐야?">여성기업제품이 뭐야?</button>
+  <button data-q="사회적기업이랑 협동조합 차이가 뭐야?">사회적기업 vs 협동조합?</button>
+  <button data-q="녹색제품은 어떤 기준으로 정해져?">녹색제품 기준은?</button>
+</div>
+
+<form class="chat-input-row" id="chatForm">
+  <input id="chatInput" maxlength="200" autocomplete="off" placeholder="메시지를 입력하세요…">
+  <button type="submit" id="chatSend" aria-label="전송">➤</button>
+</form>
+
+</main>
+<nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="ranking.html"><span>♛</span><b>랭킹</b></a></nav>
+
+<script src="assets/state.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/liveops.js"></script>
+<script>
+const charMeta = {
+  sunsik: { name:'순식', img:'assets/img/sunsik.png', greet:'왔구나! 공공구매 궁금한 거 있으면 물어봐라, 내가 다 알려주지!' },
+  daim:   { name:'다임', img:'assets/img/daim.png', greet:'안녕하세요! 공공구매 제도에 대해 궁금하신 점을 편하게 물어보세요.' },
+  hoonmin:{ name:'훈민', img:'assets/img/hoonmin.png', greet:'왔는가! 내 혜안으로 무엇이든 설명해주겠네, 물어보게나.' },
+};
+
+let currentChar = 'daim';
+let history = []; // {role:'user'|'assistant', content:string}[]
+
+const chatLog = document.getElementById('chatLog');
+const chatForm = document.getElementById('chatForm');
+const chatInput = document.getElementById('chatInput');
+const chatSend = document.getElementById('chatSend');
+const chatSuggest = document.getElementById('chatSuggest');
+
+function addBubble(role, text, charKey){
+  const el = document.createElement('div');
+  el.className = 'chat-bubble ' + (role === 'user' ? 'from-user' : 'from-bot');
+  if(role !== 'user'){
+    const meta = charMeta[charKey || currentChar];
+    el.innerHTML = `<img class="chat-bubble-avatar" src="${meta.img}" alt="${meta.name}"><div class="chat-bubble-text"><b>${meta.name}</b><span></span></div>`;
+    el.querySelector('span').textContent = text;
+  } else {
+    el.innerHTML = `<div class="chat-bubble-text user"><span></span></div>`;
+    el.querySelector('span').textContent = text;
+  }
+  chatLog.appendChild(el);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return el;
+}
+
+function addTyping(){
+  const el = document.createElement('div');
+  el.className = 'chat-bubble from-bot typing';
+  el.id = 'typingBubble';
+  const meta = charMeta[currentChar];
+  el.innerHTML = `<img class="chat-bubble-avatar" src="${meta.img}" alt="${meta.name}"><div class="chat-bubble-text"><b>${meta.name}</b><span class="dots"><i></i><i></i><i></i></span></div>`;
+  chatLog.appendChild(el);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+function removeTyping(){ const t = document.getElementById('typingBubble'); if(t) t.remove(); }
+
+function switchCharacter(key){
+  currentChar = key;
+  document.querySelectorAll('#avatarRow button').forEach(b => b.classList.toggle('active', b.dataset.character === key));
+  playSfx && playSfx('tap');
+}
+
+document.querySelectorAll('#avatarRow button').forEach(b => {
+  b.onclick = () => switchCharacter(b.dataset.character);
+});
+
+async function sendMessage(text){
+  text = text.trim();
+  if(!text) return;
+  addBubble('user', text);
+  history.push({role:'user', content:text});
+  chatInput.value = '';
+  chatSend.disabled = true;
+  addTyping();
+
+  const base = serverConfig();
+  if(!base){
+    removeTyping();
+    addBubble('assistant', '지금은 AI 서버에 연결되어 있지 않아요. 잠시 후 다시 시도해 주세요.');
+    chatSend.disabled = false;
+    return;
+  }
+
+  try{
+    const res = await fetch(base.replace(/\/$/,'') + '/api/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ character: currentChar, message: text, history: history.slice(-6) })
+    });
+    const data = await res.json();
+    removeTyping();
+    if(data && data.ok){
+      addBubble('assistant', data.reply, currentChar);
+      history.push({role:'assistant', content:data.reply});
+    } else {
+      addBubble('assistant', '음... 지금은 대답하기 어렵네요. 잠시 후 다시 물어봐 주세요.', currentChar);
+    }
+  } catch(e){
+    removeTyping();
+    addBubble('assistant', '연결에 문제가 있어요. 네트워크를 확인하고 다시 시도해 주세요.', currentChar);
+  }
+  chatSend.disabled = false;
+  chatInput.focus();
+}
+
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  sendMessage(chatInput.value);
+});
+
+chatSuggest.querySelectorAll('button').forEach(b => {
+  b.onclick = () => sendMessage(b.dataset.q);
+});
+
+// 첫 진입 시 인사 메시지
+addBubble('assistant', charMeta[currentChar].greet, currentChar);
+</script>
+</body></html>
