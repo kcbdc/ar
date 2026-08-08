@@ -175,7 +175,10 @@ function fmtNum(value){const n=Number(value);return Number.isFinite(n)?new Intl.
 function fmtMetric(value,suffix=''){return fmtNum(value)+(suffix?(' '+suffix):'')}
 
 const GO_KAKAO_KEY='jopams_go_kakao_js_key_v1';
-function kakaoMapKey(){try{return(localStorage.getItem(GO_KAKAO_KEY)||'').trim()}catch(e){return''}}
+// v18: 카카오 Developers에서 발급받은 JavaScript 키를 기본값으로 내장.
+// 사용자가 프로필 화면에서 직접 키를 저장하면 그 값이 우선 적용된다.
+const DEFAULT_KAKAO_KEY='d66b9aa8688da889fba6807d142d896c';
+function kakaoMapKey(){try{const v=(localStorage.getItem(GO_KAKAO_KEY)||'').trim();return v||DEFAULT_KAKAO_KEY}catch(e){return DEFAULT_KAKAO_KEY}}
 function setKakaoMapKey(v){try{const x=(v||'').trim();if(x)localStorage.setItem(GO_KAKAO_KEY,x);else localStorage.removeItem(GO_KAKAO_KEY);return x}catch(e){return''}}
 function kakaoMapLink(lat,lng,label='조팸스 GO 체크포인트'){return 'https://map.kakao.com/link/map/'+encodeURIComponent(label)+','+Number(lat).toFixed(6)+','+Number(lng).toFixed(6)}
 function avatarMeta(key){const k=['hoonmin','daim','sunsik'].includes(key)?key:'daim';return {key:k,path:avatarPath(k),name:k==='hoonmin'?'훈민':k==='sunsik'?'순식':'다임'}}
