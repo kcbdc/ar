@@ -42,5 +42,26 @@ function updateMapPosition(){if(!map||!cur||!window.kakao)return;const pos=new k
 async function updatePosition(pos){cur={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};gpsState.textContent='±'+fmtNum(Math.round(cur.accuracy))+'m';const n=nearestUncollectedCheckpoint(cur.lat,cur.lng);if(n){const ep=getEpisode(n.checkpoint.episodeId);nearIcon.textContent=ep.icon;nearTitle.textContent=ep.item+' 신호';nearDesc.textContent='가장 가까운 미발견 체크포인트';nearDist.textContent=fmtNum(Math.round(n.distance))+'m';openKakao.href=kakaoMapLink(n.checkpoint.lat,n.checkpoint.lng,ep.item)}else openKakao.href=kakaoMapLink(cur.lat,cur.lng,'내 위치');updateMapPosition();renderList()}
 loadKakaoWithRetry().then(ok=>{if(ok)initMap();else if(kakaoMapKey())setMapStatus('카카오맵 연결 실패','JavaScript 키와 등록 도메인(jofams.pages.dev)을 확인해 주세요. 도메인을 방금 등록했다면 반영까지 1~2분 걸릴 수 있어요.',true,true)});
 if(navigator.geolocation)navigator.geolocation.watchPosition(updatePosition,()=>{gpsState.textContent='GPS OFF';setMapStatus('위치 권한 확인 필요','브라우저에서 위치 접근을 허용하면 현재 위치를 표시합니다.');renderList()},{enableHighAccuracy:true,maximumAge:3000,timeout:8000});else gpsState.textContent='GPS N/A';
-recenterBtn.onclick=()=>{if(map&&cur&&window.kakao)map.panTo(new kakao.maps.LatLng(cur.lat,cur.lng))};renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.filter;renderList()});
+recenterBtn.onclick=()=>{
+  if(!(map&&cur&&window.kakao))return;
+  const myPos=new kakao.maps.LatLng(cur.lat,cur.lng);
+  // v36: 단순 이동(panTo)만 하던 것을, 주변 체크포인트가 화면에 잘 보이도록
+  // 반경을 점점 넓혀가며(300m→600m→1km→2km→5km) 자동으로 딱 맞게 확대한다.
+  const radii=[300,600,1000,2000,5000];
+  let nearby=[];
+  for(const r of radii){
+    nearby=CHECKPOINTS.filter(cp=>distMeters(cur.lat,cur.lng,cp.lat,cp.lng)<=r);
+    if(nearby.length>=3)break;
+  }
+  if(nearby.length===0){
+    map.setCenter(myPos);
+    map.setLevel(3);
+  }else{
+    const bounds=new kakao.maps.LatLngBounds();
+    bounds.extend(myPos);
+    nearby.forEach(cp=>bounds.extend(new kakao.maps.LatLng(cp.lat,cp.lng)));
+    map.setBounds(bounds,70,70,70,70);
+  }
+};
+renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.filter;renderList()});
 </script></body></html>
