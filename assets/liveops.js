@@ -38,6 +38,12 @@
     {id:'rare_shard',type:'shard',name:'희귀 캐릭터 조각',icon:'rare',weight:6,value:1}
   ];
   function weightedLoot(){const v=load(),aurora=v.rareUnlocked.includes('aurora_daim')&&typeof getProfile==='function'&&getProfile().avatar==='daim';const pool=LOOT.map(x=>({...x,weight:x.type==='shard'&&aurora?x.weight*2:x.weight}));let r=Math.random()*pool.reduce((s,x)=>s+x.weight,0);return pool.find(x=>(r-=x.weight)<=0)||pool[0]}
+  // v17: 확률형 보상 투명성 공개. 기본 가중치를 기준으로 각 아이템의 실제 확률(%)을 계산해 UI에서 보여준다.
+  // (오로라 다임 보유 시 조각 확률이 상승하는 보정치는 별도 안내 문구로 처리)
+  function lootOdds(){
+    const total=LOOT.reduce((s,x)=>s+x.weight,0);
+    return LOOT.map(x=>({id:x.id,name:x.name,icon:x.icon,pct:Math.round(x.weight/total*1000)/10}));
+  }
   function grantLoot(item){patch(v=>{v.openedChests=(v.openedChests||0)+1;if(item.type==='shard')v.shards+=item.value;if(item.type==='frame'&&!v.cosmetics.frames.includes(item.value))v.cosmetics.frames.push(item.value);if(item.type==='title'&&!v.cosmetics.titles.includes(item.value))v.cosmetics.titles.push(item.value);if(item.type==='sticker'&&!v.cosmetics.stickers.includes(item.value))v.cosmetics.stickers.push(item.value);v.history.push({type:'loot',item:item.id,at:new Date().toISOString()})});if(item.type==='coins')addCoins(item.value);if(item.type==='xp'&&typeof awardXP==='function')awardXP(item.value,'랜덤 보급상자');syncRare();return item}
   function chestReady(kind='daily'){const v=load();if(kind==='weekly')return quests('weekly').filter(x=>x.complete).length>=2&&v.lastWeeklyChest!==weekKey();return quests('daily').filter(x=>x.complete).length>=2&&v.lastDailyChest!==todayKey()}
   function openChest(kind='daily'){if(!chestReady(kind))return false;const item=weightedLoot();patch(v=>{if(kind==='weekly')v.lastWeeklyChest=weekKey();else v.lastDailyChest=todayKey()});grantLoot(item); if(typeof pushEvent==='function')pushEvent('live_chest',{kind,item:item.id}); return item}
@@ -68,6 +74,6 @@
   function impactHaptic(kind='capture'){if(typeof vibrate!=='function')return;const p=kind==='rare'?[20,30,60,30,110,35,160]:kind==='capture'?[25,25,55,30,120]:[20];vibrate(p)}
   function stats(){const v=load();const coins=typeof getV4==='function'?(getV4().coins||0):(v.coins||0);return {coins,shards:v.shards,chests:v.openedChests,invites:v.inviteCount,rares:v.rareUnlocked.length,learned:v.learnedEpisodes.length}}
   syncRare();
-  window.JopamsLive={load,save,weekKey,quests,claimQuest,chestReady,openChest,RARES,syncRare,charState,addCharXP,onCollect,onMiniSuccess,learningFact,claimLearning,cosmetics,setCosmetic,TITLE_NAMES,FRAME_NAMES,STICKER_NAMES,inviteFriend,environment,initAmbient,cameraShake,impactHaptic,stats};
+  window.JopamsLive={load,save,weekKey,quests,claimQuest,chestReady,openChest,lootOdds,RARES,syncRare,charState,addCharXP,onCollect,onMiniSuccess,learningFact,claimLearning,cosmetics,setCosmetic,TITLE_NAMES,FRAME_NAMES,STICKER_NAMES,inviteFriend,environment,initAmbient,cameraShake,impactHaptic,stats};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initAmbient);else initAmbient();
 })();

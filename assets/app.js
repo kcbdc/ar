@@ -10,6 +10,9 @@ function markCollected(id){const a=getProgress();if(!a.includes(id)){a.push(id);
 function resetProgress(){saveProgress([])}function nextEpisodeId(){const d=getProgress();for(const e of EPISODES)if(!d.includes(e.id))return e.id;return 12}function getEpisode(id){return EPISODES.find(e=>e.id===Number(id))||EPISODES[0]}
 function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}function distMeters(a,b,c,d){const R=6371000,x=toRad(c-a),y=toRad(d-b),v=Math.sin(x/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(v),Math.sqrt(1-v))}function bearingTo(a,b,c,d){const p1=toRad(a),p2=toRad(c),dl=toRad(d-b),y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return(toDeg(Math.atan2(y,x))+360)%360}function angleDiff(t,c){return((t-c+540)%360)-180}
 function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
+// v17: 12개를 모두 모은 뒤에도 AR 탐험이 완전히 끝나버리지 않도록, 이미 수집한
+// 체크포인트를 포함해 "가장 가까운 지점"을 찾는 함수. 재방문 미니게임에 사용된다.
+function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
 function extractHeading(e){if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))return e.webkitCompassHeading;if(e.alpha!==null&&e.alpha!==undefined)return(360-e.alpha)%360;return null}
 function vibrate(p){if(!getV4().haptics)return;if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
 let _audioCtx=null;function playChime(kind){if(!getV4().sound)return;try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();const c=_audioCtx,n=c.currentTime,f=kind==='collect'?[660,880,1320]:[520,720];f.forEach((v,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=v;g.gain.setValueAtTime(0,n+i*.09);g.gain.linearRampToValueAtTime(.14,n+i*.09+.02);g.gain.exponentialRampToValueAtTime(.001,n+i*.09+.27);o.connect(g).connect(c.destination);o.start(n+i*.09);o.stop(n+i*.09+.3)})}catch(e){}}
@@ -22,9 +25,32 @@ function pushEvent(type,data={}){const a=getEvents();a.push({type,at:new Date().
 function getProfile(){const d={name:'원정대원',xp:0,streak:1,lastDay:'',dailyBonus:0,avatar:'daim'};try{return Object.assign(d,window.JopamsState?JopamsState.get('profile',d):JSON.parse(localStorage.getItem(GO_PROFILE_KEY)||'{}'))}catch(e){return d}}
 function saveProfile(p){try{if(window.JopamsState)JopamsState.set('profile',p);else localStorage.setItem(GO_PROFILE_KEY,JSON.stringify(p))}catch(e){}}
 function todayKey(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
-function syncDaily(){const p=getProfile(),t=todayKey();if(p.lastDay!==t){p.lastDay=t;p.dailyBonus=0;saveProfile(p)}return p}
+// (버그수정) streak 필드가 스키마·화면 표시에는 존재했지만 실제로 증가시키는
+// 로직이 어디에도 없어 항상 "1일"로 고정 표시되던 문제를 수정.
+// 전날 접속했으면 +1, 하루 이상 공백이 생기면 1로 리셋, 오늘 이미 갱신했으면 유지.
+function syncDaily(){
+  const p=getProfile(),t=todayKey();
+  if(p.lastDay!==t){
+    if(p.lastDay){
+      const prev=new Date(p.lastDay+'T00:00:00'),today=new Date(t+'T00:00:00');
+      const diffDays=Math.round((today-prev)/86400000);
+      p.streak=diffDays===1?(p.streak||1)+1:1;
+    }else{
+      p.streak=1;
+    }
+    p.lastDay=t;p.dailyBonus=0;saveProfile(p);
+  }
+  return p;
+}
 function awardXP(amount,reason=''){const p=syncDaily();p.xp=(p.xp||0)+amount;saveProfile(p);pushEvent('xp',{amount,reason});return p}
-function totalXP(){const p=syncDaily();return Math.max((getProgress().length*100),(p.xp||0))}
+// v17: XP 단일 소스화. 예전에는 totalXP()가 max(수집개수*100, profile.xp)로 계산되어
+// 이벤트 기반 XP가 늘어도 화면상 값이 그대로인 것처럼 보이는 혼란이 있었음.
+// 이제 profile.xp만을 유일한 진행 지표로 사용한다.
+function totalXP(){const p=syncDaily();return Math.max(0,p.xp||0)}
+// 레거시 데이터 보정: 예전 버전에서 수집만 하고 XP 이벤트가 누락된 경우를 위한
+// 1회성(그러나 매 로드마다 안전하게 재실행 가능한) 하한 보정. profile.xp를 낮추는 일은 없고
+// 오직 "수집 개수 × 100"보다 낮을 때만 그 값으로 올려준다.
+function reconcileLegacyXP(){const p=getProfile();const floor=getProgress().length*100;if((p.xp||0)<floor){p.xp=floor;saveProfile(p)}}
 function playerLevel(){return Math.floor(totalXP()/300)+1}
 function getDailyMissions(){const done=getProgress(),events=getEvents(),today=todayKey();const todayEvents=events.filter(e=>(e.at||'').slice(0,10)===today);return [
  {icon:'explore',title:'AR 탐험 1회',desc:'체크포인트에서 아이템을 1개 발견',now:todayEvents.filter(e=>e.type==='collect').length,goal:1,reward:80},
@@ -32,9 +58,13 @@ function getDailyMissions(){const done=getProgress(),events=getEvents(),today=to
  {icon:'spark',title:'원정 진척도',desc:'공공구매 아이템 3종 이상 수집',now:Math.min(done.length,3),goal:3,reward:120}
 ]}
 function dailyCompletion(){const ms=getDailyMissions();return ms.filter(m=>m.now>=m.goal).length}
-function localLeaderboard(){const me=Math.max(1200,totalXP()*37+getProgress().length*250);return [
-{name:'윤수호',dept:'제지본부',score:4861800},{name:'유호연',dept:'제지본부',score:3847911},{name:'이현',dept:'화폐본부',score:3249200},{name:'김경아',dept:'제지본부',score:2565300},{name:'황지수',dept:'ID본부',score:1997600},{name:'나',dept:'조팸스 GO',score:me,isMe:true}
-].sort((a,b)=>b.score-a.score)}
+// v17: 실명처럼 보이는 가짜 경쟁자 데이터를 제거했습니다.
+// 서버가 연결되어 있지 않으면 "내 기록"만 정직하게 보여주고,
+// 화면(ranking.html)에서 빈 상태 안내 문구를 함께 표시합니다.
+function localLeaderboard(){
+  const me=missionScore();
+  return [{name:getProfile().name||'원정대원',dept:'조팸스 GO',score:me,isMe:true}];
+}
 function claimDailyBonus(){const p=syncDaily();if(dailyCompletion()<3||p.dailyBonus)return false;p.dailyBonus=1;p.xp=(p.xp||0)+200;saveProfile(p);pushEvent('daily_bonus',{amount:200});return true}
 
 
@@ -55,7 +85,27 @@ function setOrganization(org){const v=getV3();v.org=org;saveV3(v);return v}
 function checkAchievements(show=true){const v=getV3();const newly=[];ACHIEVEMENTS.forEach(a=>{if(!v.badges.includes(a.id)&&a.test()){v.badges.push(a.id);newly.push(a)}});v.lastBadgeCheck=Date.now();saveV3(v);if(show&&newly.length&&typeof showToast==='function'){newly.forEach((a,i)=>setTimeout(()=>{playChime('collect');showToast('배지 획득! <b>'+a.icon+' '+a.name+'</b>',{variant:'near',duration:3300})},i*500))}return newly}
 function earnedAchievements(){const ids=getV3().badges;return ACHIEVEMENTS.map(a=>({...a,earned:ids.includes(a.id)}))}
 function missionScore(){return totalXP()*37+getProgress().length*250+getEvents().filter(e=>e.type==='minigame_success').length*180}
-function organizationLeaderboard(){const mine=getV3().org||'본사';const base=[{name:'본사',score:12750},{name:'화폐본부',score:11920},{name:'제지본부',score:10840},{name:'ID본부',score:10130},{name:'기술연구원',score:9460}];const me=base.find(x=>x.name===mine);if(me)me.score+=Math.round(missionScore()/40);return base.sort((a,b)=>b.score-a.score)}
+// v17: 5개 본부에 임의로 부여된 가짜 기준점수를 제거했습니다.
+// 서버 미연결 상태에서는 내 소속 본부의 실제 점수만 표시하고, 나머지는
+// "데이터 없음"으로 정직하게 남겨둡니다 (화면 쪽에서 null을 안내 문구로 처리).
+function organizationLeaderboard(){
+  const orgs=['본사','화폐본부','제지본부','ID본부','기술연구원'];
+  const mine=getV3().org||'본사';
+  return orgs
+    .map(name=>({name,score:name===mine?missionScore():null}))
+    .sort((a,b)=>(b.score??-1)-(a.score??-1));
+}
+// 서버가 연결된 경우, 실제 제출된 점수를 본부별로 합산한 랭킹을 반환한다.
+// 서버 미연결이거나 데이터가 없으면 null을 반환하며, 이 경우 화면은
+// organizationLeaderboard()의 로컬 버전으로 대체 표시한다.
+async function organizationLeaderboardServer(){
+  const rows=await fetchServerLeaderboard();
+  if(!rows||!rows.length)return null;
+  const byOrg={};
+  rows.forEach(r=>{const org=r.org||'본사';byOrg[org]=(byOrg[org]||0)+Number(r.score||0)});
+  const list=Object.entries(byOrg).map(([name,score])=>({name,score}));
+  return list.length?list.sort((a,b)=>b.score-a.score):null;
+}
 function serverConfig(){return getV3().serverUrl||''}
 function setServerUrl(url){const v=getV3();v.serverUrl=(url||'').trim().replace(/\/$/,'');saveV3(v)}
 async function syncScoreToServer(){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};const p=getProfile(),v=getV3();try{const r=await fetch(base+'/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:p.name||'원정대원',org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length})});if(!r.ok)throw new Error('HTTP '+r.status);return {ok:true,data:await r.json()}}catch(e){return {ok:false,reason:String(e)}}}
@@ -83,8 +133,11 @@ const SEASON_TIERS=[
  {tier:7,xp:1800,icon:'rare',name:'프리미엄 보급상자',reward:'+250 XP'},
  {tier:8,xp:2100,icon:'trophy',name:'SEASON 01 마스터',reward:'+300 XP'}
 ];
-function getV4(){const d={onboarded:false,sound:true,haptics:true,reducedMotion:false,seasonClaims:[],coins:0,lastChest:'',installDismissed:false};try{return Object.assign(d,window.JopamsState?JopamsState.get('settings',d):JSON.parse(localStorage.getItem(GO_V4_KEY)||'{}'))}catch(e){return d}}
+function getV4(){const d={onboarded:false,sound:true,haptics:true,reducedMotion:false,seasonClaims:[],coins:0,lastChest:'',installDismissed:false,miniTutorialSeen:{}};try{return Object.assign(d,window.JopamsState?JopamsState.get('settings',d):JSON.parse(localStorage.getItem(GO_V4_KEY)||'{}'))}catch(e){return d}}
 function saveV4(v){try{if(window.JopamsState)JopamsState.set('settings',v);else localStorage.setItem(GO_V4_KEY,JSON.stringify(v))}catch(e){}}
+// v17: 미니게임 최초 진입 튜토리얼 여부 저장/조회 헬퍼.
+function hasSeenMiniTutorial(kind){return !!(getV4().miniTutorialSeen||{})[kind]}
+function markMiniTutorialSeen(kind){const v=getV4();v.miniTutorialSeen=Object.assign({},v.miniTutorialSeen||{},{[kind]:true});saveV4(v)}
 function setPref(key,value){const v=getV4();v[key]=value;saveV4(v);document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion);return v}
 function updatePlayer({name,org,avatar}={}){const p=getProfile();if(typeof name==='string'&&name.trim())p.name=name.trim().slice(0,14);if(avatar)p.avatar=avatar;saveProfile(p);if(org)setOrganization(org);return p}
 function avatarPath(key){return 'assets/img/'+({daim:'daim.png',sunsik:'sunsik.png',hoonmin:'hoonmin.png'}[key]||'daim.png')}
@@ -94,11 +147,12 @@ function availableSeasonRewards(){return seasonState().tiers.filter(t=>t.unlocke
 function chestAvailable(){const v=getV4();return v.lastChest!==todayKey()&&dailyCompletion()>=2}
 function claimDailyChest(){if(!chestAvailable())return false;const v=getV4();v.lastChest=todayKey();v.coins=(v.coins||0)+50;saveV4(v);awardXP(80,'일일 보급상자');pushEvent('daily_chest',{xp:80,coins:50});return true}
 function markOnboarded(){const v=getV4();v.onboarded=true;saveV4(v)}
-function resetOnboarding(){const v=getV4();v.onboarded=false;saveV4(v)}
+function resetOnboarding(){const v=getV4();v.onboarded=false;v.miniTutorialSeen={};saveV4(v)}
 function privacySummary(){return {camera:'영상 저장 안 함',location:'실시간 좌표 서버 전송 안 함',sensor:'방향값 기기 내 처리',ranking:'닉네임·소속·점수만 선택 전송'}}
 async function testServerConnection(url){const base=(url||serverConfig()).trim().replace(/\/$/,'');if(!base)return {ok:false,message:'서버 URL이 비어 있습니다.'};try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)return {ok:false,message:'HTTP '+r.status};return {ok:true,message:'랭킹 서버와 정상 연결되었습니다.'}}catch(e){return {ok:false,message:'연결할 수 없습니다. URL/CORS/배포 상태를 확인하세요.'}}}
 function applyRuntimePrefs(){const v=getV4();document.documentElement.classList.toggle('reduced-motion',!!v.reducedMotion)}
 applyRuntimePrefs();
+reconcileLegacyXP();
 
 
 // ===== 조팸스 GO v5 : 상용 체감 품질 / 사운드스케이프 / 설치 UX =====
@@ -138,7 +192,12 @@ const CHARACTER_SKILLS={
 function selectedSkill(){const key=getProfile().avatar||'daim';return CHARACTER_SKILLS[key]||CHARACTER_SKILLS.daim}
 function discoveryDate(episodeId){const ev=getEvents().find(e=>e.type==='collect'&&Number(e.episodeId)===Number(episodeId));if(!ev?.at)return '';try{return new Date(ev.at).toLocaleDateString('ko-KR',{month:'short',day:'numeric'})}catch(e){return''}}
 function discoveryPercent(){return Math.round(getProgress().length/EPISODES.length*100)}
-function motivationRanks(){const score=missionScore();return {overall:Math.max(28,238-Math.floor(score/700)),org:Math.max(3,12-Math.floor(score/5000)),week:Math.max(2,7-Math.floor(score/9000))}}
+// v17: 실제 데이터 없이 점수를 역산해 "몇 위"처럼 보여주던 가짜 추정 공식을 제거했습니다.
+// 서버 연동 전에는 정직하게 null을 반환하고, 화면에서는 "-"로 표시합니다.
+function motivationRanks(){
+  if(!serverConfig())return {overall:null,org:null,week:null};
+  return {overall:null,org:null,week:null}; // 서버 기반 순위 산출은 추후 랭킹 API 확장 시 연결
+}
 
 // ===== 조팸스 GO v7 : 공공구매 컬렉션 현대형 벡터 아이콘 =====
 function publicPurchaseIcon(id, unlocked=true){
