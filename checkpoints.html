@@ -1,12 +1,46 @@
 <!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 카카오 라이브 맵</title><link rel="stylesheet" href="assets/style.css"></head><body class="app-body"><main class="app-shell page-shell map-shell"><header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">KAKAO LIVE EXPEDITION MAP</span><h1>탐험 지도</h1></div><div class="counter-pill" id="gpsState">GPS</div></header><section class="premium-card" style="padding:10px"><div id="kakaoMap" class="kakao-map"><div class="kakao-map-status" id="mapStatus"><b>카카오맵 준비 중</b><span>현재 위치를 확인하고 있습니다.</span></div></div><div class="kakao-map-actions"><a id="openKakao" href="https://map.kakao.com" target="_blank" rel="noopener">카카오맵에서 열기</a><button id="recenterBtn" type="button">내 위치로</button></div></section><section class="nearby-card premium-card compact"><span class="section-kicker">NEAREST SIGNAL</span><div class="nearby-main"><span id="nearIcon">◎</span><div><b id="nearTitle">가장 가까운 신호 찾는 중</b><small id="nearDesc">위치 권한을 허용하면 거리를 표시합니다.</small></div><strong id="nearDist">--m</strong></div><a href="ar.html" class="sheet-primary">AR 탐험 시작</a></section><div class="filter-row"><button class="filter active" data-filter="all">전체</button><button class="filter" data-filter="open">미발견</button><button class="filter" data-filter="done">발견</button></div><section class="spot-list" id="cpList"></section></main><nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a class="active" href="checkpoints.html"><span>⌖</span><b>지도</b></a><a href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="ranking.html"><span>♛</span><b>랭킹</b></a></nav><script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script>
 const done=getProgress(),list=cpList;let mode='all',cur=null,map=null,meMarker=null,markers=[];
-function setMapStatus(title,msg,show=true){mapStatus.hidden=!show;if(show)mapStatus.innerHTML='<b>'+title+'</b><span>'+msg+'</span>'}
+function setMapStatus(title,msg,show=true,showRetry=false){mapStatus.hidden=!show;if(show)mapStatus.innerHTML='<b>'+title+'</b><span>'+msg+'</span>'+(showRetry?'<button id="mapRetryBtn" class="map-retry-btn">다시 시도</button>':'');if(show&&showRetry){const btn=document.getElementById('mapRetryBtn');if(btn)btn.onclick=()=>{kakaoLoadAttempts=0;setMapStatus('카카오맵 재연결 중','잠시만 기다려 주세요…');loadKakaoWithRetry().then(ok=>{if(ok)initMap();else setMapStatus('카카오맵 연결 실패','JavaScript 키와 등록 도메인(jofams.pages.dev)을 확인해 주세요. 도메인을 방금 등록했다면 반영까지 1~2분 걸릴 수 있어요.',true,true)})}}}
 function renderList(){list.innerHTML='';CHECKPOINTS.forEach(cp=>{const ep=getEpisode(cp.episodeId),got=done.includes(ep.id);if(mode==='open'&&got||mode==='done'&&!got)return;const d=cur?Math.round(distMeters(cur.lat,cur.lng,cp.lat,cp.lng)):null;const row=document.createElement('div');row.className='spot-row '+(got?'done':'');row.innerHTML=`<div class="spot-index">${got?'✓':String(cp.idx+1).padStart(2,'0')}</div><div class="spot-meta"><b>${got?ep.item:'미발견 체크포인트'}</b><small>${d!==null?fmtNum(d)+'m 거리 · ':''}${got?'컬렉션 등록 완료':'AR 탐험에서 자동 안내'}</small></div><span class="spot-state">${got?'FOUND':'HIDDEN'}</span>`;row.onclick=()=>{if(map&&window.kakao){const p=new kakao.maps.LatLng(cp.lat,cp.lng);map.panTo(p)}openKakao.href=kakaoMapLink(cp.lat,cp.lng,got?ep.item:'조팸스 GO 체크포인트')};list.appendChild(row)})}
-function loadKakao(){const key=kakaoMapKey();if(!key){setMapStatus('카카오맵 키가 필요합니다','프로필·설정 → 카카오맵 연결에서 JavaScript 키를 등록해 주세요. 아래 “카카오맵에서 열기”는 바로 사용할 수 있습니다.');return Promise.resolve(false)}if(window.kakao&&kakao.maps)return Promise.resolve(true);return new Promise(resolve=>{const sc=document.createElement('script');sc.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey='+encodeURIComponent(key);sc.onload=()=>{kakao.maps.load(()=>resolve(true))};sc.onerror=()=>resolve(false);document.head.appendChild(sc)})}
+// v20: 카카오맵 SDK 로딩 실패 시 자동 재시도(전파 지연·일시적 네트워크 오류 대응) +
+// kakao.maps.load 콜백 내부 예외를 안전하게 처리해 Promise가 영영 응답하지 않는 상황을 방지.
+let kakaoLoadAttempts=0;
+function loadKakao(){
+  const key=kakaoMapKey();
+  if(!key){setMapStatus('카카오맵 키가 필요합니다','프로필·설정 → 카카오맵 연결에서 JavaScript 키를 등록해 주세요. 아래 "카카오맵에서 열기"는 바로 사용할 수 있습니다.');return Promise.resolve(false)}
+  if(window.kakao&&kakao.maps)return Promise.resolve(true);
+  return new Promise(resolve=>{
+    const existing=document.getElementById('kakaoSdkScript');
+    if(existing)existing.remove();
+    const sc=document.createElement('script');
+    sc.id='kakaoSdkScript';
+    sc.src='https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&appkey='+encodeURIComponent(key);
+    let settled=false;
+    const finish=(ok)=>{if(settled)return;settled=true;resolve(ok)};
+    sc.onload=()=>{
+      try{ kakao.maps.load(()=>finish(true)); }
+      catch(err){ console.error('카카오맵 SDK 초기화 오류:',err); finish(false); }
+    };
+    sc.onerror=(e)=>{ console.error('카카오맵 SDK 스크립트 로드 실패:',e); finish(false); };
+    document.head.appendChild(sc);
+    setTimeout(()=>finish(false),8000);
+  });
+}
+async function loadKakaoWithRetry(){
+  const ok=await loadKakao();
+  if(ok)return true;
+  kakaoLoadAttempts++;
+  if(kakaoLoadAttempts<=2){
+    setMapStatus('카카오맵 연결 재시도 중','네트워크 상태를 확인하고 있어요…');
+    await new Promise(r=>setTimeout(r,2500));
+    return loadKakaoWithRetry();
+  }
+  return false;
+}
 function initMap(){if(!window.kakao||!kakao.maps)return;const c=cur||{lat:CHECKPOINTS[0].lat,lng:CHECKPOINTS[0].lng};map=new kakao.maps.Map(kakaoMap,{center:new kakao.maps.LatLng(c.lat,c.lng),level:4});const bounds=new kakao.maps.LatLngBounds();CHECKPOINTS.forEach(cp=>{const ep=getEpisode(cp.episodeId),got=done.includes(ep.id),pos=new kakao.maps.LatLng(cp.lat,cp.lng);bounds.extend(pos);const marker=new kakao.maps.Marker({position:pos,map,title:got?ep.item:'미발견 체크포인트'});kakao.maps.event.addListener(marker,'click',()=>{openKakao.href=kakaoMapLink(cp.lat,cp.lng,got?ep.item:'조팸스 GO 체크포인트');const content='<div class="map-marker-label">'+(got?ep.icon+' '+ep.item:'? 미발견 체크포인트')+'</div>';new kakao.maps.CustomOverlay({map,position:pos,content,yAnchor:1.55}).setMap(map)});markers.push(marker)});if(!cur)map.setBounds(bounds);setMapStatus('카카오맵 연결 완료','체크포인트와 현재 위치를 실시간으로 표시합니다.',true);setTimeout(()=>setMapStatus('','',false),1600);updateMapPosition()}
 function updateMapPosition(){if(!map||!cur||!window.kakao)return;const pos=new kakao.maps.LatLng(cur.lat,cur.lng);if(!meMarker)meMarker=new kakao.maps.Marker({position:pos,map,title:'내 위치'});else meMarker.setPosition(pos)}
 async function updatePosition(pos){cur={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy};gpsState.textContent='±'+fmtNum(Math.round(cur.accuracy))+'m';const n=nearestUncollectedCheckpoint(cur.lat,cur.lng);if(n){const ep=getEpisode(n.checkpoint.episodeId);nearIcon.textContent=ep.icon;nearTitle.textContent=ep.item+' 신호';nearDesc.textContent='가장 가까운 미발견 체크포인트';nearDist.textContent=fmtNum(Math.round(n.distance))+'m';openKakao.href=kakaoMapLink(n.checkpoint.lat,n.checkpoint.lng,ep.item)}else openKakao.href=kakaoMapLink(cur.lat,cur.lng,'내 위치');updateMapPosition();renderList()}
-loadKakao().then(ok=>{if(ok)initMap();else if(kakaoMapKey())setMapStatus('카카오맵 연결 실패','JavaScript 키와 등록 도메인(jofams.pages.dev)을 확인해 주세요.')});
+loadKakaoWithRetry().then(ok=>{if(ok)initMap();else if(kakaoMapKey())setMapStatus('카카오맵 연결 실패','JavaScript 키와 등록 도메인(jofams.pages.dev)을 확인해 주세요. 도메인을 방금 등록했다면 반영까지 1~2분 걸릴 수 있어요.',true,true)});
 if(navigator.geolocation)navigator.geolocation.watchPosition(updatePosition,()=>{gpsState.textContent='GPS OFF';setMapStatus('위치 권한 확인 필요','브라우저에서 위치 접근을 허용하면 현재 위치를 표시합니다.');renderList()},{enableHighAccuracy:true,maximumAge:3000,timeout:8000});else gpsState.textContent='GPS N/A';
 recenterBtn.onclick=()=>{if(map&&cur&&window.kakao)map.panTo(new kakao.maps.LatLng(cur.lat,cur.lng))};renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.filter;renderList()});
 </script></body></html>
