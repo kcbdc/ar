@@ -85,6 +85,21 @@ if(u.pathname==='/api/score'&&req.method==='POST'){
   await env.DB.prepare('INSERT INTO scores(name,org,score,updated_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(name,org) DO UPDATE SET score=MAX(score,excluded.score),updated_at=CURRENT_TIMESTAMP').bind(name,org,score).run();
   return json({ok:true,score},200,h)
 }
+if(u.pathname==='/api/reward/claim'&&req.method==='POST'){
+  let b;try{b=await req.json()}catch{return json({ok:false,error:'invalid_json'},400,h)}
+  const playerId=String(b.playerId||'').replace(/[^a-zA-Z0-9_\-]/g,'').slice(0,80);
+  const claimKey=String(b.claimKey||'').replace(/[<>]/g,'').trim().slice(0,80);
+  const rewardType=String(b.rewardType||'reward').replace(/[<>]/g,'').trim().slice(0,40);
+  if(!playerId||!claimKey)return json({ok:false,error:'missing_fields'},400,h);
+  try{
+    await env.DB.prepare('INSERT INTO reward_claims(player_id,claim_key,reward_type,created_at) VALUES(?,?,?,CURRENT_TIMESTAMP)').bind(playerId,claimKey,rewardType).run();
+    return json({ok:true,accepted:true},200,h);
+  }catch(e){
+    const msg=String(e&&e.message||e);
+    if(/UNIQUE|constraint/i.test(msg))return json({ok:true,accepted:false,duplicate:true},200,h);
+    return json({ok:false,error:'db_error'},500,h);
+  }
+}
 if(u.pathname==='/api/leaderboard'&&req.method==='GET'){const {results}=await env.DB.prepare('SELECT name,org,score,updated_at FROM scores ORDER BY score DESC,updated_at ASC LIMIT 100').all();return json({items:results||[]},200,h)}
 
 if(u.pathname==='/api/quiz'&&req.method==='POST'){
