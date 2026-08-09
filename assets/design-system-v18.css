@@ -1,0 +1,18 @@
+/* JOPAMS GO v18 commercialization polish: typography floor, spacing tokens, rare FX, trace game */
+:root{--space-1:6px;--space-2:10px;--space-3:14px;--space-4:18px;--space-5:24px;--space-6:30px;--card-radius:22px;--touch:44px}
+body.app-body{font-size:14px;line-height:1.55}
+body.app-body .premium-card{padding:24px!important}
+body.app-body .premium-card.compact{padding:20px!important}
+body.app-body .section-kicker,body.app-body .eyebrow{font-size:11px!important}
+body.app-body .bottom-nav a b{font-size:11px!important;line-height:1.2!important}
+body.app-body .bottom-nav a span{display:flex!important;align-items:center!important;justify-content:center!important;width:32px!important;height:32px!important}
+body.app-body .bottom-nav .ui-svg{width:25px!important;height:25px!important}
+body.app-body .quick-card small,body.app-body .crew small,body.app-body .rank-user small,body.app-body .collection-item small,body.app-body .device-state small,body.app-body .info-tile small{font-size:11px!important;line-height:1.45!important}
+body.app-body .rank-row>strong small,body.app-body .impact-card small,body.app-body .server-card small{font-size:10.5px!important}
+body.app-body .rank-hero span,body.app-body .rank-hero small,body.app-body .collection-no,body.app-body .collection-state{font-size:11px!important}
+body.ar-body .ar-step-guide span,body.ar-body .dwell-ring-wrap span,body.ar-body .edge-arrow small,body.ar-body .ar-privacy-badge{font-size:10.5px!important}
+body.app-body button,body.app-body a,.ar-body button,.ar-body a{min-height:var(--touch)}
+.growth-perk{display:block;margin-top:5px;color:#73ddff;font-style:normal;font-size:11px;line-height:1.35}
+.rare-card{position:relative;overflow:hidden}.rare-card.unlocked:before{content:"RARE";position:absolute;top:10px;right:10px;padding:4px 7px;border-radius:999px;background:linear-gradient(135deg,#71e7ff,#9d7bff);color:#07152a;font-size:9px;font-weight:950;letter-spacing:.8px}.rare-card.unlocked:after{content:"";position:absolute;inset:-80% -40%;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.13) 50%,transparent 60%);transform:translateX(-60%);animation:rareSweep 4s ease-in-out infinite;pointer-events:none}@keyframes rareSweep{50%,100%{transform:translateX(65%)}}
+.trace-field{height:210px;position:relative;border-radius:20px;background:radial-gradient(circle at 50% 50%,rgba(61,202,255,.13),rgba(3,18,40,.72));border:1px solid rgba(91,207,255,.22);overflow:hidden}.trace-dot{position:absolute;transform:translate(-50%,-50%);width:54px;height:54px;min-height:54px;border-radius:50%;border:1px solid rgba(121,209,255,.24);background:#0b2548;color:#8ea7bd;font-weight:950;font-size:17px;transition:.18s}.trace-dot.active{color:#06142b;background:#69e5ff;box-shadow:0 0 0 8px rgba(94,221,255,.12),0 0 28px rgba(94,221,255,.55);animation:tracePulse 1s ease-in-out infinite}.trace-dot.hit{background:#143b45;color:#72e7bc;border-color:#51d4aa;opacity:.72}@keyframes tracePulse{50%{transform:translate(-50%,-50%) scale(1.08)}}.trace-hint{display:block;margin-top:10px;text-align:center;color:#a7bbcf;font-size:11px}
+@media(max-width:390px){body.app-body .premium-card{padding:20px!important}body.app-body .premium-card.compact{padding:18px!important}}

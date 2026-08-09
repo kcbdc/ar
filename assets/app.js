@@ -116,6 +116,8 @@ async function organizationLeaderboardServer(){
 // v21: 배포된 랭킹 서버 주소를 기본값으로 내장. 사용자가 프로필에서 별도로
 // 저장한 값이 있으면 그 값이 우선 적용된다 (카카오맵 키와 동일한 패턴).
 const DEFAULT_SERVER_URL='https://jofams-go.junewoopark16.workers.dev';
+function playerDeviceId(){try{let id=localStorage.getItem('jopams_go_player_id_v18');if(!id){id=(crypto?.randomUUID?.()||('p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2)));localStorage.setItem('jopams_go_player_id_v18',id)}return id}catch(e){return 'local_player'}}
+async function syncRewardReceipt(claimKey,rewardType='reward'){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};try{const r=await fetch(base+'/api/reward/claim',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({playerId:playerDeviceId(),claimKey:String(claimKey).slice(0,80),rewardType:String(rewardType).slice(0,40)})});return await r.json()}catch(e){return {ok:false,reason:'network'}}}
 function serverConfig(){return getV3().serverUrl||DEFAULT_SERVER_URL}
 function setServerUrl(url){const v=getV3();v.serverUrl=(url||'').trim().replace(/\/$/,'');saveV3(v)}
 async function syncScoreToServer(){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};const p=getProfile(),v=getV3();try{const r=await fetch(base+'/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:p.name||'원정대원',org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length})});if(!r.ok)throw new Error('HTTP '+r.status);return {ok:true,data:await r.json()}}catch(e){return {ok:false,reason:String(e)}}}
