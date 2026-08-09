@@ -1,4 +1,4 @@
-// 조팸스 GO 서비스워커 v21
+// 조팸스 GO 서비스워커 v22
 // v19 변경 이유:
 //   기존에는 install 시 caches.addAll(ASSETS)로 전체 목록을 한 번에 캐싱했는데,
 //   배포 도중 파일 하나만 일시적으로 404가 나도 addAll() 전체가 실패해 설치(install)
@@ -13,12 +13,12 @@
 //      항상 최신 버전을 먼저 시도하고, 오프라인일 때만 캐시로 폴백한다.
 //      (이미지·CSS·JS 같은 정적 자산은 기존처럼 캐시 우선을 유지해 로딩 속도를 지킨다.)
 
-const CACHE = 'jopams-go-v21';
+const CACHE = 'jopams-go-v22';
 const ASSETS = [
   './', './index.html', './ar.html', './checkpoints.html', './collection.html',
   './ranking.html', './achievements.html', './battle.html', './season.html',
   './profile.html', './expedition.html', './master.html', './chat.html', './manifest.webmanifest',
-  './assets/style.css','./assets/design-system-v18.css','./assets/design-system-v19.css','./assets/design-system-v20.css', './assets/state.js', './assets/ui.js', './assets/app.js', './assets/liveops.js',
+  './assets/style.css','./assets/design-system-v18.css','./assets/design-system-v19.css','./assets/design-system-v20.css','./assets/design-system-v22.css', './assets/state.js', './assets/ui.js', './assets/app.js', './assets/liveops.js',
   './assets/img/daim.png', './assets/img/sunsik.png', './assets/img/hoonmin.png',
   './assets/img/icon-192.png', './assets/img/icon-512.png', './assets/img/icon-maskable-512.png'
 ];

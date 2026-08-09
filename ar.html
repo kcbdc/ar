@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css">
 </head>
 <body class="ar-body">
 <video id="cameraVideo" playsinline muted autoplay></video><div class="ar-privacy-badge" id="arPrivacyBadge"><span data-ui-icon="lock"></span><b>영상·위치 저장 안 함</b></div>
@@ -32,7 +32,7 @@ const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmi
 const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
 document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>{if(document.hidden){stopScannerAmbience()}else{startScannerAmbience();if(geoWatchId!==null&&Date.now()-lastGeoFixAt>6000)navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}});
 function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
-async function startCamera(){if(video.srcObject&&video.srcObject.getVideoTracks().some(t=>t.readyState==='live'))return true;if(cameraStartPromise)return cameraStartPromise;cameraStartPromise=(async()=>{if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;const attempts=[{video:{facingMode:{ideal:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}},audio:false},{video:{facingMode:{ideal:'environment'}},audio:false}];for(const constraints of attempts){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;video.setAttribute('playsinline','');try{await Promise.race([video.play(),new Promise(r=>setTimeout(r,220))])}catch(e){}permGate.classList.add('camera-ready');return true}catch(e){}}return false})().finally(()=>cameraStartPromise=null);return cameraStartPromise;}
+async function startCamera(){if(video.srcObject&&video.srcObject.getVideoTracks().some(t=>t.readyState==='live'))return true;if(cameraStartPromise)return cameraStartPromise;cameraStartPromise=(async()=>{if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;/* v22: 카메라를 최우선으로 표시한다. 초기 getUserMedia에는 해상도/프레임 제약을 거의 주지 않아 브라우저가 가장 빨리 열 수 있는 후면 카메라 스트림을 먼저 확보하고, 화면이 보인 뒤 품질 제약은 백그라운드로 적용한다. */const attempts=[{video:{facingMode:{ideal:'environment'}},audio:false},{video:true,audio:false}];for(const constraints of attempts){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;video.setAttribute('playsinline','');video.muted=true;try{await Promise.race([video.play(),new Promise(r=>setTimeout(r,120))])}catch(e){}permGate.classList.add('camera-ready');const track=stream.getVideoTracks&&stream.getVideoTracks()[0];if(track&&track.applyConstraints){setTimeout(()=>track.applyConstraints({width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}).catch(()=>{}),0)}return true}catch(e){}}return false})().finally(()=>cameraStartPromise=null);return cameraStartPromise;}
 async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query)return;const p=await navigator.permissions.query({name:'camera'});if(p.state==='granted'){startCamera().then(ok=>{if(ok)setStep(stepCam,true)})}}catch(e){}}
 const GEO_FAST={enableHighAccuracy:false,maximumAge:15000,timeout:3500};
 const GEO_FINE={enableHighAccuracy:true,maximumAge:1000,timeout:12000};
@@ -61,24 +61,27 @@ async function startGeolocation(){
 }
 async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query||!navigator.geolocation)return;const p=await navigator.permissions.query({name:'geolocation'});if(p.state==='granted')navigator.geolocation.getCurrentPosition(x=>acceptLocation(x),()=>{},GEO_FAST)}catch(e){}}
 async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
-permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라·위치 신호를 동시에 준비하고 있어요…';const camP=startCamera(),locP=startGeolocation(),oriP=startOrientation();const camOk=await camP;setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}permNote.textContent='카메라 연결 완료 · 위치 신호 확인 중…';const [locOk,oriOk]=await Promise.all([locP,oriP]);setStep(stepLoc,locOk);setStep(stepOri,oriOk);if(!locOk){permNote.textContent='카메라는 연결되었습니다. 위치 권한을 허용한 뒤 다시 눌러 주세요.';permStartBtn.disabled=false;return;}permGate.style.display='none';beginTracking(oriOk);startScannerAmbience();playSfx('spawn');showPrivacyBadge();};warmStartCameraIfGranted();warmStartLocationIfGranted();
+let trackingStarted=false,orientationAttached=false,geoRecoveryTimer=null;
+function enableOrientationTracking(){if(orientationAttached)return;const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true);orientationAttached=true;}
+permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라를 여는 중…';/* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를 백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';beginTracking(false);startScannerAmbience();playSfx('spawn');showPrivacyBadge();/* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};warmStartCameraIfGranted();warmStartLocationIfGranted();
 
 function showPrivacyBadge(){if(!privacyBadge)return;privacyBadge.classList.remove('show','hide');void privacyBadge.offsetWidth;privacyBadge.classList.add('show');setTimeout(()=>privacyBadge.classList.add('hide'),2800);setTimeout(()=>privacyBadge.classList.remove('show','hide'),3900);}
 function beginTracking(oriOk){
-  stopLocationTracking();
-  // 정밀 watch + 저전력 fallback을 병행한다. 일부 안드로이드 브라우저에서 정밀 GPS가
-  // 늦게 뜨는 동안 coarse fix가 먼저 들어와 '위치 신호 없음' 상태를 줄인다.
-  geoWatchId=navigator.geolocation.watchPosition(acceptLocation,onPosError,GEO_FINE);
-  geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{if(Date.now()-lastGeoFixAt>4500)acceptLocation(p)},()=>{},GEO_FAST);
-  if(oriOk){const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true)}else{statusBanner.textContent='거리 신호를 따라 목표에 가까이 이동하세요.'}
-  // GPS가 장시간 갱신되지 않으면 단발 재요청으로 자동 복구한다.
-  setInterval(()=>{if(!document.hidden&&Date.now()-lastGeoFixAt>10000&&navigator.geolocation){navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}},8000);
-// v17: 매 프레임(최대 초당 60회) 상태를 재계산하던 requestAnimationFrame 루프를
-// 초당 약 8회(120ms) 간격의 setInterval로 전환. 위치(GPS)는 원래 1Hz 안팎으로만
-// 갱신되고, dwell 진행 링은 CSS transition이 부드럽게 보간해 주기 때문에
-// 이 정도 주기로도 체감 품질 차이 없이 배터리·발열 부담을 크게 줄일 수 있다.
-renderTimer=setInterval(updateUI,120);}
-function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}geoWatchId=geoFallbackWatchId=null;}
+  if(!navigator.geolocation){statusBanner.classList.add('show');statusBanner.textContent='이 기기에서는 위치 기능을 사용할 수 없습니다.';return;}
+  if(!trackingStarted){
+    stopLocationTracking();
+    // 정밀 watch + 저전력 fallback을 병행한다. 카메라 화면은 이미 표시된 상태에서 GPS는 백그라운드로 수렴한다.
+    geoWatchId=navigator.geolocation.watchPosition(acceptLocation,onPosError,GEO_FINE);
+    geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{if(Date.now()-lastGeoFixAt>3500)acceptLocation(p)},()=>{},GEO_FAST);
+    trackingStarted=true;
+    if(geoRecoveryTimer)clearInterval(geoRecoveryTimer);
+    geoRecoveryTimer=setInterval(()=>{if(!document.hidden&&Date.now()-lastGeoFixAt>8000&&navigator.geolocation){navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}},6500);
+    if(renderTimer)clearInterval(renderTimer);
+    renderTimer=setInterval(updateUI,120);
+  }
+  if(oriOk)enableOrientationTracking();
+}
+function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}geoWatchId=geoFallbackWatchId=null;trackingStarted=false;}
 function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요. 창가나 열린 공간으로 이동해 주세요.'}}
 let lastPosSample=null,spoofLockUntil=0;
 function onFilteredPosition(raw){const rawAcc=Math.max(1,Number(raw.accuracy||curAccuracy||999));accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>35);accuracyChip.title='최근 위치 정확도 ±'+Math.round(curAccuracy||rawAcc)+'m';
