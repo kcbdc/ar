@@ -1,0 +1,60 @@
+/* JOPAMS GO v22 — camera-first launch + AR HUD composition */
+:root{--ar-hud-gap:10px;--ar-hud-side:18px}
+/* four topbar children get dedicated columns; prevents sound/progress wrapping */
+body.ar-body .ar-topbar{
+  top:calc(12px + var(--safe-t))!important;left:18px!important;right:18px!important;
+  grid-template-columns:52px minmax(0,1fr) 52px 58px!important;gap:8px!important;align-items:center!important;
+}
+body.ar-body .ar-exit{width:50px!important;height:50px!important;border-radius:17px!important;font-size:30px!important;line-height:1!important}
+body.ar-body .ar-brand{justify-self:center;min-width:82px}
+body.ar-body .ar-brand small{font-size:8px!important;letter-spacing:3px!important}
+body.ar-body .ar-brand b{font-size:24px!important}
+body.ar-body .ar-sound{position:static!important;justify-self:center!important;width:48px!important;height:48px!important;margin:0!important;border-radius:16px!important}
+body.ar-body .ar-progress{justify-self:end!important;width:56px!important;height:50px!important;border-radius:17px!important;align-items:center!important;line-height:1!important}
+body.ar-body .ar-progress span{font-size:22px!important;line-height:1!important}
+body.ar-body .ar-progress small{font-size:11px!important;line-height:1!important;margin-left:2px}
+/* HUD hierarchy: target -> 4-step guide -> signal/weather row. Every layer owns its vertical slot. */
+body.ar-body .quest-chip{
+  top:calc(78px + var(--safe-t))!important;left:50%!important;transform:translateX(-50%)!important;
+  min-height:42px!important;max-width:calc(100vw - 120px)!important;padding:9px 15px!important;font-size:12px!important;
+  overflow:hidden;text-overflow:ellipsis;
+}
+body.ar-body .quest-chip b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.ar-body .quest-chip .ui-svg{width:22px;height:22px;flex:0 0 auto}
+body.ar-body .ar-step-guide{
+  top:calc(128px + var(--safe-t))!important;gap:2px!important;padding:4px!important;max-width:calc(100vw - 54px)!important;
+  background:rgba(3,17,37,.70)!important;
+}
+body.ar-body .ar-step-guide span{font-size:10px!important;padding:5px 8px!important;line-height:1!important}
+body.ar-body .range-chip{
+  top:calc(170px + var(--safe-t))!important;left:18px!important;right:auto!important;transform:none!important;
+  max-width:calc(100vw - 148px)!important;min-height:36px;display:flex;align-items:center;
+  padding:7px 12px!important;font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+body.ar-body .env-chip{
+  top:calc(170px + var(--safe-t))!important;right:18px!important;left:auto!important;min-height:36px;
+  padding:7px 10px!important;font-size:10px!important;white-space:nowrap;
+}
+body.ar-body .env-chip .ui-svg{width:17px!important;height:17px!important}
+/* transient privacy message belongs near the bottom, not in the already occupied top HUD */
+body.ar-body .ar-privacy-badge{top:auto!important;bottom:calc(142px + var(--safe-b))!important;max-width:78vw!important}
+/* camera is visually available before GPS converges */
+body.ar-body .perm-gate.camera-first-exit{opacity:0;pointer-events:none;transition:opacity .09s ease!important}
+body.ar-body .perm-gate.camera-ready{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:rgba(0,0,0,.06)!important}
+@media(max-width:390px){
+  body.ar-body .ar-topbar{left:12px!important;right:12px!important;grid-template-columns:48px minmax(0,1fr) 46px 54px!important;gap:6px!important}
+  body.ar-body .ar-exit{width:46px!important;height:46px!important}
+  body.ar-body .ar-sound{width:44px!important;height:44px!important}
+  body.ar-body .ar-progress{width:52px!important;height:46px!important}
+  body.ar-body .quest-chip{top:calc(72px + var(--safe-t))!important;max-width:calc(100vw - 90px)!important}
+  body.ar-body .ar-step-guide{top:calc(120px + var(--safe-t))!important;max-width:calc(100vw - 28px)!important}
+  body.ar-body .ar-step-guide span{font-size:9.5px!important;padding:5px 6px!important}
+  body.ar-body .range-chip,body.ar-body .env-chip{top:calc(160px + var(--safe-t))!important}
+  body.ar-body .range-chip{left:12px!important;max-width:calc(100vw - 132px)!important}
+  body.ar-body .env-chip{right:12px!important}
+}
+@media(max-height:700px){
+  body.ar-body .quest-chip{top:calc(68px + var(--safe-t))!important}
+  body.ar-body .ar-step-guide{top:calc(112px + var(--safe-t))!important}
+  body.ar-body .range-chip,body.ar-body .env-chip{top:calc(150px + var(--safe-t))!important}
+}
