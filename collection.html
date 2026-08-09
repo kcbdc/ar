@@ -2,18 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#06142b"><title>조팸스 GO | 컬렉션</title><link rel="stylesheet" href="assets/style.css">
+<meta name="theme-color" content="#06142b"><title>조팸스 GO | 컬렉션</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
 </head>
 <body class="app-body">
 <main class="app-shell page-shell">
   <header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">DISCOVERY BOOK</span><h1>공공구매 컬렉션</h1></div><span class="counter-pill" id="counter">0/12</span></header>
   <section class="collection-hero premium-card compact"><div><span class="section-kicker">YOUR PROGRESS</span><h2 id="collectionHeadline">첫 발견을 시작해보세요</h2><p>발견한 제도는 도감에 기록되고 핵심 내용을 언제든 복습할 수 있어요.</p><span class="discovery-rate" id="discoveryRate">DISCOVERY 0%</span></div><div class="mini-ring" id="miniRing"><b id="miniCount">0</b><small>/12</small></div></section>
   <section class="collection-grid" id="collectionGrid"></section>
+  <section class="master-banner" id="masterBanner"><span class="master-icon" data-ui-icon="trophy"></span><div><h3 id="masterTitle">MASTER MODE</h3><p id="masterDesc">12개 제도를 모두 발견하면 실제 사례형 마스터 테스트가 열립니다.</p></div><a id="masterLink" href="master.html">도전하기</a></section>
   <div class="bottom-spacer"></div>
 </main>
 <nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a class="active" href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="ranking.html"><span>♛</span><b>랭킹</b></a></nav>
 <div class="sheet" id="itemSheet" aria-hidden="true"><button class="sheet-dim" data-close-sheet></button><div class="sheet-card"><div class="sheet-handle"></div><div class="item-detail"><div class="detail-icon modern-detail-icon" id="detailIcon"></div><span class="section-kicker" id="detailTag">ITEM 01 / 12</span><h2 id="detailName">중소기업제품</h2><p id="detailQuote"></p><div class="learning-box"><b>10초 핵심</b><p id="detailLearn"></p></div></div><button class="sheet-primary" data-close-sheet>컬렉션으로 돌아가기</button></div></div>
-<script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script>
+<script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script>
 <script>
 const learn = {
 1:'공공기관의 구매력을 활용해 중소기업의 판로 확대와 경쟁력 강화를 지원하는 공공구매 영역입니다.',
@@ -31,8 +32,9 @@ const learn = {
 const done=getProgress(); document.getElementById('counter').textContent=done.length+'/12'; document.getElementById('miniCount').textContent=done.length; document.getElementById('miniRing').style.setProperty('--p',(done.length/12*360)+'deg');
 document.getElementById('collectionHeadline').textContent=done.length?done.length+'개의 제도를 발견했어요':'첫 발견을 시작해보세요';document.getElementById('discoveryRate').textContent='DISCOVERY '+discoveryPercent()+'%';
 const grid=document.getElementById('collectionGrid');
-EPISODES.forEach(ep=>{ const got=done.includes(ep.id),date=got?discoveryDate(ep.id):''; const b=document.createElement('button'); b.className='collection-item '+(got?'unlocked':'locked'); b.innerHTML=`<span class="collection-no">${String(ep.id).padStart(2,'0')}</span><span class="collection-state">${got?'DISCOVERED':'LOCKED'}</span><div class="collection-icon modern-collection-icon">${publicPurchaseIcon(ep.id,got)}</div><b>${got?ep.item:'???'}</b><small>${got?(date?date+' 발견 · 다시 보기':'핵심 제도 다시 보기'):'AR 탐험에서 발견하세요'}</small>`; if(got)b.onclick=()=>openDetail(ep); grid.appendChild(b); });
+EPISODES.forEach(ep=>{ const got=done.includes(ep.id),date=got?discoveryDate(ep.id):''; const b=document.createElement('button'); b.className='collection-item '+(got?'unlocked':'locked'); const rarity=got?JopamsLive.episodeRarity(ep.id):{key:'normal',name:'LOCKED',visits:0}; b.innerHTML=`<span class="collection-no">${String(ep.id).padStart(2,'0')}</span><span class="collection-state">${got?'DISCOVERED':'LOCKED'}</span><div class="collection-icon modern-collection-icon">${publicPurchaseIcon(ep.id,got)}</div><b>${got?ep.item:'???'}</b><small>${got?(date?date+' 발견 · '+rarity.visits+'회 기록':'핵심 제도 다시 보기'):'AR 탐험에서 발견하세요'}</small><span class="rarity-badge rarity-${rarity.key}">${rarity.name}</span>`; if(got)b.onclick=()=>openDetail(ep); grid.appendChild(b); });
 const sheet=document.getElementById('itemSheet'); function openDetail(ep){ document.getElementById('detailIcon').innerHTML=publicPurchaseIcon(ep.id,true);document.getElementById('detailTag').textContent='ITEM '+String(ep.id).padStart(2,'0')+' / 12';document.getElementById('detailName').textContent=ep.item;document.getElementById('detailQuote').textContent='“'+ep.quote+'”';document.getElementById('detailLearn').textContent=learn[ep.id];sheet.classList.add('show');sheet.setAttribute('aria-hidden','false'); }
+const masterLink=document.getElementById('masterLink'),masterTitle=document.getElementById('masterTitle'),masterDesc=document.getElementById('masterDesc');const mastery=JopamsLive.collectionMastery();masterLink.style.display=mastery.unlocked?'flex':'none';masterTitle.textContent=mastery.unlocked?'MASTER MODE 해금':'MASTER MODE 잠김';masterDesc.textContent=mastery.unlocked?'12개 제도 수집 완료 · 실제 사례형 테스트에 도전하세요':`${mastery.done}/12 발견 · 모두 수집하면 마스터 테스트가 열립니다`;
 document.querySelectorAll('[data-close-sheet]').forEach(el=>el.onclick=()=>{sheet.classList.remove('show');sheet.setAttribute('aria-hidden','true');});
 </script>
 <script>document.addEventListener('click',e=>{const t=e.target.closest('.collection-card,.episode-card,.learn-card,button,a');if(t&&t.closest('main')){pushEvent('learn',{source:'collection'});}});</script>
