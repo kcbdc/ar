@@ -20,7 +20,7 @@
 <div class="character-reaction" id="characterReaction"><span id="reactionText">발견했어요!</span><img id="reactionImg" src="assets/img/daim.png" alt=""></div><div class="capture-flash" id="captureFlash"></div><div class="particle-field" id="particleField"></div><div class="card-overlay" id="cardOverlay"><div class="get-card commercial"><span class="discovery-kicker">NEW DISCOVERY</span><div class="reward-burst"><div class="icon" id="cardIcon"></div></div><div class="tag" id="cardTag">ITEM 01 / 12</div><div class="name" id="cardName">중소기업제품</div><div class="xp-award">+100 XP</div><div class="quote" id="cardQuote">“이거 만든 사람이 누구게?”</div><div class="micro-learn" id="microLearn"><div class="micro-learn-head"><span data-ui-icon="book"></span><b>10초 지식 보너스</b></div><p id="microLearnText"></p><button id="microLearnBtn">핵심 확인하고 +30 XP</button></div><div class="all-done-badge" id="allDoneBadge" style="display:none;"><span data-ui-icon="trophy"></span> 12개 전체 수집 완료!</div><button id="cardNextBtn">계속 탐험하기 <span>→</span></button><a class="card-link" href="collection.html">컬렉션에서 다시 보기</a></div></div>
 <script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script>
 <script>
-let curLat=null,curLng=null,curHeading=null,curAccuracy=null;let cameraStartPromise=null;let wasTargetVisible=false;let pendingEpisode=null,pendingCheckpoint=null,pendingRevisit=false;let notifiedIdx=new Set();let dwellStart=null,dwellTargetEpId=null;let collectingLock=false;const CIRC=2*Math.PI*27;let headingSamples=[];
+let curLat=null,curLng=null,curHeading=null,curAccuracy=null;let cameraStartPromise=null;let geoWatchId=null,geoFallbackWatchId=null,lastGeoFixAt=0,locationSamples=[];let wasTargetVisible=false;let pendingEpisode=null,pendingCheckpoint=null,pendingRevisit=false;let notifiedIdx=new Set();let dwellStart=null,dwellTargetEpId=null;let collectingLock=false;const CIRC=2*Math.PI*27;let headingSamples=[];
 // v39: 촘촘하게 몰려있는 체크포인트 구간에서 한 자리에 서 있어도 서로 다른
 // 항목이 연달아 포획되던 문제 방지. 직전 획득 지점에서 일정 거리 이상
 // 이동해야만 다음 발견이 가능하도록 제한한다.
@@ -30,25 +30,58 @@ let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),charac
 const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
 const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmin:'assets/img/hoonmin.png'};const env=JopamsLive.environment();document.getElementById('envIcon').innerHTML=uiIcon(env.weather==='rain'?'rain':env.weather==='cloud'?'cloud':env.period==='night'?'moon':'sun');const activeAvatar=()=>getProfile().avatar||'daim';const currentPerks=()=>JopamsLive.skillPerks(activeAvatar());const episodeGame=ep=>['speed','shield','quiz','trace'][(Number(ep?.id||1)-1)%4];
 const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
-document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>document.hidden?stopScannerAmbience():startScannerAmbience());
+document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>{if(document.hidden){stopScannerAmbience()}else{startScannerAmbience();if(geoWatchId!==null&&Date.now()-lastGeoFixAt>6000)navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}});
 function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
 async function startCamera(){if(video.srcObject&&video.srcObject.getVideoTracks().some(t=>t.readyState==='live'))return true;if(cameraStartPromise)return cameraStartPromise;cameraStartPromise=(async()=>{if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;const attempts=[{video:{facingMode:{ideal:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}},audio:false},{video:{facingMode:{ideal:'environment'}},audio:false}];for(const constraints of attempts){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;video.setAttribute('playsinline','');try{await Promise.race([video.play(),new Promise(r=>setTimeout(r,220))])}catch(e){}permGate.classList.add('camera-ready');return true}catch(e){}}return false})().finally(()=>cameraStartPromise=null);return cameraStartPromise;}
 async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query)return;const p=await navigator.permissions.query({name:'camera'});if(p.state==='granted'){startCamera().then(ok=>{if(ok)setStep(stepCam,true)})}}catch(e){}}
-async function startGeolocation(){if(!navigator.geolocation)return false;return new Promise(r=>navigator.geolocation.getCurrentPosition(()=>r(true),()=>r(false),{enableHighAccuracy:true,maximumAge:2500,timeout:5500}));}
-async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query||!navigator.geolocation)return;const p=await navigator.permissions.query({name:'geolocation'});if(p.state==='granted')navigator.geolocation.getCurrentPosition(()=>{},()=>{},{enableHighAccuracy:false,maximumAge:5000,timeout:2500})}catch(e){}}
+const GEO_FAST={enableHighAccuracy:false,maximumAge:15000,timeout:3500};
+const GEO_FINE={enableHighAccuracy:true,maximumAge:1000,timeout:12000};
+function acceptLocation(pos){
+  if(!pos||!pos.coords)return false;
+  const acc=Math.max(1,Number(pos.coords.accuracy||999));
+  const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:acc,t:Date.now()};
+  if(!Number.isFinite(sample.lat)||!Number.isFinite(sample.lng))return false;
+  // 아주 불안정한 순간값은 이미 양호한 위치가 있을 때만 버린다.
+  if(curLat!==null&&acc>150&&curAccuracy!==null&&curAccuracy<80)return false;
+  locationSamples.push(sample);if(locationSamples.length>6)locationSamples.shift();
+  // 최근 샘플을 정확도 역가중 평균하여 실내/도심 GPS의 순간 튐을 완화한다.
+  const recent=locationSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
+  let wsum=0,lat=0,lng=0;for(const x of recent){const w=1/Math.max(8,x.accuracy);wsum+=w;lat+=x.lat*w;lng+=x.lng*w;}
+  curLat=lat/wsum;curLng=lng/wsum;curAccuracy=Math.min(...recent.map(x=>x.accuracy));lastGeoFixAt=Date.now();
+  onFilteredPosition(sample);return true;
+}
+async function startGeolocation(){
+  if(!navigator.geolocation)return false;
+  return new Promise(resolve=>{let done=false;const finish=ok=>{if(!done){done=true;resolve(ok)}};
+    // 캐시/네트워크 위치를 먼저 받아 UI를 빠르게 띄우고 동시에 정밀 GPS를 요청한다.
+    navigator.geolocation.getCurrentPosition(p=>{acceptLocation(p);finish(true)},()=>{},GEO_FAST);
+    navigator.geolocation.getCurrentPosition(p=>{acceptLocation(p);finish(true)},e=>{if(e&&e.code===1)finish(false)},GEO_FINE);
+    setTimeout(()=>finish(curLat!==null),9000);
+  });
+}
+async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query||!navigator.geolocation)return;const p=await navigator.permissions.query({name:'geolocation'});if(p.state==='granted')navigator.geolocation.getCurrentPosition(x=>acceptLocation(x),()=>{},GEO_FAST)}catch(e){}}
 async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
 permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라·위치 신호를 동시에 준비하고 있어요…';const camP=startCamera(),locP=startGeolocation(),oriP=startOrientation();const camOk=await camP;setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}permNote.textContent='카메라 연결 완료 · 위치 신호 확인 중…';const [locOk,oriOk]=await Promise.all([locP,oriP]);setStep(stepLoc,locOk);setStep(stepOri,oriOk);if(!locOk){permNote.textContent='카메라는 연결되었습니다. 위치 권한을 허용한 뒤 다시 눌러 주세요.';permStartBtn.disabled=false;return;}permGate.style.display='none';beginTracking(oriOk);startScannerAmbience();playSfx('spawn');showPrivacyBadge();};warmStartCameraIfGranted();warmStartLocationIfGranted();
 
 function showPrivacyBadge(){if(!privacyBadge)return;privacyBadge.classList.remove('show','hide');void privacyBadge.offsetWidth;privacyBadge.classList.add('show');setTimeout(()=>privacyBadge.classList.add('hide'),2800);setTimeout(()=>privacyBadge.classList.remove('show','hide'),3900);}
-function beginTracking(oriOk){navigator.geolocation.watchPosition(onPosition,onPosError,{enableHighAccuracy:true,maximumAge:700,timeout:15000});if(oriOk){const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true)}else{statusBanner.textContent='거리 신호를 따라 목표에 가까이 이동하세요.'}
+function beginTracking(oriOk){
+  stopLocationTracking();
+  // 정밀 watch + 저전력 fallback을 병행한다. 일부 안드로이드 브라우저에서 정밀 GPS가
+  // 늦게 뜨는 동안 coarse fix가 먼저 들어와 '위치 신호 없음' 상태를 줄인다.
+  geoWatchId=navigator.geolocation.watchPosition(acceptLocation,onPosError,GEO_FINE);
+  geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{if(Date.now()-lastGeoFixAt>4500)acceptLocation(p)},()=>{},GEO_FAST);
+  if(oriOk){const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true)}else{statusBanner.textContent='거리 신호를 따라 목표에 가까이 이동하세요.'}
+  // GPS가 장시간 갱신되지 않으면 단발 재요청으로 자동 복구한다.
+  setInterval(()=>{if(!document.hidden&&Date.now()-lastGeoFixAt>10000&&navigator.geolocation){navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}},8000);
 // v17: 매 프레임(최대 초당 60회) 상태를 재계산하던 requestAnimationFrame 루프를
 // 초당 약 8회(120ms) 간격의 setInterval로 전환. 위치(GPS)는 원래 1Hz 안팎으로만
 // 갱신되고, dwell 진행 링은 CSS transition이 부드럽게 보간해 주기 때문에
 // 이 정도 주기로도 체감 품질 차이 없이 배터리·발열 부담을 크게 줄일 수 있다.
 renderTimer=setInterval(updateUI,120);}
-function onPosError(){statusBanner.textContent='위치 신호를 보정하고 있어요. 열린 공간에서 잠시 기다려 주세요.';}
+function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}geoWatchId=geoFallbackWatchId=null;}
+function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요. 창가나 열린 공간으로 이동해 주세요.'}}
 let lastPosSample=null,spoofLockUntil=0;
-function onPosition(pos){curLat=pos.coords.latitude;curLng=pos.coords.longitude;curAccuracy=Number(pos.coords.accuracy||0);accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>25);
+function onFilteredPosition(raw){const rawAcc=Math.max(1,Number(raw.accuracy||curAccuracy||999));accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>35);accuracyChip.title='최근 위치 정확도 ±'+Math.round(curAccuracy||rawAcc)+'m';
 // v17: 기초적인 위치 위조(GPS 스푸핑) 감지. 두 위치 샘플 사이의 "이동 속도"가
 // 사람이 걸어서 낼 수 없는 수준(예: 시속 60km 이상)이면 순간이동으로 간주해
 // 몇 초간 포획을 잠그는 가벼운 저지선.
@@ -56,8 +89,11 @@ function onPosition(pos){curLat=pos.coords.latitude;curLng=pos.coords.longitude;
 // collectingLock과 섞이지 않도록 함 — 이전엔 같은 변수를 건드려 타이밍에 따라
 // 잠금이 의도치 않게 풀리거나 겹칠 수 있었음.
 const now=performance.now();
-if(lastPosSample){const dt=(now-lastPosSample.t)/1000;if(dt>0.3){const d=distMeters(lastPosSample.lat,lastPosSample.lng,curLat,curLng);const speed=d/dt;if(speed>16.7&&now>spoofLockUntil){spoofLockUntil=now+8000;showToast('비정상적인 이동이 감지되어 잠시 포획이 제한됩니다',{variant:'error',duration:2600});}}}
-lastPosSample={lat:curLat,lng:curLng,t:now};
+if(lastPosSample){const dt=(now-lastPosSample.t)/1000;if(dt>0.3){const d=distMeters(lastPosSample.lat,lastPosSample.lng,curLat,curLng),speed=d/dt;
+  // GPS 오차가 큰 상황의 순간 점프를 위조로 오인하지 않는다. 양쪽 샘플이 모두 비교적 정밀하고
+  // 오차범위를 크게 넘어선 이동일 때만 잠근다.
+  if(lastPosSample.accuracy<=35&&curAccuracy<=35&&d>Math.max(45,(lastPosSample.accuracy+curAccuracy)*1.4)&&speed>16.7&&now>spoofLockUntil){spoofLockUntil=now+8000;showToast('비정상적인 이동이 감지되어 잠시 포획이 제한됩니다',{variant:'error',duration:2600});}}}
+lastPosSample={lat:curLat,lng:curLng,accuracy:curAccuracy,t:now};
 }
 function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
 function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);}}
@@ -74,14 +110,20 @@ const nearest=allDone?nearestAnyCheckpoint(curLat,curLng):nearestUncollectedChec
 if(!nearest){epTag.innerHTML='<span>'+uiIcon('trophy')+'</span><b>원정 완료</b>';statusBanner.classList.add('show');statusBanner.textContent='12개 아이템을 모두 발견했습니다!';radarDist.textContent='ALL CLEAR';targetWrap.classList.remove('visible');dwellRing.classList.remove('show');return;}
 const {checkpoint,distance}=nearest,ep=getEpisode(checkpoint.episodeId);
 if(allDone){epTag.innerHTML='<span>'+uiIcon('trophy')+'</span><b>재방문 · '+ep.item+'</b>';}else{epTag.innerHTML='<span>'+publicPurchaseIcon(ep.id,true)+'</span><b>'+ep.item+'</b>';}
-radarDist.textContent=fmtNum(Math.round(distance))+'m';setSignal(distance);updateRangeExperience(distance);if(distance<=NOTIFY_RADIUS_M&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast(allDone?'재방문 신호 포착! <b>'+ep.item+'</b> 지점이 근처예요':'신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>NOTIFY_RADIUS_M+15)notifiedIdx.delete(checkpoint.idx);const effectiveCollectRadius=Math.max(COLLECT_RADIUS_M,Math.min(30,(curAccuracy||0)*0.65));if(distance>NOTIFY_RADIUS_M){statusBanner.classList.add('show');statusBanner.textContent=allDone?'재방문 지점 방향으로 이동해보세요':'신호를 따라 체크포인트 방향으로 이동하세요';}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else{statusBanner.classList.remove('show');}
-let diff=0,haveHeading=curHeading!==null;if(haveHeading){const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);diff=angleDiff(bearing,curHeading);}const spoofLocked=performance.now()<spoofLockUntil;const tooCloseToLastCollect=lastCollectPos&&distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)<POST_COLLECT_MOVE_M;const inCollectRange=distance<=effectiveCollectRadius,facingTarget=!haveHeading||Math.abs(diff)<=FOV_HALF_DEG,discoverable=inCollectRange&&facingTarget&&!collectingLock&&!spoofLocked&&!tooCloseToLastCollect;
+const accuracy=curAccuracy||20;
+const effectiveNotifyRadius=Math.max(NOTIFY_RADIUS_M,Math.min(85,NOTIFY_RADIUS_M+Math.max(0,accuracy-20)*0.65));
+const effectiveCollectRadius=Math.max(COLLECT_RADIUS_M,Math.min(42,COLLECT_RADIUS_M+Math.max(0,accuracy-12)*0.55));
+radarDist.textContent=fmtNum(Math.round(distance))+'m';setSignal(Math.max(0,distance-(effectiveNotifyRadius-NOTIFY_RADIUS_M)));updateRangeExperience(distance);if(distance<=effectiveNotifyRadius&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast(allDone?'재방문 신호 포착! <b>'+ep.item+'</b> 지점이 근처예요':'신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>effectiveNotifyRadius+15)notifiedIdx.delete(checkpoint.idx);if(distance>effectiveNotifyRadius){statusBanner.classList.add('show');statusBanner.textContent=accuracy>40?'GPS 오차 ±'+Math.round(accuracy)+'m · 신호를 보정하며 이동하세요':(allDone?'재방문 지점 방향으로 이동해보세요':'신호를 따라 체크포인트 방향으로 이동하세요');}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else{statusBanner.classList.remove('show');}
+let diff=0,haveHeading=curHeading!==null;if(haveHeading){const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);diff=angleDiff(bearing,curHeading);}const spoofLocked=performance.now()<spoofLockUntil;const tooCloseToLastCollect=lastCollectPos&&distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)<POST_COLLECT_MOVE_M;const inCollectRange=distance<=effectiveCollectRadius;
+// 위치 오차가 큰 환경에서는 GPS 좌표와 방위 계산 자체가 흔들리므로 방향 허용폭도 자동 완화한다.
+const effectiveFov=accuracy>45?75:accuracy>30?58:FOV_HALF_DEG,facingTarget=!haveHeading||Math.abs(diff)<=effectiveFov,discoverable=inCollectRange&&facingTarget&&!collectingLock&&!spoofLocked&&!tooCloseToLastCollect;
 if(discoverable){statusBanner.classList.add('show');statusBanner.textContent='타깃 포착 · 중앙에 2.2초 유지하세요';const charKey=activeAvatar();targetImg.src=charImgs[charKey];targetLabel.innerHTML=publicPurchaseIcon(ep.id,true)+'<b>'+ep.item+(allDone?' · 재방문':'')+'</b>';const xRatio=haveHeading?Math.max(-1,Math.min(1,diff/FOV_HALF_DEG)):0,maxOffset=Math.min(innerWidth*.28,105),scale=1.38-Math.min(distance/effectiveCollectRadius,1)*.28;targetWrap.style.setProperty('--target-x',(xRatio*maxOffset)+'px');targetWrap.style.setProperty('--target-scale',scale.toFixed(2));const depth=Math.max(0,Math.min(1,1-distance/effectiveCollectRadius));targetWrap.style.setProperty('--target-depth',depth.toFixed(2));targetWrap.style.setProperty('--shadow-scale',(.72+depth*.28).toFixed(2));targetWrap.classList.add('visible');if(!wasTargetVisible){targetWrap.classList.remove('spawn');void targetWrap.offsetWidth;targetWrap.classList.add('spawn');playSfx('spawn')}wasTargetVisible=true;arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');dwellRing.classList.add('show');if(dwellStart===null||dwellTargetEpId!==ep.id){dwellStart=performance.now();dwellTargetEpId=ep.id;if(activeAvatar()==='hoonmin')prefetchAIQuiz(ep.item);}const live=JopamsLive.load(),perk=currentPerks(),baseReduction=activeAvatar()==='sunsik'?(perk.dwellReductionPct||0):0,rareReduction=(live.rareUnlocked.includes('shadow_sunsik')&&activeAvatar()==='sunsik')?15:0,dwellMs=Math.max(1450,Math.round(DWELL_MS*(1-(baseReduction+rareReduction)/100)));const pct=Math.min((performance.now()-dwellStart)/dwellMs,1);dwellFg.style.strokeDashoffset=String(CIRC*(1-pct));if(pct>=1&&!collectingLock)startMiniGame(ep,checkpoint,allDone);}else{targetWrap.classList.remove('visible');wasTargetVisible=false;dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;dwellFg.style.strokeDashoffset=String(CIRC);
 if(tooCloseToLastCollect){
   const remain=Math.max(0,Math.round(POST_COLLECT_MOVE_M-distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)));
   statusBanner.classList.add('show');statusBanner.textContent='다음 신호를 받으려면 조금 더 이동하세요 · '+remain+'m';
   arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');
 }else if(inCollectRange&&haveHeading){const deg=Math.max(1,Math.round(Math.abs(diff)));if(diff>0){arrowRight.classList.add('visible');arrowLeft.classList.remove('visible');arrowRight.querySelector('small').textContent='RIGHT '+deg+'°'}else{arrowLeft.classList.add('visible');arrowRight.classList.remove('visible');arrowLeft.querySelector('small').textContent='LEFT '+deg+'°'}}else{arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible')}}}
+window.addEventListener('pagehide',()=>{stopLocationTracking();if(renderTimer){clearInterval(renderTimer);renderTimer=null;}});
 const MINI_TUTORIAL={
   speed:{title:'순식 · SIGNAL TAP',desc:'막대가 좌우로 움직입니다. 밝게 빛나는 가운데 포획 존에 들어왔을 때 "지금 포획!" 버튼을 눌러보세요.'},
   shield:{title:'다임 · SHIELD CHARGE',desc:'버튼을 손을 떼지 말고 계속 눌러 에너지를 100%까지 채우세요. 중간에 손을 떼면 실패합니다.'},
