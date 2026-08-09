@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css"><link rel="stylesheet" href="assets/design-system-v25.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css"><link rel="stylesheet" href="assets/design-system-v25.css"><link rel="stylesheet" href="assets/design-system-v26.css">
 </head>
 <body class="ar-body">
 <video id="cameraVideo" playsinline muted autoplay></video><div class="ar-privacy-badge" id="arPrivacyBadge"><span data-ui-icon="lock"></span><b>영상·위치 저장 안 함</b></div>
@@ -12,14 +12,26 @@
 <div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
 <div class="target-wrap" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터"><div class="target-label" id="targetLabel">중소기업제품</div></div>
-<div class="ar-multitool" id="arMultitool" data-mode="scan" aria-label="KOMSCO AR 멀티툴">
+<div class="ar-multitool splash-scanner" id="arMultitool" data-mode="scan" aria-label="KOMSCO AR 멀티툴">
   <div class="tool-glow"></div>
+  <div class="scanner-barrel" aria-hidden="true"><span class="barrel-ring r1"></span><span class="barrel-ring r2"></span><i class="scanner-lens"></i></div>
   <div class="tool-body">
-    <div class="tool-emitter"><i></i><span></span></div>
+    <div class="scanner-shell-top"></div>
+    <div class="scanner-rail"></div>
     <div class="tool-core"><span class="tool-k">K</span><i class="tool-energy"></i></div>
-    <div class="tool-screen"><small>KOMSCO MULTI</small><b id="toolModeLabel">SCAN</b><span id="toolSubLabel">신호 탐색</span></div>
-    <div class="tool-mode-dots"><i data-m="scan"></i><i data-m="track"></i><i data-m="capture"></i><i data-m="analyze"></i></div>
-    <button class="tool-trigger" id="toolTrigger" type="button" aria-label="스캐너 작동"><span></span></button>
+    <div class="tool-screen">
+      <small>KOMSCO</small><em>MULTI TOOL</em>
+      <div class="tool-mode-current"><b id="toolModeLabel">SCAN</b><span id="toolSubLabel">신호 탐색</span></div>
+      <div class="tool-mode-dots" aria-hidden="true">
+        <i data-m="scan"><span>SCAN</span></i>
+        <i data-m="track"><span>TRACK</span></i>
+        <i data-m="capture"><span>CAPTURE</span></i>
+        <i data-m="analyze"><span>ANALYZE</span></i>
+      </div>
+    </div>
+    <button class="tool-trigger" id="toolTrigger" type="button" aria-label="스캐너 작동"><span></span><small>SCAN</small></button>
+    <div class="scanner-grip"><i></i><span></span></div>
+    <div class="scanner-hand" aria-hidden="true"></div>
   </div>
   <div class="tool-pulse" id="toolPulse"></div>
 </div>
