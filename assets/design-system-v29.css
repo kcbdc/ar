@@ -1,0 +1,78 @@
+/* JOPAMS GO v29 — Forward-facing KOMSCO Scanner Gun
+   Reference intent: the tool points into the camera view, with visible side body, rail,
+   emitter and rear display. It remains a non-weapon AR scanner/multitool. */
+body.ar-body .ar-multitool{
+  --tool-x:0px;--tool-y:0px;--tool-r:0deg;
+  position:fixed;z-index:13;
+  right:clamp(-48px,-6vw,-18px);
+  bottom:calc(-38px + var(--safe-b));
+  width:clamp(255px,46vw,380px);
+  height:clamp(360px,54vh,560px);
+  pointer-events:none;
+  transform:translate3d(var(--tool-x),var(--tool-y),0) rotate(calc(-18deg + var(--tool-r)));
+  transform-origin:88% 96%;
+  filter:drop-shadow(-16px 24px 24px rgba(0,0,0,.48));
+  will-change:transform;
+}
+body.ar-body .ar-multitool .tool-body{
+  position:absolute;inset:auto 0 0 auto;width:88%;height:92%;overflow:visible;pointer-events:auto;
+  border:0;background:none;box-shadow:none;border-radius:0;
+}
+body.ar-body .ar-multitool .tool-body:after{display:none!important}
+body.ar-body .tool-side-shell{
+  position:absolute;right:8%;top:12%;width:76%;height:62%;
+  clip-path:polygon(13% 0,84% 4%,100% 28%,93% 82%,67% 100%,15% 86%,0 45%);
+  background:
+    linear-gradient(100deg,rgba(255,255,255,.92),rgba(214,225,234,.98) 30%,rgba(113,127,141,.94) 31%,rgba(31,42,53,.98) 41%,rgba(235,241,246,.98) 44%,rgba(159,173,186,.96) 74%,rgba(52,65,78,.98));
+  border:2px solid rgba(220,238,248,.86);
+  box-shadow:inset -18px -18px 28px rgba(0,0,0,.32),inset 12px 8px 16px rgba(255,255,255,.28),0 0 0 2px rgba(12,25,40,.9);
+}
+body.ar-body .tool-side-shell:before{
+  content:"";position:absolute;left:13%;top:11%;width:52%;height:15%;border-radius:8px;
+  background:linear-gradient(180deg,#132334,#0a1522);box-shadow:0 0 0 2px rgba(90,107,122,.5),inset 0 0 14px rgba(0,0,0,.8)
+}
+body.ar-body .tool-side-shell:after{
+  content:"";position:absolute;left:17%;bottom:13%;width:56%;height:22%;border-radius:12px 5px 14px 9px;
+  background:linear-gradient(120deg,#202f3d,#07111d);box-shadow:inset 0 0 0 2px rgba(78,218,255,.18)
+}
+body.ar-body .tool-nose{position:absolute;left:-3%;top:1%;width:41%;height:34%;z-index:5;transform:rotate(3deg)}
+body.ar-body .tool-emitter{
+  position:absolute!important;left:0!important;top:16%!important;width:82%!important;height:72%!important;border-radius:50%!important;
+  background:radial-gradient(circle,#d9feff 0 5%,#61e8ff 7% 12%,#0bd4ff 14% 21%,#10364c 23% 31%,#07121f 34% 56%,#344858 58% 70%,#0a131d 72%)!important;
+  border:4px solid #dce8ed!important;box-shadow:0 0 0 4px #172533,0 0 32px rgba(39,219,255,.75),inset 0 0 22px rgba(14,219,255,.55)!important;
+}
+body.ar-body .tool-emitter:before{display:none!important}
+body.ar-body .tool-emitter i{inset:18%!important;border-width:3px!important;box-shadow:0 0 20px currentColor,inset 0 0 14px currentColor!important}
+body.ar-body .tool-emitter span{left:50%!important;top:50%!important;width:13%!important;height:13%!important;transform:translate(-50%,-50%);background:#fff!important;box-shadow:0 0 18px #52e9ff!important}
+body.ar-body .tool-muzzle-ring{position:absolute;left:-10%;top:5%;width:103%;height:94%;border-radius:50%;border:2px solid rgba(109,239,255,.65);box-shadow:0 0 18px rgba(67,223,255,.45);animation:v29Muzzle 1.7s ease-in-out infinite}
+body.ar-body .tool-upper-rail{position:absolute;right:21%;top:5%;width:55%;height:12%;z-index:7;transform:skewX(-8deg);border-radius:8px 5px 2px 8px;background:linear-gradient(180deg,#f6f8f9,#aebbc6 55%,#263441 56%,#111d28);box-shadow:0 0 0 2px rgba(21,34,45,.86)}
+body.ar-body .tool-upper-rail i{position:absolute;top:23%;width:10%;height:40%;border-radius:3px;background:#0b1824;box-shadow:inset 0 0 0 1px rgba(93,226,255,.45)}
+body.ar-body .tool-upper-rail i:nth-child(1){left:12%}.tool-upper-rail i:nth-child(2){left:43%}.tool-upper-rail i:nth-child(3){right:12%}
+body.ar-body .tool-side-vent{position:absolute;z-index:8;width:21%;height:6%;border-radius:999px;background:linear-gradient(90deg,#07131f,#223442);box-shadow:inset 0 0 0 1px rgba(118,230,255,.2),0 0 9px rgba(44,216,255,.13)}
+body.ar-body .tool-side-vent.v1{right:45%;top:31%;transform:rotate(9deg)}body.ar-body .tool-side-vent.v2{right:39%;top:40%;transform:rotate(9deg)}body.ar-body .tool-side-vent.v3{right:33%;top:49%;transform:rotate(9deg)}
+body.ar-body .tool-side-light{position:absolute;z-index:9;right:49%;top:58%;width:13%;height:3%;border-radius:999px;background:#63eaff;box-shadow:0 0 13px #38dfff}
+body.ar-body .tool-core{right:56%!important;top:22%!important;width:14%!important;height:12%!important;border-radius:50%!important;z-index:8;background:radial-gradient(circle,#dfffff,#4eeaff 17%,#04324b 45%,#07121f 65%)!important;box-shadow:0 0 18px rgba(64,225,255,.65)!important}
+body.ar-body .tool-k{font-size:clamp(10px,2.2vw,17px)!important}.tool-energy{animation:v29Core 1.4s ease-in-out infinite!important}
+body.ar-body .tool-screen{
+  left:auto!important;right:1%!important;top:29%!important;width:35%!important;height:34%!important;z-index:10;
+  border-radius:12px!important;padding:10% 8%!important;background:linear-gradient(180deg,#07131f,#0b1d2d 62%,#050b12)!important;
+  border:3px solid #202e3b!important;box-shadow:0 0 0 2px #aab8c2,0 0 0 5px #263746,inset 0 0 18px rgba(19,195,255,.09)!important;
+  justify-content:flex-start!important;align-items:stretch!important;text-align:center!important
+}
+body.ar-body .tool-screen small{font-size:clamp(7px,1.7vw,11px)!important;letter-spacing:.4px!important;color:#fff!important}.tool-screen em{display:block;font-style:normal;font-size:clamp(4px,1vw,7px);letter-spacing:1px;color:#7d97a8;margin-bottom:6%}.tool-screen b{font-size:clamp(12px,2.8vw,20px)!important;line-height:1!important;margin:2% 0;color:#71ebff}.tool-screen span{font-size:clamp(6px,1.5vw,10px)!important;color:#aac6d6!important;margin-top:4%!important}
+body.ar-body .tool-mode-stack{margin-top:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.tool-mode-stack i{font-style:normal;height:clamp(11px,2.6vw,18px);border-radius:4px;display:grid;place-items:center;font-size:clamp(5px,1.2vw,8px);background:#101f2c;color:#6f8797;border:1px solid rgba(255,255,255,.08)}.tool-mode-stack i.on{color:#dfffff;border-color:#64eaff;background:rgba(43,215,255,.16);box-shadow:0 0 8px rgba(52,219,255,.3)}
+body.ar-body .tool-mode-dots{display:none!important}
+body.ar-body .tool-grip{position:absolute;right:2%;bottom:-5%;width:31%;height:43%;z-index:4;transform:rotate(-2deg);clip-path:polygon(22% 0,92% 5%,100% 100%,18% 100%,0 26%);background:linear-gradient(110deg,#26333f,#0d141d 43%,#1a2631 58%,#060a0f);box-shadow:inset 10px 0 18px rgba(255,255,255,.05),0 0 0 2px #313e49}.tool-grip span{position:absolute;left:19%;top:14%;width:57%;height:58%;border-radius:9px;background:repeating-linear-gradient(180deg,#202b34 0 8%,#101820 8% 15%);opacity:.9}
+body.ar-body .tool-hand{position:absolute;right:-8%;bottom:-2%;width:48%;height:37%;z-index:6;border-radius:45% 22% 14% 44%;background:linear-gradient(120deg,#242b34,#0b0e13 60%);box-shadow:inset 8px 6px 18px rgba(255,255,255,.05),-4px -2px 0 rgba(0,0,0,.35)}.tool-hand:before{content:"";position:absolute;left:-9%;top:12%;width:39%;height:24%;border-radius:50%;background:#11161c;transform:rotate(-27deg)}.tool-hand i{position:absolute;right:7%;width:50%;height:13%;border-radius:999px;background:linear-gradient(180deg,#2b333c,#090d12);box-shadow:0 2px 2px rgba(0,0,0,.65)}.tool-hand i:nth-child(1){top:9%}.tool-hand i:nth-child(2){top:26%}.tool-hand i:nth-child(3){top:43%}.tool-hand i:nth-child(4){top:60%}
+body.ar-body .tool-trigger{right:36%!important;bottom:12%!important;width:clamp(42px,8.8vw,62px)!important;height:clamp(42px,8.8vw,62px)!important;z-index:12;background:radial-gradient(circle at 40% 30%,#1d6e89,#061724 72%)!important;border:3px solid rgba(111,236,255,.9)!important;box-shadow:0 0 18px rgba(54,224,255,.55)!important}.tool-trigger span{width:38%!important;height:38%!important;border-width:3px!important}
+body.ar-body .tool-beam{position:absolute;left:-17%;top:11%;width:42%;height:3px;z-index:1;transform:rotate(-17deg);transform-origin:right center;background:linear-gradient(90deg,transparent,#64ecff 40%,#dfffff 100%);filter:blur(.2px);opacity:.38;box-shadow:0 0 12px #4bdfff;animation:v29Beam 1.5s ease-in-out infinite}
+body.ar-body .tool-glow{right:2%!important;bottom:9%!important;width:94%!important;height:68%!important;background:radial-gradient(circle at 25% 25%,rgba(61,226,255,.23),transparent 54%)!important;filter:blur(18px)!important}
+body.ar-body .ar-multitool[data-mode="track"] .tool-screen b{color:#ffd05e!important}body.ar-body .ar-multitool[data-mode="track"] .tool-emitter i{border-color:#ffd05e!important;color:#ffd05e!important;box-shadow:0 0 23px #ffc64e!important}
+body.ar-body .ar-multitool[data-mode="capture"] .tool-screen b{color:#66ffae!important}body.ar-body .ar-multitool[data-mode="capture"] .tool-emitter i{border-color:#66ffae!important;color:#66ffae!important;box-shadow:0 0 26px #42ff9d!important}
+body.ar-body .ar-multitool[data-mode="analyze"] .tool-screen b{color:#d296ff!important;text-shadow:0 0 10px #a23cff}body.ar-body .ar-multitool[data-mode="analyze"] .tool-emitter i{border-color:#c06cff!important;color:#c06cff!important;box-shadow:0 0 30px #ac3cff!important}.ar-multitool[data-mode="analyze"] .tool-side-light{background:#c06cff;box-shadow:0 0 14px #a63cff}
+body.ar-body .tool-pulse{z-index:3}
+@keyframes v29Muzzle{50%{transform:scale(1.06);opacity:.5}}@keyframes v29Core{50%{transform:scale(.9);box-shadow:0 0 18px rgba(65,224,255,.5)}}@keyframes v29Beam{50%{opacity:.72;box-shadow:0 0 18px #4bdfff}}
+@media(max-width:420px){body.ar-body .ar-multitool{right:-42px!important;bottom:calc(-26px + var(--safe-b))!important;width:300px!important;height:445px!important;transform:translate3d(var(--tool-x),var(--tool-y),0) rotate(calc(-18deg + var(--tool-r))) scale(.88)!important;transform-origin:90% 96%!important}}
+@media(max-width:360px){body.ar-body .ar-multitool{right:-58px!important;bottom:calc(-42px + var(--safe-b))!important;transform:translate3d(var(--tool-x),var(--tool-y),0) rotate(calc(-18deg + var(--tool-r))) scale(.78)!important}}
+@media(max-height:720px){body.ar-body .ar-multitool{bottom:calc(-54px + var(--safe-b))!important;transform:translate3d(var(--tool-x),var(--tool-y),0) rotate(calc(-18deg + var(--tool-r))) scale(.78)!important;transform-origin:90% 96%!important}}
+@media(prefers-reduced-motion:reduce){body.ar-body .ar-multitool{transform:rotate(-18deg)!important}.tool-beam,.tool-muzzle-ring{animation:none!important}}
