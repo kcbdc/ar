@@ -48,6 +48,11 @@ function acceptLocation(pos){
   const recent=locationSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
   let wsum=0,lat=0,lng=0;for(const x of recent){const w=1/Math.max(8,x.accuracy);wsum+=w;lat+=x.lat*w;lng+=x.lng*w;}
   curLat=lat/wsum;curLng=lng/wsum;curAccuracy=Math.min(...recent.map(x=>x.accuracy));lastGeoFixAt=Date.now();
+  // v31: GPS가 수신되는 즉시 해당 좌표의 실시간 날씨를 백그라운드에서 갱신한다.
+  // 카메라/AR 렌더링은 기다리지 않으며, 이동 1km 또는 10분 단위로만 재조회해 배터리와 API 호출을 절약한다.
+  if(window.JopamsLive&&typeof JopamsLive.refreshEnvironmentForLocation==='function'&&curAccuracy<=150){
+    JopamsLive.refreshEnvironmentForLocation(curLat,curLng,curAccuracy,false).catch(()=>{});
+  }
   onFilteredPosition(sample);return true;
 }
 async function startGeolocation(){
