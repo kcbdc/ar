@@ -73,7 +73,19 @@ async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navi
 async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
 let trackingStarted=false,orientationAttached=false,geoRecoveryTimer=null;
 function enableOrientationTracking(){if(orientationAttached)return;const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true);orientationAttached=true;}
-permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라를 여는 중…';/* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를\n백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';beginTracking(false);startScannerAmbience();playSfx('spawn');showPrivacyBadge();/* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');warmStartCameraIfGranted();warmStartLocationIfGranted();
+permStartBtn.onclick=async()=>{
+  permStartBtn.disabled=true;
+  permNote.textContent='카메라를 여는 중…';
+  // v37 핵심 수정: 위치 권한 요청을 카메라 준비를 기다리기 전에, 클릭 제스처에
+  // 곧바로(동기적으로) 묶어서 먼저 트리거한다. 일부 모바일 브라우저(특히
+  // 삼성 인터넷)는 async 핸들러에서 await로 한 박자 늦게 위치 권한을
+  // 요청하면 "사용자 제스처가 만료됐다"고 판단해 권한 팝업 자체를 아예
+  // 띄우지 않는 경우가 있다. 이게 "지도 탭은 되는데 AR만 GPS가 안 잡히는"
+  // 증상의 유력한 원인이었다 — checkpoints.html은 페이지 로드 즉시 위치를
+  // 요청하지만, ar.html은 카메라 await 이후에 요청하고 있었다.
+  beginTracking(false);
+  /* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를\n백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';startScannerAmbience();playSfx('spawn');showPrivacyBadge();/* 이미 위에서 beginTracking으로 watch가 시작된 상태이므로, 여기서는
+     getCurrentPosition 기반 보조 확인만 수행해 권한 상태 UI를 갱신한다. */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');warmStartCameraIfGranted();warmStartLocationIfGranted();
 
 function showPrivacyBadge(){if(!privacyBadge)return;privacyBadge.classList.remove('show','hide');void privacyBadge.offsetWidth;privacyBadge.classList.add('show');setTimeout(()=>privacyBadge.classList.add('hide'),2800);setTimeout(()=>privacyBadge.classList.remove('show','hide'),3900);}
 function beginTracking(oriOk){
