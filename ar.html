@@ -11,6 +11,7 @@
 <div class="status-banner" id="statusBanner">위치를 확인하고 있어요...</div><div class="ar-step-guide" id="arStepGuide"><span>1 거리</span><span>2 방향</span><span>3 포착</span><span>4 유지</span></div>
 <div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
+<div class="scanner-viewmodel" id="scannerViewmodel"><div class="scanner-vm-glow"></div><img src="assets/img/scanner-tool.png" alt="KOMSCO 스캐너 툴"><div class="scanner-vm-label" id="scannerVmLabel">SCAN</div></div>
 <div class="point-search-cue" id="pointSearchCue" aria-live="polite"><div class="point-beacon"><i></i><i></i><span>POINT</span></div><b id="pointSearchTitle">포인트 도착</b><small>기기를 좌우로 움직여 숨은 아이템을 찾아보세요</small><div class="point-search-track"><i id="pointSearchFill"></i></div></div>
 <div class="target-wrap item-mode" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt=""><div class="spark-item" id="sparkItem"><i class="spark-core"></i><i class="spark-orbit o1"></i><i class="spark-orbit o2"></i><i class="spark-star s1"></i><i class="spark-star s2"></i><i class="spark-star s3"></i><span id="sparkIcon"></span></div><div class="target-label" id="targetLabel">중소기업제품</div></div>
 <div class="dwell-ring-wrap" id="dwellRing"><svg viewBox="0 0 64 64"><circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle><circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle></svg><span>HOLD 2.2s</span></div>
@@ -108,7 +109,21 @@ lastPosSample={lat:curLat,lng:curLng,accuracy:curAccuracy,t:now};
 function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
 function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);advancePointSearch(curHeading);}}
 let renderTimer=null;
-function setToolMode(){/* v30: scanner gun removed; compatibility no-op */}
+// v33: 스캐너건 HUD 부활. 기존 코드 8곳에서 이미 setToolMode(mode,label)를
+// 호출하고 있던 것을 그대로 활용해, 상태(scan/track/capture)에 따라
+// 스캐너건의 글로우 색상과 화면 라벨이 실시간으로 바뀌도록 연결한다.
+let lastToolMode=null;
+function setToolMode(mode, label){
+  const vm=document.getElementById('scannerViewmodel');
+  if(!vm)return;
+  if(mode&&mode!==lastToolMode){
+    vm.classList.remove('mode-scan','mode-track','mode-capture');
+    vm.classList.add('mode-'+mode);
+    lastToolMode=mode;
+  }
+  const lbl=document.getElementById('scannerVmLabel');
+  if(lbl&&label)lbl.textContent=label;
+}
 function fireToolPulse(){/* v30: scanner gun removed; compatibility no-op */}
 function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+Math.round(distance)+'m'}else if(distance<=20){band='near';label='신호 강함 · '+Math.round(distance)+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+Math.round(distance)+'m'}else label='체크포인트까지 '+Math.round(distance)+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
 function showCharacterReaction(text='발견했어요!'){reactionImg.src=avatarPath(activeAvatar());reactionText.textContent=text;characterReaction.classList.add('show');setTimeout(()=>characterReaction.classList.remove('show'),1800)}
