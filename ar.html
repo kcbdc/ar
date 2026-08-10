@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css"><link rel="stylesheet" href="assets/design-system-v25.css"><link rel="stylesheet" href="assets/design-system-v26.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css">
 </head>
 <body class="ar-body">
 <video id="cameraVideo" playsinline muted autoplay></video><div class="ar-privacy-badge" id="arPrivacyBadge"><span data-ui-icon="lock"></span><b>영상·위치 저장 안 함</b></div>
@@ -12,29 +12,6 @@
 <div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
 <div class="target-wrap" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터"><div class="target-label" id="targetLabel">중소기업제품</div></div>
-<div class="ar-multitool splash-scanner" id="arMultitool" data-mode="scan" aria-label="KOMSCO AR 멀티툴">
-  <div class="tool-glow"></div>
-  <div class="scanner-barrel" aria-hidden="true"><span class="barrel-ring r1"></span><span class="barrel-ring r2"></span><i class="scanner-lens"></i></div>
-  <div class="tool-body">
-    <div class="scanner-shell-top"></div>
-    <div class="scanner-rail"></div>
-    <div class="tool-core"><span class="tool-k">K</span><i class="tool-energy"></i></div>
-    <div class="tool-screen">
-      <small>KOMSCO</small><em>MULTI TOOL</em>
-      <div class="tool-mode-current"><b id="toolModeLabel">SCAN</b><span id="toolSubLabel">신호 탐색</span></div>
-      <div class="tool-mode-dots" aria-hidden="true">
-        <i data-m="scan"><span>SCAN</span></i>
-        <i data-m="track"><span>TRACK</span></i>
-        <i data-m="capture"><span>CAPTURE</span></i>
-        <i data-m="analyze"><span>ANALYZE</span></i>
-      </div>
-    </div>
-    <button class="tool-trigger" id="toolTrigger" type="button" aria-label="스캐너 작동"><span></span><small>SCAN</small></button>
-    <div class="scanner-grip"><i></i><span></span></div>
-    <div class="scanner-hand" aria-hidden="true"></div>
-  </div>
-  <div class="tool-pulse" id="toolPulse"></div>
-</div>
 <div class="dwell-ring-wrap" id="dwellRing"><svg viewBox="0 0 64 64"><circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle><circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle></svg><span>HOLD 2.2s</span></div>
 <div class="accuracy-chip" id="accuracyChip">GPS 정확도 확인 중</div>
 <div id="permGate" class="perm-gate"><div class="perm-card commercial"><div class="perm-logo" data-ui-icon="explore"></div><span class="section-kicker">READY TO EXPLORE</span><h2>조팸스 GO를 시작할까요?</h2><p>현실 공간에 숨은 공공구매 아이템을 찾기 위해 아래 기능을 사용합니다.</p><div class="perm-steps"><div class="perm-step" id="stepCam"><span class="perm-symbol" data-ui-icon="camera"></span><span><b>카메라</b><small>AR 캐릭터를 화면에 표시</small></span><i>필수</i></div><div class="perm-step" id="stepLoc"><span class="perm-symbol" data-ui-icon="location"></span><span><b>위치</b><small>가까운 체크포인트 탐색</small></span><i>필수</i></div><div class="perm-step" id="stepOri"><span class="perm-symbol" data-ui-icon="compass"></span><span><b>방향센서</b><small>캐릭터가 있는 방향 안내</small></span><i>권장</i></div></div><div class="privacy-note"><span data-ui-icon="lock"></span> 카메라 영상과 실시간 위치는 서버에 저장하지 않습니다.</div><button id="permStartBtn" class="sheet-primary">탐험 시작하기</button><div class="perm-note" id="permNote"></div></div></div>
@@ -43,15 +20,15 @@
 <div class="character-reaction" id="characterReaction"><span id="reactionText">발견했어요!</span><img id="reactionImg" src="assets/img/daim.png" alt=""></div><div class="capture-flash" id="captureFlash"></div><div class="particle-field" id="particleField"></div><div class="card-overlay" id="cardOverlay"><div class="get-card commercial"><span class="discovery-kicker">NEW DISCOVERY</span><div class="reward-burst"><div class="icon" id="cardIcon"></div></div><div class="tag" id="cardTag">ITEM 01 / 12</div><div class="name" id="cardName">중소기업제품</div><div class="xp-award">+100 XP</div><div class="quote" id="cardQuote">“이거 만든 사람이 누구게?”</div><div class="micro-learn" id="microLearn"><div class="micro-learn-head"><span data-ui-icon="book"></span><b>10초 지식 보너스</b></div><p id="microLearnText"></p><button id="microLearnBtn">핵심 확인하고 +30 XP</button></div><div class="all-done-badge" id="allDoneBadge" style="display:none;"><span data-ui-icon="trophy"></span> 12개 전체 수집 완료!</div><button id="cardNextBtn">계속 탐험하기 <span>→</span></button><a class="card-link" href="collection.html">컬렉션에서 다시 보기</a></div></div>
 <script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script>
 <script>
-let curLat=null,curLng=null,curHeading=null,curAccuracy=null;let toolTiltX=0,toolTiltY=0,toolMode='scan',toolPulseLock=false;let cameraStartPromise=null;let geoWatchId=null,geoFallbackWatchId=null,lastGeoFixAt=0,locationSamples=[];let wasTargetVisible=false;let pendingEpisode=null,pendingCheckpoint=null,pendingRevisit=false;let notifiedIdx=new Set();let dwellStart=null,dwellTargetEpId=null;let collectingLock=false;const CIRC=2*Math.PI*27;let headingSamples=[];
+let curLat=null,curLng=null,curHeading=null,curAccuracy=null;let cameraStartPromise=null;let geoWatchId=null,geoFallbackWatchId=null,lastGeoFixAt=0,locationSamples=[];let wasTargetVisible=false;let pendingEpisode=null,pendingCheckpoint=null,pendingRevisit=false;let notifiedIdx=new Set();let dwellStart=null,dwellTargetEpId=null;let collectingLock=false;const CIRC=2*Math.PI*27;let headingSamples=[];
 // v39: 촘촘하게 몰려있는 체크포인트 구간에서 한 자리에 서 있어도 서로 다른
 // 항목이 연달아 포획되던 문제 방지. 직전 획득 지점에서 일정 거리 이상
 // 이동해야만 다음 발견이 가능하도록 제한한다.
 let lastCollectPos=null,lastCollectAt=0;
 const POST_COLLECT_MOVE_M=10;
 let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),characterReaction=document.getElementById('characterReaction'),reactionImg=document.getElementById('reactionImg'),reactionText=document.getElementById('reactionText');
-const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip'),arMultitool=document.getElementById('arMultitool'),toolModeLabel=document.getElementById('toolModeLabel'),toolSubLabel=document.getElementById('toolSubLabel'),toolTrigger=document.getElementById('toolTrigger'),toolPulse=document.getElementById('toolPulse');
-const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmin:'assets/img/hoonmin.png'};const env=JopamsLive.environment();document.getElementById('envIcon').innerHTML=uiIcon(env.weather==='rain'?'rain':env.weather==='cloud'?'cloud':env.period==='night'?'moon':'sun');const activeAvatar=()=>getProfile().avatar||'daim';const currentPerks=()=>JopamsLive.skillPerks(activeAvatar());const episodeGame=ep=>['speed','shield','quiz','trace'][(Number(ep?.id||1)-1)%4];
+const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmin:'assets/img/hoonmin.png'};function refreshEnvIcon(env=JopamsLive.environment()){const el=document.getElementById('envIcon');if(el)el.innerHTML=uiIcon(env.weather==='rain'?'rain':env.weather==='cloud'?'cloud':env.period==='night'?'moon':'sun')}refreshEnvIcon();window.addEventListener('jopams:environment',e=>refreshEnvIcon(e.detail||JopamsLive.environment()));const activeAvatar=()=>getProfile().avatar||'daim';const currentPerks=()=>JopamsLive.skillPerks(activeAvatar());const episodeGame=ep=>['speed','shield','quiz','trace'][(Number(ep?.id||1)-1)%4];
 const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
 document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>{if(document.hidden){stopScannerAmbience()}else{startScannerAmbience();if(geoWatchId!==null&&Date.now()-lastGeoFixAt>6000)navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}});
 function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
@@ -122,11 +99,10 @@ if(lastPosSample){const dt=(now-lastPosSample.t)/1000;if(dt>0.3){const d=distMet
 lastPosSample={lat:curLat,lng:curLng,accuracy:curAccuracy,t:now};
 }
 function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
-function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);}/* v25: 총이 아닌 AR 스캐너 멀티툴이 실제 손에 든 장비처럼 기기 움직임을 부드럽게 따라간다. */const g=Number.isFinite(e.gamma)?Math.max(-28,Math.min(28,e.gamma)):0,b=Number.isFinite(e.beta)?Math.max(-32,Math.min(32,e.beta-45)):0;toolTiltX=toolTiltX*.82+g*.18;toolTiltY=toolTiltY*.82+b*.18;if(arMultitool){arMultitool.style.setProperty('--tool-x',(toolTiltX*.48).toFixed(2)+'px');arMultitool.style.setProperty('--tool-y',(toolTiltY*.22).toFixed(2)+'px');arMultitool.style.setProperty('--tool-r',(-toolTiltX*.16).toFixed(2)+'deg');}}
+function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);}}
 let renderTimer=null;
-function setToolMode(mode,sub){if(!arMultitool)return;const names={scan:'SCAN',track:'TRACK',capture:'CAPTURE',analyze:'ANALYZE'};toolMode=names[mode]?mode:'scan';arMultitool.dataset.mode=toolMode;toolModeLabel.textContent=names[toolMode];toolSubLabel.textContent=sub||({scan:'신호 탐색',track:'타깃 추적',capture:'포획 준비',analyze:'제도 분석'}[toolMode]);arMultitool.querySelectorAll('.tool-mode-dots i').forEach(i=>i.classList.toggle('on',i.dataset.m===toolMode));}
-function fireToolPulse(strong=false){if(!arMultitool||toolPulseLock)return;toolPulseLock=true;arMultitool.classList.remove('pulse','pulse-strong');void arMultitool.offsetWidth;arMultitool.classList.add(strong?'pulse-strong':'pulse');playSfx(strong?'near':'tap');vibrate(strong?[35,25,55]:18);setTimeout(()=>{arMultitool.classList.remove('pulse','pulse-strong');toolPulseLock=false},520);}
-if(toolTrigger)toolTrigger.onclick=()=>fireToolPulse(toolMode==='capture');
+function setToolMode(){/* v30: scanner gun removed; compatibility no-op */}
+function fireToolPulse(){/* v30: scanner gun removed; compatibility no-op */}
 function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+Math.round(distance)+'m'}else if(distance<=20){band='near';label='신호 강함 · '+Math.round(distance)+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+Math.round(distance)+'m'}else label='체크포인트까지 '+Math.round(distance)+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
 function showCharacterReaction(text='발견했어요!'){reactionImg.src=avatarPath(activeAvatar());reactionText.textContent=text;characterReaction.classList.add('show');setTimeout(()=>characterReaction.classList.remove('show'),1800)}
 function setSignal(distance){const pct=Math.max(0,Math.min(1,1-distance/NOTIFY_RADIUS_M));const bars=Math.max(1,Math.ceil(pct*5));document.querySelectorAll('#signalBars i').forEach((el,i)=>el.classList.toggle('on',i<bars));}
