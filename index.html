@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="manifest.webmanifest"><title>조팸스 GO | 공공구매 AR 어드벤처</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"></head>
-<body class="app-body"><main class="app-shell hub-shell">
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/img/icon-192.png"><link rel="icon" href="assets/img/icon-192.png"><title>조팸스 GO | 공공구매 AR 어드벤처</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><style>
+/* v47: 앱 실행(첫 로드) 스플래시 화면. main 콘텐츠나 CSS/JS가 아직 준비되기 전에도
+   즉시 보이도록 head 안에 인라인 style로 넣는다. */
+#appSplash{position:fixed;inset:0;z-index:999998;background:#050b1c url('assets/img/splash.jpg') center/cover no-repeat;transition:opacity .45s ease;}
+#appSplash.hide{opacity:0;pointer-events:none;}
+</style></head>
+<body class="app-body"><div id="appSplash"></div><main class="app-shell hub-shell">
 <header class="hero-panel"><div class="top-utility"><div class="brand-line"><span class="brand-mark">✦</span><span>KOMSCO PLAY LAB</span></div><a class="profile-mini" href="profile.html"><img id="miniAvatar" data-player-avatar src="assets/img/daim.png" alt="다임"><span><small>PLAYER</small><b id="miniName">원정대원</b></span><i>›</i></a></div><div class="hero-copy"><div><div class="eyebrow">LOCATION × AR × LEARNING</div><h1 class="go-logo">조팸스 <em>GO</em></h1><p class="hero-sub">현실 공간을 탐험하며 배우는 <b>공공구매 AR 어드벤처</b></p></div><div class="hero-orb"><img data-player-avatar src="assets/img/daim.png" alt="다임"><span class="scan-ring r1"></span><span class="scan-ring r2"></span></div></div><div class="privacy-pill"><span data-ui-icon="lock"></span> 카메라 영상·실시간 위치는 서버에 저장하지 않아요</div></header>
 <section class="mission-card premium-card"><div class="section-head"><div><span class="section-kicker">TODAY'S EXPEDITION</span><h2>오늘의 탐험</h2></div><div class="level-chip">LV. <span id="playerLevel">1</span></div></div><div class="mission-progress"><div class="progress-ring" id="progressRing"><span id="progressNum">0<small>/12</small></span></div><div class="mission-copy"><strong id="missionTitle">첫 번째 아이템을 찾아보세요</strong><p id="missionDesc">가까운 체크포인트까지 이동하면 AR 탐색이 시작됩니다.</p><div class="xp-row"><span>EXP</span><div class="xp-track"><i id="xpFill"></i></div><b id="xpText">0 XP</b></div></div></div><a class="primary-cta" href="ar.html"><span class="cta-icon" data-ui-icon="explore"></span><span><b>AR 탐험 시작</b><small id="startHint">주변 아이템 탐색하기</small></span><span class="cta-arrow">→</span></a></section>
 <section class="today-pulse" aria-label="오늘의 플레이 요약"><span class="pulse-icon" data-ui-icon="target"></span><span><b id="pulseTitle">다음 제도를 찾아 원정을 이어가세요</b><small id="pulseMeta">탐험 · 학습 · 성장 보상이 연결됩니다</small></span><strong id="pulseReward">+100 XP</strong></section>
@@ -20,4 +25,17 @@ dailyReward.onclick=()=>{const r=JopamsLive.claimDailyMaster();if(r){playChime('
 checkAchievements(false);badgeCount.textContent=earnedAchievements().filter(x=>x.earned).length;renderHome();window.addEventListener('pageshow',renderHome);document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderHome()});
 const ob=onboard,prefs=getV4();if(!prefs.onboarded){ob.classList.add('show');ob.setAttribute('aria-hidden','false')}let step=0;const pages=[...document.querySelectorAll('.onboard-page')],dots=[...document.querySelectorAll('.onboard-dots i')];function setStep(n){step=n;pages.forEach((x,i)=>x.classList.toggle('active',i===step));dots.forEach((x,i)=>x.classList.toggle('active',i===step));onboardNext.textContent=step===2?'탐험 시작':'다음'}onboardNext.onclick=()=>{if(step<2)setStep(step+1);else{markOnboarded();ob.classList.remove('show')}};skipOnboard.onclick=()=>{markOnboarded();ob.classList.remove('show')};
 registerPWA();let deferredInstall=null;const installCard=document.getElementById('installCard'),installBtn=document.getElementById('installBtn'),installClose=document.getElementById('installClose');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;if(!getV4().installDismissed&&!installState().standalone)installCard.hidden=false});installBtn.onclick=async()=>{if(!deferredInstall)return;playSfx('tap');deferredInstall.prompt();await deferredInstall.userChoice;installCard.hidden=true;deferredInstall=null};installClose.onclick=()=>{const v=getV4();v.installDismissed=true;saveV4(v);installCard.hidden=true};
+// v47: 스플래시를 최소 노출 시간(700ms) 확보 후, 페이지 로드가 끝나면 자연스럽게 사라지게 한다.
+(function(){
+  const splash = document.getElementById('appSplash');
+  if(!splash) return;
+  const minShown = new Promise(r => setTimeout(r, 700));
+  const pageReady = document.readyState === 'complete'
+    ? Promise.resolve()
+    : new Promise(r => window.addEventListener('load', r, { once:true }));
+  Promise.all([minShown, pageReady]).then(() => {
+    splash.classList.add('hide');
+    setTimeout(() => splash.remove(), 500);
+  });
+})();
 </script></body></html>
