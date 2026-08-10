@@ -37,6 +37,17 @@ let lastCollectPos=null,lastCollectAt=0;
 const POST_COLLECT_MOVE_M=10;
 let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),characterReaction=document.getElementById('characterReaction'),reactionImg=document.getElementById('reactionImg'),reactionText=document.getElementById('reactionText');
 const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+// v42 핵심 버그 수정: 아래 두 변수(geoRetryButtonShown/geoRetryCount, lastToolMode)가
+// 원래 스크립트 하단에 let으로 선언되어 있었는데, 그보다 앞쪽 코드(acceptLocation,
+// 최상위 setToolMode() 호출)에서 먼저 참조되고 있었다. let/const는 선언문에
+// 도달하기 전까지 "일시적 사각지대(TDZ)"에 있어 참조 시 즉시 ReferenceError가
+// 발생하는데, 이 에러가 매번 위치를 정상 수신한 직후(acceptLocation 내부)에
+// 발생하면서 화면 갱신 로직(onFilteredPosition 호출)까지 도달하지 못하고 있었다.
+// 즉 GPS 좌표 자체는 내부적으로 정상 수신되고 있었지만, 그 직후 발생하는 이
+// 예외 때문에 화면에는 절대 반영되지 못했던 것이 "GPS가 전혀 안 잡힌다"는
+// 증상의 진짜 원인이었다. 두 변수를 스크립트 최상단에서 미리 선언해 해결한다.
+let lastToolMode=null;
+let geoRetryButtonShown=false,geoRetryCount=0;
 // v41 진단 코드: GPS가 전혀 안 잡히는 문제를 실기기에서 원격으로 확인할 방법이
 // 없어, 화면 위에 실시간 로그 배너를 띄워 위치 API 호출/응답/에러를 그대로
 // 노출한다. 문제가 재현되면 이 배너 내용을 스크린샷으로 보내주면 정확한
@@ -185,7 +196,6 @@ function beginTracking(oriOk){
   }
   if(oriOk)enableOrientationTracking();
 }
-let geoRetryButtonShown=false,geoRetryCount=0;
 function showGeoRetryButton(){
   if(geoRetryButtonShown)return;
   geoRetryButtonShown=true;
@@ -226,7 +236,6 @@ let renderTimer=null;
 // v33: 스캐너건 HUD 부활. 기존 코드 8곳에서 이미 setToolMode(mode,label)를
 // 호출하고 있던 것을 그대로 활용해, 상태(scan/track/capture)에 따라
 // 스캐너건의 글로우 색상과 화면 라벨이 실시간으로 바뀌도록 연결한다.
-let lastToolMode=null;
 function setToolMode(mode, label){
   const vm=document.getElementById('scannerViewmodel');
   if(!vm)return;
