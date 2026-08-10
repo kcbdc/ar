@@ -11,7 +11,6 @@
 <div class="status-banner" id="statusBanner">위치를 확인하고 있어요...</div><div class="ar-step-guide" id="arStepGuide"><span>1 거리</span><span>2 방향</span><span>3 포착</span><span>4 유지</span></div>
 <div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
-<div class="scanner-viewmodel" id="scannerViewmodel"><div class="scanner-vm-glow"></div><div class="scanner-vm-waves"><i></i><i></i><i></i></div><img src="assets/img/scanner-tool.png" alt="KOMSCO 스캐너 툴"><div class="scanner-vm-label" id="scannerVmLabel">SCAN</div></div>
 <div class="point-search-cue" id="pointSearchCue" aria-live="polite"><div class="point-beacon"><i></i><i></i><span>POINT</span></div><b id="pointSearchTitle">포인트 도착</b><small>기기를 좌우로 움직여 숨은 아이템을 찾아보세요</small><div class="point-search-track"><i id="pointSearchFill"></i></div></div>
 <div class="target-wrap item-mode" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt=""><div class="spark-item" id="sparkItem"><i class="spark-core"></i><i class="spark-orbit o1"></i><i class="spark-orbit o2"></i><i class="spark-star s1"></i><i class="spark-star s2"></i><i class="spark-star s3"></i><span id="sparkIcon"></span></div><div class="target-label" id="targetLabel">중소기업제품</div></div>
 <div class="dwell-ring-wrap" id="dwellRing"><svg viewBox="0 0 64 64"><circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle><circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle></svg><span>HOLD 2.2s</span></div>
@@ -51,8 +50,6 @@ function acceptLocation(pos){
   const recent=locationSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
   let wsum=0,lat=0,lng=0;for(const x of recent){const w=1/Math.max(8,x.accuracy);wsum+=w;lat+=x.lat*w;lng+=x.lng*w;}
   curLat=lat/wsum;curLng=lng/wsum;curAccuracy=Math.min(...recent.map(x=>x.accuracy));lastGeoFixAt=Date.now();
-  geoRetryCount=0;
-  if(geoRetryButtonShown){const b=document.getElementById('geoRetryBtn');if(b)b.remove();geoRetryButtonShown=false;}
   // v31: GPS가 수신되는 즉시 해당 좌표의 실시간 날씨를 백그라운드에서 갱신한다.
   // 카메라/AR 렌더링은 기다리지 않으며, 이동 1km 또는 10분 단위로만 재조회해 배터리와 API 호출을 절약한다.
   if(window.JopamsLive&&typeof JopamsLive.refreshEnvironmentForLocation==='function'&&curAccuracy<=150){
@@ -73,14 +70,7 @@ async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navi
 async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
 let trackingStarted=false,orientationAttached=false,geoRecoveryTimer=null;
 function enableOrientationTracking(){if(orientationAttached)return;const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true);orientationAttached=true;}
-permStartBtn.onclick=async()=>{
-  permStartBtn.disabled=true;
-  permNote.textContent='카메라를 여는 중…';
-  // v38: v37에서 "위치 요청을 카메라보다 먼저"로 순서를 바꿨었으나, 실제로는
-  // 이 변경이 GPS 미수신의 원인이었던 것으로 확인되어 원래(v33) 순서로
-  // 되돌립니다: 카메라 권한을 먼저 확보한 뒤 beginTracking()으로 위치 watch를
-  // 시작합니다. 재시도/안내 문구 개선(v36)은 그대로 유지합니다.
-  /* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를\n백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';beginTracking(false);startScannerAmbience();playSfx('spawn');showPrivacyBadge();/* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');warmStartCameraIfGranted();warmStartLocationIfGranted();
+permStartBtn.onclick=async()=>{permStartBtn.disabled=true;permNote.textContent='카메라를 여는 중…';/* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를 백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';beginTracking(false);startScannerAmbience();playSfx('spawn');showPrivacyBadge();/* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');warmStartCameraIfGranted();warmStartLocationIfGranted();
 
 function showPrivacyBadge(){if(!privacyBadge)return;privacyBadge.classList.remove('show','hide');void privacyBadge.offsetWidth;privacyBadge.classList.add('show');setTimeout(()=>privacyBadge.classList.add('hide'),2800);setTimeout(()=>privacyBadge.classList.remove('show','hide'),3900);}
 function beginTracking(oriOk){
@@ -92,54 +82,14 @@ function beginTracking(oriOk){
     geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{if(Date.now()-lastGeoFixAt>3500)acceptLocation(p)},()=>{},GEO_FAST);
     trackingStarted=true;
     if(geoRecoveryTimer)clearInterval(geoRecoveryTimer);
-    geoRetryCount=0;
-    // v36: 위치 신호 재획득 개선. 정밀(GEO_FINE) 요청만 반복하면 실내처럼 정확도가
-    // 안 나오는 환경에서 계속 실패만 반복될 수 있어, 재시도마다 FAST/FINE을 번갈아
-    // 시도해 "정확도는 낮아도 일단 하나라도 잡는" 쪽으로 수렴 확률을 높인다.
-    // 또한 일정 시간 이상 못 잡으면 안내 문구를 단계적으로 구체화하고 수동 재시도를 노출한다.
-    geoRecoveryTimer=setInterval(()=>{
-      if(document.hidden||!navigator.geolocation)return;
-      const stuckMs=Date.now()-lastGeoFixAt;
-      if(stuckMs<=8000)return;
-      geoRetryCount++;
-      const opts=(geoRetryCount%2===0)?GEO_FAST:GEO_FINE;
-      navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},opts);
-      if(curLat===null){
-        if(geoRetryCount===2){
-          statusBanner.classList.add('show');
-          statusBanner.textContent='신호를 계속 찾고 있어요\n창가나 실외로 이동하면 더 빨리 잡혀요';
-        }else if(geoRetryCount>=4){
-          statusBanner.classList.add('show');
-          statusBanner.textContent='실내에서는 위치 수신이 어려울 수 있어요';
-          showGeoRetryButton();
-        }
-      }
-    },6500);
+    geoRecoveryTimer=setInterval(()=>{if(!document.hidden&&Date.now()-lastGeoFixAt>8000&&navigator.geolocation){navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},GEO_FINE)}},6500);
     if(renderTimer)clearInterval(renderTimer);
     renderTimer=setInterval(updateUI,120);
   }
   if(oriOk)enableOrientationTracking();
 }
-let geoRetryButtonShown=false,geoRetryCount=0;
-function showGeoRetryButton(){
-  if(geoRetryButtonShown)return;
-  geoRetryButtonShown=true;
-  const btn=document.createElement('button');
-  btn.id='geoRetryBtn';
-  btn.className='geo-retry-btn';
-  btn.textContent='위치 다시 시도';
-  btn.onclick=()=>{
-    btn.disabled=true;btn.textContent='재시도 중…';
-    navigator.geolocation.getCurrentPosition(
-      p=>{acceptLocation(p);btn.remove();geoRetryButtonShown=false;geoRetryCount=0;},
-      ()=>{btn.disabled=false;btn.textContent='위치 다시 시도';},
-      GEO_FAST
-    );
-  };
-  document.body.appendChild(btn);
-}
 function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}geoWatchId=geoFallbackWatchId=null;trackingStarted=false;}
-function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요\n창가나 열린 공간으로 이동해 주세요.'}}
+function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요. 창가나 열린 공간으로 이동해 주세요.'}}
 let lastPosSample=null,spoofLockUntil=0;
 function onFilteredPosition(raw){const rawAcc=Math.max(1,Number(raw.accuracy||curAccuracy||999));accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>35);accuracyChip.title='최근 위치 정확도 ±'+Math.round(curAccuracy||rawAcc)+'m';
 // v17: 기초적인 위치 위조(GPS 스푸핑) 감지. 두 위치 샘플 사이의 "이동 속도"가
@@ -158,23 +108,9 @@ lastPosSample={lat:curLat,lng:curLng,accuracy:curAccuracy,t:now};
 function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
 function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);advancePointSearch(curHeading);}}
 let renderTimer=null;
-// v33: 스캐너건 HUD 부활. 기존 코드 8곳에서 이미 setToolMode(mode,label)를
-// 호출하고 있던 것을 그대로 활용해, 상태(scan/track/capture)에 따라
-// 스캐너건의 글로우 색상과 화면 라벨이 실시간으로 바뀌도록 연결한다.
-let lastToolMode=null;
-function setToolMode(mode, label){
-  const vm=document.getElementById('scannerViewmodel');
-  if(!vm)return;
-  if(mode&&mode!==lastToolMode){
-    vm.classList.remove('mode-scan','mode-track','mode-capture');
-    vm.classList.add('mode-'+mode);
-    lastToolMode=mode;
-  }
-  const lbl=document.getElementById('scannerVmLabel');
-  if(lbl&&label)lbl.textContent=label;
-}
+function setToolMode(){/* v30: scanner gun removed; compatibility no-op */}
 function fireToolPulse(){/* v30: scanner gun removed; compatibility no-op */}
-function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+fmtNum(Math.round(distance))+'m'}else if(distance<=20){band='near';label='신호 강함 · '+fmtNum(Math.round(distance))+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+fmtNum(Math.round(distance))+'m'}else label='체크포인트까지 '+fmtNum(Math.round(distance))+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
+function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+Math.round(distance)+'m'}else if(distance<=20){band='near';label='신호 강함 · '+Math.round(distance)+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+Math.round(distance)+'m'}else label='체크포인트까지 '+Math.round(distance)+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
 function showCharacterReaction(text='발견했어요!'){reactionImg.src=avatarPath(activeAvatar());reactionText.textContent=text;characterReaction.classList.add('show');setTimeout(()=>characterReaction.classList.remove('show'),1800)}
 function setSignal(distance){const pct=Math.max(0,Math.min(1,1-distance/NOTIFY_RADIUS_M));const bars=Math.max(1,Math.ceil(pct*5));document.querySelectorAll('#signalBars i').forEach((el,i)=>el.classList.toggle('on',i<bars));}
 function updateUI(){if(curLat===null||curLng===null){setToolMode('scan','GPS 신호 탐색');statusBanner.classList.add('show');statusBanner.textContent='위치 신호를 확인하고 있어요…';targetWrap.classList.remove('visible');return;}const done=getProgress();document.getElementById('arCount').textContent=done.length;
@@ -192,7 +128,7 @@ const effectiveCollectRadius=Math.max(COLLECT_RADIUS_M,Math.min(42,COLLECT_RADIU
 radarDist.textContent=fmtNum(Math.round(distance))+'m';setSignal(Math.max(0,distance-(effectiveNotifyRadius-NOTIFY_RADIUS_M)));updateRangeExperience(distance);if(distance<=effectiveNotifyRadius&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast(allDone?'재방문 신호 포착! <b>'+ep.item+'</b> 지점이 근처예요':'신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>effectiveNotifyRadius+15)notifiedIdx.delete(checkpoint.idx);if(distance>effectiveNotifyRadius){statusBanner.classList.add('show');statusBanner.textContent=accuracy>40?'GPS 오차 ±'+Math.round(accuracy)+'m · 신호를 보정하며 이동하세요':(allDone?'재방문 지점 방향으로 이동해보세요':'신호를 따라 체크포인트 방향으로 이동하세요');}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else{statusBanner.classList.remove('show');}
 let diff=0,haveHeading=curHeading!==null;if(haveHeading){const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);diff=angleDiff(bearing,curHeading);}const spoofLocked=performance.now()<spoofLockUntil;const tooCloseToLastCollect=lastCollectPos&&distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)<POST_COLLECT_MOVE_M;const inCollectRange=distance<=effectiveCollectRadius;
 // 위치 오차가 큰 환경에서는 GPS 좌표와 방위 계산 자체가 흔들리므로 방향 허용폭도 자동 완화한다.
-const effectiveFov=accuracy>45?75:accuracy>30?58:FOV_HALF_DEG,facingTarget=!haveHeading||Math.abs(diff)<=effectiveFov;if(pointSearchCheckpointIdx!==checkpoint.idx){resetPointSearch(checkpoint.idx);}if(!inCollectRange||tooCloseToLastCollect||spoofLocked){if(distance>effectiveCollectRadius+6)resetPointSearch(checkpoint.idx);}const searchReady=inCollectRange&&!collectingLock&&!spoofLocked&&!tooCloseToLastCollect;if(searchReady&&!pointSearchFound){setToolMode('track','포인트 탐색');pointSearchCue.classList.add('show');pointSearchTitle.textContent='포인트 도착';statusBanner.classList.add('show');statusBanner.textContent=haveHeading?'기기를 좌우로 천천히 움직여 아이템을 찾아보세요':'포인트 도착 · 기기를 좌우로 움직여 주변을 탐색하세요';targetWrap.classList.remove('visible');dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');return;}else{pointSearchCue.classList.remove('show');}const discoverable=searchReady&&pointSearchFound;if(discoverable)setToolMode('capture','아이템 발견');else if(distance<=effectiveNotifyRadius)setToolMode('track',haveHeading?'방향 '+Math.round(Math.abs(diff))+'°':'근거리 추적');else setToolMode('scan','신호 '+fmtNum(Math.round(distance))+'m');
+const effectiveFov=accuracy>45?75:accuracy>30?58:FOV_HALF_DEG,facingTarget=!haveHeading||Math.abs(diff)<=effectiveFov;if(pointSearchCheckpointIdx!==checkpoint.idx){resetPointSearch(checkpoint.idx);}if(!inCollectRange||tooCloseToLastCollect||spoofLocked){if(distance>effectiveCollectRadius+6)resetPointSearch(checkpoint.idx);}const searchReady=inCollectRange&&!collectingLock&&!spoofLocked&&!tooCloseToLastCollect;if(searchReady&&!pointSearchFound){setToolMode('track','포인트 탐색');pointSearchCue.classList.add('show');pointSearchTitle.textContent='포인트 도착';statusBanner.classList.add('show');statusBanner.textContent=haveHeading?'기기를 좌우로 천천히 움직여 아이템을 찾아보세요':'포인트 도착 · 기기를 좌우로 움직여 주변을 탐색하세요';targetWrap.classList.remove('visible');dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');return;}else{pointSearchCue.classList.remove('show');}const discoverable=searchReady&&pointSearchFound;if(discoverable)setToolMode('capture','아이템 발견');else if(distance<=effectiveNotifyRadius)setToolMode('track',haveHeading?'방향 '+Math.round(Math.abs(diff))+'°':'근거리 추적');else setToolMode('scan','신호 '+Math.round(distance)+'m');
 if(discoverable){statusBanner.classList.add('show');statusBanner.textContent='아이템 발견! 중앙에 유지해 수집하세요';targetImg.style.display='none';sparkIcon.innerHTML=publicPurchaseIcon(ep.id,true);targetLabel.innerHTML='<b>'+ep.item+(allDone?' · 재방문':'')+'</b>';targetWrap.style.setProperty('--target-x','0px');targetWrap.style.setProperty('--target-scale','1.18');targetWrap.style.setProperty('--target-depth','1');targetWrap.style.setProperty('--shadow-scale','1');targetWrap.classList.add('visible','item-mode');if(!wasTargetVisible){targetWrap.classList.remove('spawn');void targetWrap.offsetWidth;targetWrap.classList.add('spawn');playSfx('spawn')}wasTargetVisible=true;arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');dwellRing.classList.add('show');if(dwellStart===null||dwellTargetEpId!==ep.id){dwellStart=performance.now();dwellTargetEpId=ep.id;if(activeAvatar()==='hoonmin')prefetchAIQuiz(ep.item);}const live=JopamsLive.load(),perk=currentPerks(),baseReduction=activeAvatar()==='sunsik'?(perk.dwellReductionPct||0):0,rareReduction=(live.rareUnlocked.includes('shadow_sunsik')&&activeAvatar()==='sunsik')?15:0,dwellMs=Math.max(1300,Math.round(DWELL_MS*(1-(baseReduction+rareReduction)/100)));const pct=Math.min((performance.now()-dwellStart)/dwellMs,1);dwellFg.style.strokeDashoffset=String(CIRC*(1-pct));if(pct>=1&&!collectingLock)startMiniGame(ep,checkpoint,allDone);}else{targetWrap.classList.remove('visible');wasTargetVisible=false;dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;dwellFg.style.strokeDashoffset=String(CIRC);
 if(tooCloseToLastCollect){
   const remain=Math.max(0,Math.round(POST_COLLECT_MOVE_M-distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)));
