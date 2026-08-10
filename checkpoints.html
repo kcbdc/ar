@@ -41,7 +41,35 @@ async function loadKakaoWithRetry(){
 }
 function initMap(){if(!window.kakao||!kakao.maps)return;const c=cur||{lat:CHECKPOINTS[0].lat,lng:CHECKPOINTS[0].lng};map=new kakao.maps.Map(kakaoMap,{center:new kakao.maps.LatLng(c.lat,c.lng),level:4});kakao.maps.event.addListener(map,'dragstart',()=>{recenterRequestedAt=0;});const bounds=new kakao.maps.LatLngBounds();CHECKPOINTS.forEach(cp=>{const ep=getEpisode(cp.episodeId),got=done.includes(ep.id),pos=new kakao.maps.LatLng(cp.lat,cp.lng);bounds.extend(pos);const marker=new kakao.maps.Marker({position:pos,map,title:got?ep.item:'미발견 체크포인트'});kakao.maps.event.addListener(marker,'click',()=>{openKakao.href=kakaoMapLink(cp.lat,cp.lng,got?ep.item:'조팸스 GO 체크포인트');const content='<div class="map-marker-label">'+(got?ep.icon+' '+ep.item:'? 미발견 체크포인트')+'</div>';new kakao.maps.CustomOverlay({map,position:pos,content,yAnchor:1.55}).setMap(map)});markers.push(marker)});if(!cur)map.setBounds(bounds);setMapStatus('카카오맵 연결 완료','체크포인트와 현재 위치를 실시간으로 표시합니다.',true);setTimeout(()=>setMapStatus('','',false),1600);updateMapPosition()}
 function updateMapPosition(){if(!map||!cur||!window.kakao)return;const pos=new kakao.maps.LatLng(cur.lat,cur.lng);if(!meMarker)meMarker=new kakao.maps.Marker({position:pos,map,title:'내 위치'});else meMarker.setPosition(pos);/* v32: GPS 갱신은 내 위치 마커만 갱신한다. 지도 중심은 사용자가 '내 위치로'를 눌렀을 때만 변경한다. */}
-function updatePosition(pos){if(!pos||!pos.coords)return;const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:Math.max(1,Number(pos.coords.accuracy||999)),t:Date.now()};if(!Number.isFinite(sample.lat)||!Number.isFinite(sample.lng))return;gpsSamples.push(sample);if(gpsSamples.length>6)gpsSamples.shift();const recent=gpsSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);let w=0,lat=0,lng=0;recent.forEach(x=>{const k=1/Math.max(8,x.accuracy);w+=k;lat+=x.lat*k;lng+=x.lng*k});cur={lat:lat/w,lng:lng/w,accuracy:Math.min(...recent.map(x=>x.accuracy))};lastGpsAt=Date.now();gpsState.textContent='±'+fmtNum(Math.round(cur.accuracy))+'m';const n=nearestUncollectedCheckpoint(cur.lat,cur.lng);if(n){const ep=getEpisode(n.checkpoint.episodeId);nearIcon.innerHTML=publicPurchaseIcon(ep.id,true);nearTitle.textContent=ep.item+' 신호';nearDesc.textContent=cur.accuracy>40?'GPS 보정 중 · 가장 가까운 체크포인트':'가장 가까운 미발견 체크포인트';nearDist.textContent=fmtNum(Math.round(n.distance))+'m';openKakao.href=kakaoMapLink(n.checkpoint.lat,n.checkpoint.lng,ep.item)}else openKakao.href=kakaoMapLink(cur.lat,cur.lng,'내 위치');updateMapPosition();renderList()}
+function updatePosition(pos){if(!pos||!pos.coords)return;const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:Math.max(1,Number(pos.coords.accuracy||999)),t:Date.now()};if(!Number.isFinite(sample.lat)||!Number.isFinite(sample.lng))return;gpsSamples.push(sample);if(gpsSamples.length>6)gpsSamples.shift();const recent=gpsSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);let w=0,lat=0,lng=0;recent.forEach(x=>{const k=1/Math.max(8,x.accuracy);w+=k;lat+=x.lat*k;lng+=x.lng*k});cur={lat:lat/w,lng:lng/w,accuracy:Math.min(...recent.map(x=>x.accuracy))};lastGpsAt=Date.now();gpsState.textContent='±'+fmtNum(Math.round(cur.accuracy))+'m';
+  // v45: "NEAREST SIGNAL" 카드가 위치를 받고도 계속 placeholder에 갇혀있던
+  // 문제 수정. 원인이 무엇이든(모든 체크포인트가 쿨다운 중이거나, 12개를
+  // 전부 수집했거나, 아이콘 렌더링 중 예외 등) 이 블록에서 예외가 나면
+  // 화면이 절대 갱신되지 않았다. 1) 미수집 체크포인트가 없으면 재방문
+  // 대상으로 자동 폴백하고, 2) 전체를 try/catch로 감싸 어떤 경우에도
+  // 최소한 대략적인 안내 문구는 표시되도록 방어한다.
+  try{
+    let n=nearestUncollectedCheckpoint(cur.lat,cur.lng);
+    let isRevisit=false;
+    if(!n){n=nearestAnyCheckpoint(cur.lat,cur.lng);isRevisit=true;}
+    if(n){
+      const ep=getEpisode(n.checkpoint.episodeId);
+      try{nearIcon.innerHTML=publicPurchaseIcon(ep.id,true);}catch(e){nearIcon.textContent=ep.icon||'◎';}
+      nearTitle.textContent=ep.item+(isRevisit?' 재방문':' 신호');
+      nearDesc.textContent=isRevisit?'수집 완료 · 재방문 가능 지점':(cur.accuracy>40?'GPS 보정 중 · 가장 가까운 체크포인트':'가장 가까운 미발견 체크포인트');
+      nearDist.textContent=fmtNum(Math.round(n.distance))+'m';
+      openKakao.href=kakaoMapLink(n.checkpoint.lat,n.checkpoint.lng,ep.item);
+    }else{
+      nearTitle.textContent='모든 체크포인트 완료';
+      nearDesc.textContent='주변에 표시할 지점이 없어요';
+      openKakao.href=kakaoMapLink(cur.lat,cur.lng,'내 위치');
+    }
+  }catch(e){
+    nearTitle.textContent='신호 확인 중 오류';
+    nearDesc.textContent='잠시 후 다시 시도해 주세요';
+    openKakao.href=kakaoMapLink(cur.lat,cur.lng,'내 위치');
+  }
+  updateMapPosition();renderList()}
 function startGpsTracking(){
   if(!navigator.geolocation){gpsState.textContent='GPS N/A';return}
   const fine={enableHighAccuracy:true,maximumAge:1000,timeout:12000};
