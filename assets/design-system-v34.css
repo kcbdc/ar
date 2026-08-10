@@ -1,0 +1,22 @@
+/* JOPAMS GO v34 - first-person scanner tool + muzzle radar waves */
+.ar-scanner-tool{--tool:#39e8ff;position:fixed;right:-8vw;bottom:-5.5vh;width:clamp(300px,57vw,520px);aspect-ratio:2/3;z-index:34;pointer-events:none;user-select:none;transform-origin:78% 86%;animation:scannerFloat 3.4s ease-in-out infinite;filter:drop-shadow(0 18px 28px rgba(0,0,0,.38));will-change:transform}
+.ar-scanner-tool img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;pointer-events:none;filter:drop-shadow(0 0 9px color-mix(in srgb,var(--tool) 48%,transparent))}
+.ar-scanner-tool[data-mode="scan"]{--tool:#35e7ff}.ar-scanner-tool[data-mode="track"]{--tool:#ffd34d}.ar-scanner-tool[data-mode="capture"]{--tool:#ff4fb3}.ar-scanner-tool[data-mode="analyze"]{--tool:#9d5cff}
+.scanner-muzzle-glow{position:absolute;left:18.5%;top:16.2%;width:15%;aspect-ratio:1;border-radius:50%;z-index:3;background:radial-gradient(circle,rgba(255,255,255,.98) 0 9%,var(--tool) 21%,color-mix(in srgb,var(--tool) 42%,transparent) 48%,transparent 72%);mix-blend-mode:screen;filter:blur(.2px) drop-shadow(0 0 18px var(--tool));opacity:.9;transition:background .2s ease,filter .2s ease}
+.scanner-wave-field{position:absolute;left:25.8%;top:23.5%;width:1px;height:1px;z-index:2;pointer-events:none}
+.scanner-wave-field i{position:absolute;left:0;top:0;width:78px;height:78px;border:2px solid var(--tool);border-radius:50%;transform:translate(-50%,-50%) scale(.18) rotateX(67deg);opacity:0;box-shadow:0 0 10px color-mix(in srgb,var(--tool) 72%,transparent),inset 0 0 8px color-mix(in srgb,var(--tool) 48%,transparent);animation:muzzleRadar 2.15s cubic-bezier(.12,.55,.2,1) infinite}
+.scanner-wave-field i:nth-child(2){animation-delay:.7s}.scanner-wave-field i:nth-child(3){animation-delay:1.4s}
+.ar-scanner-tool[data-mode="capture"] .scanner-wave-field i{animation:none;opacity:0}
+.ar-scanner-tool[data-mode="capture"] .scanner-muzzle-glow{animation:captureMuzzle .42s ease-in-out infinite alternate}
+.scanner-state-pill{position:absolute;right:12%;top:47%;z-index:5;display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:rgba(2,15,36,.70);border:1px solid color-mix(in srgb,var(--tool) 72%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--tool) 28%,transparent);backdrop-filter:blur(7px);opacity:.88;transform:rotate(4deg);transition:border-color .2s ease,box-shadow .2s ease}
+.scanner-state-pill b{font:800 9px/1 system-ui;color:var(--tool);letter-spacing:.08em}.scanner-state-pill span{font:700 8px/1.1 system-ui;color:#f7fbff;white-space:nowrap}
+.ar-scanner-tool.tool-pulse{animation:scannerKick .34s ease-out,scannerFloat 3.4s ease-in-out .34s infinite}.ar-scanner-tool.tool-pulse-strong{animation:scannerKickStrong .5s ease-out,scannerFloat 3.4s ease-in-out .5s infinite}
+.perm-gate:not([style*="display: none"])~.ar-scanner-tool{opacity:0}
+body:has(.perm-gate:not([style*="display: none"])) .ar-scanner-tool{opacity:0}
+@keyframes scannerFloat{0%,100%{transform:translate3d(0,0,0) rotate(-2deg)}50%{transform:translate3d(-2px,-11px,0) rotate(-1deg)}}
+@keyframes muzzleRadar{0%{opacity:.78;transform:translate(-50%,-50%) scale(.14) rotateX(67deg)}70%{opacity:.26}100%{opacity:0;transform:translate(-50%,-50%) scale(3.15) rotateX(67deg)}}
+@keyframes captureMuzzle{from{transform:scale(.92);opacity:.72}to{transform:scale(1.18);opacity:1}}
+@keyframes scannerKick{0%{transform:translate3d(0,0,0) rotate(-2deg)}40%{transform:translate3d(5px,9px,0) rotate(.5deg)}100%{transform:translate3d(0,0,0) rotate(-2deg)}}
+@keyframes scannerKickStrong{0%{transform:translate3d(0,0,0) rotate(-2deg)}30%{transform:translate3d(11px,17px,0) rotate(1deg)}70%{transform:translate3d(-3px,-4px,0) rotate(-2.5deg)}100%{transform:translate3d(0,0,0) rotate(-2deg)}}
+@media(max-width:420px){.ar-scanner-tool{right:-11vw;bottom:-4vh;width:clamp(290px,64vw,390px)}.scanner-state-pill{right:10%;top:48%;padding:5px 7px}.scanner-state-pill span{display:none}.scanner-wave-field{left:25%;top:23%}}
+@media(prefers-reduced-motion:reduce){.ar-scanner-tool{animation:none}.scanner-wave-field i{animation-duration:3.6s}.ar-scanner-tool[data-mode="capture"] .scanner-muzzle-glow{animation:none}}
