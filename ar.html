@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css"><link rel="stylesheet" href="assets/design-system-v25.css"><link rel="stylesheet" href="assets/design-system-v28.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"><meta name="theme-color" content="#06142b"><title>조팸스 GO | AR 탐험</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><link rel="stylesheet" href="assets/design-system-v22.css"><link rel="stylesheet" href="assets/design-system-v25.css"><link rel="stylesheet" href="assets/design-system-v29.css">
 </head>
 <body class="ar-body">
 <video id="cameraVideo" playsinline muted autoplay></video><div class="ar-privacy-badge" id="arPrivacyBadge"><span data-ui-icon="lock"></span><b>영상·위치 저장 안 함</b></div>
@@ -13,28 +13,30 @@
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
 <div class="target-wrap" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt="캐릭터"><div class="target-label" id="targetLabel">중소기업제품</div></div>
 <div class="ar-multitool" id="arMultitool" data-mode="scan" aria-label="KOMSCO AR 멀티툴">
+  <div class="tool-beam"></div>
   <div class="tool-glow"></div>
-  <div class="tool-gun" aria-hidden="true">
-    <div class="tool-barrel">
-      <div class="tool-rail"><i></i><i></i><i></i></div>
+  <div class="tool-body">
+    <div class="tool-nose">
       <div class="tool-emitter"><i></i><span></span></div>
-      <div class="tool-side-core"><span></span></div>
-      <div class="tool-side-light l1"></div><div class="tool-side-light l2"></div>
-      <div class="tool-vent"><i></i><i></i><i></i></div>
+      <div class="tool-muzzle-ring"></div>
     </div>
-    <div class="tool-receiver">
-      <div class="tool-brand"><b>KOMSCO</b><small>MULTI TOOL</small></div>
-      <div class="tool-screen">
-        <div class="mode-row active" data-mode-row="scan"><i></i><span>SCAN</span></div>
-        <div class="mode-row" data-mode-row="track"><i></i><span>TRACK</span></div>
-        <div class="mode-row" data-mode-row="capture"><i></i><span>CAPTURE</span></div>
-        <div class="mode-row" data-mode-row="analyze"><i></i><span>ANALYZE</span></div>
-        <b id="toolModeLabel" class="tool-current">SCAN</b><span id="toolSubLabel" class="tool-sub">신호 탐색</span>
-      </div>
-      <button class="tool-trigger" id="toolTrigger" type="button" aria-label="스캐너 작동"><span></span></button>
+    <div class="tool-upper-rail"><i></i><i></i><i></i></div>
+    <div class="tool-side-shell">
+      <span class="tool-side-vent v1"></span><span class="tool-side-vent v2"></span><span class="tool-side-vent v3"></span>
+      <span class="tool-side-light"></span>
     </div>
-    <div class="tool-grip"><i></i></div>
-    <div class="tool-hand"><i></i><i></i><i></i></div>
+    <div class="tool-core"><span class="tool-k">K</span><i class="tool-energy"></i></div>
+    <div class="tool-screen">
+      <small>KOMSCO</small>
+      <em>MULTI TOOL</em>
+      <b id="toolModeLabel">SCAN</b>
+      <span id="toolSubLabel">신호 탐색</span>
+      <div class="tool-mode-stack"><i data-m="scan">S</i><i data-m="track">T</i><i data-m="capture">C</i><i data-m="analyze">A</i></div>
+    </div>
+    <div class="tool-mode-dots"><i data-m="scan"></i><i data-m="track"></i><i data-m="capture"></i><i data-m="analyze"></i></div>
+    <div class="tool-grip"><span></span></div>
+    <div class="tool-hand"><i></i><i></i><i></i><i></i></div>
+    <button class="tool-trigger" id="toolTrigger" type="button" aria-label="스캐너 작동"><span></span></button>
   </div>
   <div class="tool-pulse" id="toolPulse"></div>
 </div>
@@ -127,7 +129,7 @@ lastPosSample={lat:curLat,lng:curLng,accuracy:curAccuracy,t:now};
 function circularAverage(arr){if(!arr.length)return null;let s=0,c=0;arr.forEach(a=>{s+=Math.sin(toRad(a));c+=Math.cos(toRad(a));});return (toDeg(Math.atan2(s,c))+360)%360;}
 function onOrientation(e){const h=extractHeading(e);if(h!==null){headingSamples.push(h);if(headingSamples.length>8)headingSamples.shift();curHeading=circularAverage(headingSamples);}/* v25: 총이 아닌 AR 스캐너 멀티툴이 실제 손에 든 장비처럼 기기 움직임을 부드럽게 따라간다. */const g=Number.isFinite(e.gamma)?Math.max(-28,Math.min(28,e.gamma)):0,b=Number.isFinite(e.beta)?Math.max(-32,Math.min(32,e.beta-45)):0;toolTiltX=toolTiltX*.82+g*.18;toolTiltY=toolTiltY*.82+b*.18;if(arMultitool){arMultitool.style.setProperty('--tool-x',(toolTiltX*.48).toFixed(2)+'px');arMultitool.style.setProperty('--tool-y',(toolTiltY*.22).toFixed(2)+'px');arMultitool.style.setProperty('--tool-r',(-toolTiltX*.16).toFixed(2)+'deg');}}
 let renderTimer=null;
-function setToolMode(mode,sub){if(!arMultitool)return;const names={scan:'SCAN',track:'TRACK',capture:'CAPTURE',analyze:'ANALYZE'};toolMode=names[mode]?mode:'scan';arMultitool.dataset.mode=toolMode;toolModeLabel.textContent=names[toolMode];toolSubLabel.textContent=sub||({scan:'신호 탐색',track:'타깃 추적',capture:'포획 준비',analyze:'제도 분석'}[toolMode]);arMultitool.querySelectorAll('[data-mode-row]').forEach(i=>i.classList.toggle('active',i.dataset.modeRow===toolMode));}
+function setToolMode(mode,sub){if(!arMultitool)return;const names={scan:'SCAN',track:'TRACK',capture:'CAPTURE',analyze:'ANALYZE'};toolMode=names[mode]?mode:'scan';arMultitool.dataset.mode=toolMode;toolModeLabel.textContent=names[toolMode];toolSubLabel.textContent=sub||({scan:'신호 탐색',track:'타깃 추적',capture:'포획 준비',analyze:'제도 분석'}[toolMode]);arMultitool.querySelectorAll('.tool-mode-dots i,.tool-mode-stack i').forEach(i=>i.classList.toggle('on',i.dataset.m===toolMode));}
 function fireToolPulse(strong=false){if(!arMultitool||toolPulseLock)return;toolPulseLock=true;arMultitool.classList.remove('pulse','pulse-strong');void arMultitool.offsetWidth;arMultitool.classList.add(strong?'pulse-strong':'pulse');playSfx(strong?'near':'tap');vibrate(strong?[35,25,55]:18);setTimeout(()=>{arMultitool.classList.remove('pulse','pulse-strong');toolPulseLock=false},520);}
 if(toolTrigger)toolTrigger.onclick=()=>fireToolPulse(toolMode==='capture');
 function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+Math.round(distance)+'m'}else if(distance<=20){band='near';label='신호 강함 · '+Math.round(distance)+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+Math.round(distance)+'m'}else label='체크포인트까지 '+Math.round(distance)+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
