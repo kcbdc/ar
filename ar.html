@@ -37,6 +37,44 @@ let lastCollectPos=null,lastCollectAt=0;
 const POST_COLLECT_MOVE_M=10;
 let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),characterReaction=document.getElementById('characterReaction'),reactionImg=document.getElementById('reactionImg'),reactionText=document.getElementById('reactionText');
 const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+// v41 진단 코드: GPS가 전혀 안 잡히는 문제를 실기기에서 원격으로 확인할 방법이
+// 없어, 화면 위에 실시간 로그 배너를 띄워 위치 API 호출/응답/에러를 그대로
+// 노출한다. 문제가 재현되면 이 배너 내용을 스크린샷으로 보내주면 정확한
+// 원인(권한 거부/타임아웃/미지원/JS 에러 등)을 100% 특정할 수 있다.
+window.__gpsLog = [];
+function gpsLog(msg){
+  const t = new Date().toISOString().slice(11,19);
+  window.__gpsLog.push(t+' '+msg);
+  if(window.__gpsLog.length>60) window.__gpsLog.shift();
+  let el = document.getElementById('gpsDiagBanner');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'gpsDiagBanner';
+    el.dataset.expanded = '0';
+    el.style.cssText = 'position:fixed;z-index:999999;left:0;right:0;bottom:0;max-height:22px;overflow:hidden;background:rgba(0,0,0,.9);color:#7fffb0;font:9px/1.5 monospace;padding:3px 6px;white-space:pre-wrap;word-break:break-all;border-top:2px solid #ff2d55;transition:max-height .2s;';
+    el.onclick = function(){
+      const exp = el.dataset.expanded === '1';
+      el.dataset.expanded = exp ? '0' : '1';
+      el.style.maxHeight = exp ? '22px' : '60vh';
+      el.style.overflow = exp ? 'hidden' : 'auto';
+    };
+    document.body.appendChild(el);
+  }
+  const lines = window.__gpsLog.slice();
+  el.textContent = '[탭해서 펼치기/접기 · 로그 '+lines.length+'줄] ' + lines[lines.length-1] + '\n' + lines.join('\n');
+}
+gpsLog('[진단] 스크립트 로드됨. navigator.geolocation 존재: ' + (!!navigator.geolocation));
+window.addEventListener('error', function(e){
+  gpsLog('[JS 에러!] ' + e.message + ' @ ' + e.filename + ':' + e.lineno);
+});
+if(navigator.permissions && navigator.permissions.query){
+  navigator.permissions.query({name:'geolocation'}).then(function(p){
+    gpsLog('[진단] 위치 권한 상태(query): ' + p.state);
+    p.onchange = function(){ gpsLog('[진단] 위치 권한 상태 변경: ' + p.state); };
+  }).catch(function(e){ gpsLog('[진단] 권한 query 실패: ' + e.message); });
+} else {
+  gpsLog('[진단] navigator.permissions 미지원');
+}
 // v40: 스캐너건 이미지는 네트워크 요청 없이 문서에 내장된 base64를 그대로 주입한다.
 (function(){
   const heroImg=document.getElementById('scannerHeroImg'),vmImg=document.getElementById('scannerVmImg');
@@ -53,6 +91,7 @@ async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!naviga
 const GEO_FAST={enableHighAccuracy:false,maximumAge:15000,timeout:3500};
 const GEO_FINE={enableHighAccuracy:true,maximumAge:1000,timeout:12000};
 function acceptLocation(pos){
+  gpsLog('[진단] acceptLocation 호출됨. coords='+(pos&&pos.coords?(pos.coords.latitude.toFixed(5)+','+pos.coords.longitude.toFixed(5)+' acc='+pos.coords.accuracy):'없음'));
   if(!pos||!pos.coords)return false;
   const acc=Math.max(1,Number(pos.coords.accuracy||999));
   const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:acc,t:Date.now()};
@@ -64,6 +103,7 @@ function acceptLocation(pos){
   const recent=locationSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
   let wsum=0,lat=0,lng=0;for(const x of recent){const w=1/Math.max(8,x.accuracy);wsum+=w;lat+=x.lat*w;lng+=x.lng*w;}
   curLat=lat/wsum;curLng=lng/wsum;curAccuracy=Math.min(...recent.map(x=>x.accuracy));lastGeoFixAt=Date.now();
+  gpsLog('[진단] 위치 확정: '+curLat.toFixed(5)+','+curLng.toFixed(5)+' 정확도='+Math.round(curAccuracy)+'m');
   geoRetryCount=0;
   if(geoRetryButtonShown){const b=document.getElementById('geoRetryBtn');if(b)b.remove();geoRetryButtonShown=false;}
   // v31: GPS가 수신되는 즉시 해당 좌표의 실시간 날씨를 백그라운드에서 갱신한다.
@@ -74,41 +114,46 @@ function acceptLocation(pos){
   onFilteredPosition(sample);return true;
 }
 async function startGeolocation(){
-  if(!navigator.geolocation)return false;
-  return new Promise(resolve=>{let done=false;const finish=ok=>{if(!done){done=true;resolve(ok)}};
+  gpsLog('[진단] startGeolocation() 호출됨');
+  if(!navigator.geolocation){gpsLog('[진단] navigator.geolocation 없음! 종료');return false;}
+  return new Promise(resolve=>{let done=false;const finish=ok=>{if(!done){done=true;gpsLog('[진단] startGeolocation 완료: '+ok);resolve(ok)}};
     // 캐시/네트워크 위치를 먼저 받아 UI를 빠르게 띄우고 동시에 정밀 GPS를 요청한다.
-    navigator.geolocation.getCurrentPosition(p=>{acceptLocation(p);finish(true)},()=>{},GEO_FAST);
-    navigator.geolocation.getCurrentPosition(p=>{acceptLocation(p);finish(true)},e=>{if(e&&e.code===1)finish(false)},GEO_FINE);
-    setTimeout(()=>finish(curLat!==null),9000);
+    navigator.geolocation.getCurrentPosition(p=>{gpsLog('[진단] GEO_FAST 성공 콜백');acceptLocation(p);finish(true)},e=>{gpsLog('[진단] GEO_FAST 에러: code='+(e&&e.code)+' msg='+(e&&e.message));},GEO_FAST);
+    navigator.geolocation.getCurrentPosition(p=>{gpsLog('[진단] GEO_FINE 성공 콜백');acceptLocation(p);finish(true)},e=>{gpsLog('[진단] GEO_FINE 에러: code='+(e&&e.code)+' msg='+(e&&e.message));if(e&&e.code===1)finish(false)},GEO_FINE);
+    setTimeout(()=>{gpsLog('[진단] startGeolocation 9초 타임아웃');finish(curLat!==null)},9000);
   });
 }
-async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query||!navigator.geolocation)return;const p=await navigator.permissions.query({name:'geolocation'});if(p.state==='granted')navigator.geolocation.getCurrentPosition(x=>acceptLocation(x),()=>{},GEO_FAST)}catch(e){}}
+async function warmStartLocationIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query||!navigator.geolocation){gpsLog('[진단] warmStartLocation 스킵 (API 없음)');return;}const p=await navigator.permissions.query({name:'geolocation'});gpsLog('[진단] warmStartLocation 권한 상태: '+p.state);if(p.state==='granted'){gpsLog('[진단] warmStartLocation: 이미 허용됨, getCurrentPosition 호출');navigator.geolocation.getCurrentPosition(x=>{gpsLog('[진단] warmStartLocation 성공');acceptLocation(x)},e=>{gpsLog('[진단] warmStartLocation 에러: code='+(e&&e.code)+' msg='+(e&&e.message))},GEO_FAST)}}catch(e){gpsLog('[진단] warmStartLocation 예외: '+e.message)}}
 async function startOrientation(){if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){try{return(await DeviceOrientationEvent.requestPermission())==='granted'}catch(e){return false}}return typeof DeviceOrientationEvent!=='undefined';}
 let trackingStarted=false,orientationAttached=false,geoRecoveryTimer=null;
 function enableOrientationTracking(){if(orientationAttached)return;const evName='ondeviceorientationabsolute'in window?'deviceorientationabsolute':'deviceorientation';window.addEventListener(evName,onOrientation,true);orientationAttached=true;}
 permStartBtn.onclick=async()=>{
+  gpsLog('[진단] "탐험 시작하기" 버튼 클릭됨');
   permStartBtn.disabled=true;
   permNote.textContent='카메라를 여는 중…';
   // v38: v37에서 "위치 요청을 카메라보다 먼저"로 순서를 바꿨었으나, 실제로는
   // 이 변경이 GPS 미수신의 원인이었던 것으로 확인되어 원래(v33) 순서로
   // 되돌립니다: 카메라 권한을 먼저 확보한 뒤 beginTracking()으로 위치 watch를
   // 시작합니다. 재시도/안내 문구 개선(v36)은 그대로 유지합니다.
-  /* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를\n백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';beginTracking(false);startScannerAmbience();playSfx('spawn');showPrivacyBadge();
+  /* v22 핵심: GPS/방향센서가 카메라 첫 화면을 막지 않는다. */const camOk=await startCamera();gpsLog('[진단] startCamera() 완료: '+camOk);setStep(stepCam,camOk);if(!camOk){permNote.textContent='카메라 권한을 확인한 뒤 다시 시도해 주세요.';permStartBtn.disabled=false;return;}/* 카메라 프레임이 확보되는 즉시 권한 시트를 닫아 AR 화면부터 보여 준다. */permGate.classList.add('camera-first-exit');setTimeout(()=>{permGate.style.display='none'},90);statusBanner.classList.add('show');statusBanner.textContent='카메라 준비 완료 · 위치 신호를\n백그라운드에서 찾고 있어요…';accuracyChip.textContent='GPS 연결 중';gpsLog('[진단] beginTracking(false) 호출 직전');beginTracking(false);gpsLog('[진단] beginTracking(false) 호출 완료');startScannerAmbience();playSfx('spawn');showPrivacyBadge();
   // v39: 스캐너건 이미지(뷰모델) 등장을 1.2초 지연시킨다. 위치 권한 요청
   // 직후 곧바로 큰 이미지를 디코딩·페인트하면 메인 스레드가 잠깐 바빠져
   // 위치 권한 처리 타이밍과 겹칠 수 있다는 제보가 있어, GPS 요청이 먼저
   // 확실히 진행되도록 우선순위를 늦췄다.
   setTimeout(()=>{const vm=document.getElementById('scannerViewmodel');if(vm)vm.classList.add('ready');},1200);
-  /* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');warmStartCameraIfGranted();warmStartLocationIfGranted();
+  /* 위치와 방향은 화면이 열린 뒤 백그라운드에서 준비 */startGeolocation().then(locOk=>{setStep(stepLoc,locOk);if(!locOk){accuracyChip.classList.add('warn');accuracyChip.textContent='위치 권한 확인';statusBanner.textContent='카메라는 실행 중입니다 · 위치 권한을 허용해 주세요.'}}).catch(()=>{});startOrientation().then(oriOk=>{setStep(stepOri,oriOk);if(oriOk)enableOrientationTracking()}).catch(()=>setStep(stepOri,false));};setToolMode('scan','탐험 장비 대기');gpsLog('[진단] 페이지 스크립트 최상위 실행됨 (permStartBtn 대기 중)');warmStartCameraIfGranted();warmStartLocationIfGranted();
 
 function showPrivacyBadge(){if(!privacyBadge)return;privacyBadge.classList.remove('show','hide');void privacyBadge.offsetWidth;privacyBadge.classList.add('show');setTimeout(()=>privacyBadge.classList.add('hide'),2800);setTimeout(()=>privacyBadge.classList.remove('show','hide'),3900);}
 function beginTracking(oriOk){
-  if(!navigator.geolocation){statusBanner.classList.add('show');statusBanner.textContent='이 기기에서는 위치 기능을 사용할 수 없습니다.';return;}
+  gpsLog('[진단] beginTracking() 진입. navigator.geolocation='+(!!navigator.geolocation)+' trackingStarted='+trackingStarted);
+  if(!navigator.geolocation){statusBanner.classList.add('show');statusBanner.textContent='이 기기에서는 위치 기능을 사용할 수 없습니다.';gpsLog('[진단] geolocation API 없음 - 종료');return;}
   if(!trackingStarted){
     stopLocationTracking();
     // 정밀 watch + 저전력 fallback을 병행한다. 카메라 화면은 이미 표시된 상태에서 GPS는 백그라운드로 수렴한다.
     geoWatchId=navigator.geolocation.watchPosition(acceptLocation,onPosError,GEO_FINE);
-    geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{if(Date.now()-lastGeoFixAt>3500)acceptLocation(p)},()=>{},GEO_FAST);
+    gpsLog('[진단] watchPosition(GEO_FINE) 등록됨, id='+geoWatchId);
+    geoFallbackWatchId=navigator.geolocation.watchPosition(p=>{gpsLog('[진단] fallback watch 콜백');if(Date.now()-lastGeoFixAt>3500)acceptLocation(p)},e=>{gpsLog('[진단] fallback watch 에러: code='+(e&&e.code)+' msg='+(e&&e.message))},GEO_FAST);
+    gpsLog('[진단] watchPosition(GEO_FAST fallback) 등록됨, id='+geoFallbackWatchId);
     trackingStarted=true;
     if(geoRecoveryTimer)clearInterval(geoRecoveryTimer);
     geoRetryCount=0;
@@ -121,8 +166,9 @@ function beginTracking(oriOk){
       const stuckMs=Date.now()-lastGeoFixAt;
       if(stuckMs<=8000)return;
       geoRetryCount++;
+      gpsLog('[진단] 복구 타이머 재시도 #'+geoRetryCount+' (stuckMs='+stuckMs+')');
       const opts=(geoRetryCount%2===0)?GEO_FAST:GEO_FINE;
-      navigator.geolocation.getCurrentPosition(acceptLocation,()=>{},opts);
+      navigator.geolocation.getCurrentPosition(acceptLocation,e=>{gpsLog('[진단] 복구 재시도 에러: code='+(e&&e.code)+' msg='+(e&&e.message))},opts);
       if(curLat===null){
         if(geoRetryCount===2){
           statusBanner.classList.add('show');
@@ -158,7 +204,7 @@ function showGeoRetryButton(){
   document.body.appendChild(btn);
 }
 function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}geoWatchId=geoFallbackWatchId=null;trackingStarted=false;}
-function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요\n창가나 열린 공간으로 이동해 주세요.'}}
+function onPosError(err){gpsLog('[진단] onPosError(watch) 호출됨: code='+(err&&err.code)+' msg='+(err&&err.message));accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요\n창가나 열린 공간으로 이동해 주세요.'}}
 let lastPosSample=null,spoofLockUntil=0;
 function onFilteredPosition(raw){const rawAcc=Math.max(1,Number(raw.accuracy||curAccuracy||999));accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>35);accuracyChip.title='최근 위치 정확도 ±'+Math.round(curAccuracy||rawAcc)+'m';
 // v17: 기초적인 위치 위조(GPS 스푸핑) 감지. 두 위치 샘플 사이의 "이동 속도"가
