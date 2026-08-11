@@ -6,7 +6,7 @@
 </head>
 <body class="app-body">
 <main class="app-shell page-shell">
-  <header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">DISCOVERY BOOK</span><h1>공공구매 컬렉션</h1></div><span class="counter-pill" id="counter">0/12</span></header>
+  <header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">DISCOVERY BOOK</span><h1>공공구매 컬렉션</h1></div><div class="collection-head-actions"><button id="collectionBgmBtn" class="collection-audio-btn" type="button" aria-label="컬렉션 음악 켜기" aria-pressed="false"><span class="collection-speaker" aria-hidden="true"><span class="speaker-body"></span><span class="speaker-wave wave-1"></span><span class="speaker-wave wave-2"></span></span></button><span class="counter-pill" id="counter">0/12</span></div></header>
   <section class="collection-hero premium-card compact"><div><span class="section-kicker">YOUR PROGRESS</span><h2 id="collectionHeadline">첫 발견을 시작해보세요</h2><p>발견한 제도는 도감에 기록되고 핵심 내용을 언제든 복습할 수 있어요.</p><span class="discovery-rate" id="discoveryRate">DISCOVERY 0%</span></div><div class="mini-ring" id="miniRing"><b id="miniCount">0</b><small>/12</small></div></section>
   <section class="collection-grid" id="collectionGrid"></section>
   <section class="master-banner" id="masterBanner"><span class="master-icon" data-ui-icon="trophy"></span><div><h3 id="masterTitle">MASTER MODE</h3><p id="masterDesc">12개 제도를 모두 발견하면 실제 사례형 마스터 테스트가 열립니다.</p></div><a id="masterLink" href="master.html">도전하기</a></section>
@@ -14,6 +14,24 @@
 </main>
 <nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a class="active" href="collection.html"><span>◇</span><b>컬렉션</b></a><a href="ranking.html"><span>♛</span><b>랭킹</b></a></nav>
 <div class="sheet" id="itemSheet" aria-hidden="true"><button class="sheet-dim" data-close-sheet></button><div class="sheet-card"><div class="sheet-handle"></div><div class="item-detail"><div class="detail-icon modern-detail-icon" id="detailIcon"></div><span class="section-kicker" id="detailTag">ITEM 01 / 12</span><h2 id="detailName">중소기업제품</h2><p id="detailQuote"></p><div class="learning-box"><b>10초 핵심</b><p id="detailLearn"></p></div></div><button class="sheet-primary" data-close-sheet>컬렉션으로 돌아가기</button></div></div>
+
+<style>
+.collection-head-actions{display:flex;align-items:center;gap:10px;min-width:0}
+.collection-audio-btn{appearance:none;-webkit-appearance:none;width:38px;height:38px;min-width:38px;padding:0;margin:0;border:0!important;outline:0;background:transparent!important;box-shadow:none!important;border-radius:0;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.collection-audio-btn:focus,.collection-audio-btn:focus-visible,.collection-audio-btn:hover,.collection-audio-btn:active{border:0!important;background:transparent!important;box-shadow:none!important;outline:0}
+.collection-speaker{position:relative;display:block;width:30px;height:26px}
+.speaker-body:before{content:"";position:absolute;left:3px;top:9px;width:7px;height:9px;border:2px solid #fff;border-right:0;border-radius:2px 0 0 2px}
+.speaker-body:after{content:"";position:absolute;left:9px;top:5px;width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-right:10px solid #fff;transform:rotate(180deg)}
+.speaker-wave{display:none;position:absolute;border:2px solid #67e8f9;border-left-color:transparent;border-top-color:transparent;border-bottom-color:transparent;border-radius:50%;transform:rotate(0deg);opacity:.9}
+.wave-1{left:18px;top:7px;width:7px;height:12px}
+.wave-2{left:20px;top:4px;width:10px;height:18px}
+.collection-audio-btn.is-on .speaker-wave{display:block;animation:collectionWave 1.45s ease-in-out infinite}
+.collection-audio-btn.is-on .wave-2{animation-delay:.18s}
+@keyframes collectionWave{0%,100%{opacity:.28;transform:scale(.88)}50%{opacity:1;transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.collection-audio-btn.is-on .speaker-wave{animation:none}}
+</style>
+<audio id="collectionBgm" src="assets/audio/jofams3.mp3" preload="metadata" loop></audio>
+
 <script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script>
 <script>
 const learn = {
@@ -38,4 +56,37 @@ const masterLink=document.getElementById('masterLink'),masterTitle=document.getE
 document.querySelectorAll('[data-close-sheet]').forEach(el=>el.onclick=()=>{sheet.classList.remove('show');sheet.setAttribute('aria-hidden','true');});
 </script>
 <script>document.addEventListener('click',e=>{const t=e.target.closest('.collection-card,.episode-card,.learn-card,button,a');if(t&&t.closest('main')){pushEvent('learn',{source:'collection'});}});</script>
+
+<script>
+(()=>{
+ const audio=document.getElementById('collectionBgm');
+ const btn=document.getElementById('collectionBgmBtn');
+ if(!audio||!btn)return;
+ const KEY='jopams_collection_bgm_on';
+ const TARGET=.16;
+ let fadeTimer=null;
+ function setUI(on){
+   btn.classList.toggle('is-on',on);
+   btn.setAttribute('aria-pressed',String(on));
+   btn.setAttribute('aria-label',on?'컬렉션 음악 끄기':'컬렉션 음악 켜기');
+ }
+ function fadeIn(){
+   clearInterval(fadeTimer); audio.volume=.02;
+   fadeTimer=setInterval(()=>{audio.volume=Math.min(TARGET,audio.volume+.02);if(audio.volume>=TARGET)clearInterval(fadeTimer)},90);
+ }
+ async function play(save=true){
+   try{await audio.play();fadeIn();setUI(true);if(save)localStorage.setItem(KEY,'1')}
+   catch(e){setUI(false)}
+ }
+ function stop(save=true){
+   clearInterval(fadeTimer);audio.pause();setUI(false);if(save)localStorage.setItem(KEY,'0');
+ }
+ btn.addEventListener('click',()=>audio.paused?play(true):stop(true));
+ const wanted=localStorage.getItem(KEY)==='1';
+ setUI(wanted);
+ if(wanted) play(false);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.pause()}else if(localStorage.getItem(KEY)==='1'){play(false)}});
+})();
+</script>
+
 </body></html>
