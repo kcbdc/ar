@@ -6,7 +6,7 @@
 #appSplash.hide{opacity:0;pointer-events:none;}
 </style></head>
 <body class="app-body"><div id="appSplash"></div><main class="app-shell hub-shell">
-<header class="hero-panel"><div class="top-utility"><div class="brand-line"><span class="brand-mark">✦</span><span>KOMSCO PLAY LAB</span></div><a class="profile-mini" href="profile.html"><img id="miniAvatar" data-player-avatar src="assets/img/daim.png" alt="다임"><span><small>PLAYER</small><b id="miniName">원정대원</b></span><i>›</i></a></div><div class="hero-copy"><div><div class="eyebrow">LOCATION × AR × LEARNING</div><h1 class="go-logo">조팸스 <em>GO</em></h1><p class="hero-sub">현실 공간을 탐험하며 배우는 <b>공공구매 AR 어드벤처</b></p></div><div class="hero-orb"><img data-player-avatar src="assets/img/daim.png" alt="다임"><span class="scan-ring r1"></span><span class="scan-ring r2"></span></div></div><div class="privacy-pill"><span data-ui-icon="lock"></span> 카메라 영상·실시간 위치는 서버에 저장하지 않아요</div></header>
+<header class="hero-panel"><div class="top-utility"><div class="brand-line"><span class="brand-mark">✦</span><span>KOMSCO PLAY LAB</span></div><button id="bgmToggle" class="bgm-toggle" aria-label="배경음악 켜기/끄기" aria-pressed="false"><span data-ui-icon="sound"></span></button><a class="profile-mini" href="profile.html"><img id="miniAvatar" data-player-avatar src="assets/img/daim.png" alt="다임"><span><small>PLAYER</small><b id="miniName">원정대원</b></span><i>›</i></a></div><audio id="homeBgm" src="assets/audio/bgm-home.mp3" loop preload="none"></audio><div class="hero-copy"><div><div class="eyebrow">LOCATION × AR × LEARNING</div><h1 class="go-logo">조팸스 <em>GO</em></h1><p class="hero-sub">현실 공간을 탐험하며 배우는 <b>공공구매 AR 어드벤처</b></p></div><div class="hero-orb"><img data-player-avatar src="assets/img/daim.png" alt="다임"><span class="scan-ring r1"></span><span class="scan-ring r2"></span></div></div><div class="privacy-pill"><span data-ui-icon="lock"></span> 카메라 영상·실시간 위치는 서버에 저장하지 않아요</div></header>
 <section class="mission-card premium-card"><div class="section-head"><div><span class="section-kicker">TODAY'S EXPEDITION</span><h2>오늘의 탐험</h2></div><div class="level-chip">LV. <span id="playerLevel">1</span></div></div><div class="mission-progress"><div class="progress-ring" id="progressRing"><span id="progressNum">0<small>/12</small></span></div><div class="mission-copy"><strong id="missionTitle">첫 번째 아이템을 찾아보세요</strong><p id="missionDesc">가까운 체크포인트까지 이동하면 AR 탐색이 시작됩니다.</p><div class="xp-row"><span>EXP</span><div class="xp-track"><i id="xpFill"></i></div><b id="xpText">0 XP</b></div></div></div><a class="primary-cta" href="ar.html"><span class="cta-icon" data-ui-icon="explore"></span><span><b>AR 탐험 시작</b><small id="startHint">주변 아이템 탐색하기</small></span><span class="cta-arrow">→</span></a></section>
 <section class="today-pulse" aria-label="오늘의 플레이 요약"><span class="pulse-icon" data-ui-icon="target"></span><span><b id="pulseTitle">다음 제도를 찾아 원정을 이어가세요</b><small id="pulseMeta">탐험 · 학습 · 성장 보상이 연결됩니다</small></span><strong id="pulseReward">+100 XP</strong></section>
 <section class="season-card premium-card home-secondary"><div class="season-head"><div><span class="section-kicker gold-text">SEASON 01 · PUBLIC QUEST</span><h2>공공구매 마스터 패스</h2><small>플레이할수록 시즌 보상이 열립니다</small></div><a href="season.html">전체 보기 ›</a></div><div class="season-track"><i id="seasonFill"></i><span id="seasonMarker"></span></div><div class="season-meta"><b id="seasonXp">0 XP</b><span id="seasonNext">다음 보상까지 300 XP</span></div><a class="reward-ready" id="seasonReward" href="season.html"><span class="icon-orb" data-ui-icon="chest"></span><div><b>받을 수 있는 시즌 보상</b><small id="rewardCount">0개 대기 중</small></div><i>→</i></a></section>
@@ -37,5 +37,51 @@ registerPWA();let deferredInstall=null;const installCard=document.getElementById
     splash.classList.add('hide');
     setTimeout(() => splash.remove(), 500);
   });
+})();
+// v49: 홈 화면 전용 배경음악. 기본은 꺼짐이며, 사용자가 직접 켜야만 재생된다.
+// 켜짐 상태는 이 기기에 저장해 다음 방문 때도 유지하되, 자동재생 정책 때문에
+// 실제 재생은 항상 사용자의 탭(클릭) 안에서만 시작한다.
+(function(){
+  const bgm = document.getElementById('homeBgm');
+  const btn = document.getElementById('bgmToggle');
+  if(!bgm || !btn) return;
+  bgm.volume = 0.35;
+  const KEY = 'jopams-bgm-on';
+  let wanted = localStorage.getItem(KEY) === '1';
+
+  function setUI(playing){
+    btn.classList.toggle('on', playing);
+    btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+  }
+
+  btn.onclick = () => {
+    wanted = !wanted;
+    localStorage.setItem(KEY, wanted ? '1' : '0');
+    if(wanted){
+      bgm.currentTime = bgm.currentTime || 0;
+      bgm.play().then(() => setUI(true)).catch(() => setUI(false));
+    } else {
+      bgm.pause();
+      setUI(false);
+    }
+  };
+
+  // 이전에 켜둔 적이 있다면 버튼 표시만 미리 켜진 상태로 두되, 실제 재생은
+  // 사용자가 이 화면에서 아무 곳이나 한 번 탭했을 때 자동으로 이어서 시작한다
+  // (브라우저 자동재생 정책 때문에 페이지 로드만으로는 재생할 수 없음).
+  if(wanted){
+    setUI(true);
+    const resumeOnFirstTap = () => {
+      if(wanted && bgm.paused){
+        bgm.play().catch(() => {});
+      }
+      document.removeEventListener('pointerdown', resumeOnFirstTap);
+    };
+    document.addEventListener('pointerdown', resumeOnFirstTap, { once:true });
+  }
+
+  // 다른 페이지로 이동하면(정적 다중 페이지 구조라 오디오가 이어지지 않음)
+  // 자연스럽게 멈추도록 별도 처리는 하지 않는다 — 페이지 전환 시 브라우저가
+  // 알아서 문서를 새로 로드하며 재생도 함께 종료된다.
 })();
 </script></body></html>
