@@ -13,11 +13,11 @@
 //      항상 최신 버전을 먼저 시도하고, 오프라인일 때만 캐시로 폴백한다.
 //      (이미지·CSS·JS 같은 정적 자산은 기존처럼 캐시 우선을 유지해 로딩 속도를 지킨다.)
 
-const CACHE = 'jopams-go-v47';
+const CACHE = 'jopams-go-v48';
 const ASSETS = [
   './', './index.html', './ar.html', './checkpoints.html', './collection.html',
   './ranking.html', './achievements.html', './battle.html', './season.html',
-  './profile.html', './expedition.html', './master.html', './chat.html', './manifest.webmanifest',
+  './profile.html', './expedition.html', './master.html', './chat.html', './privacy.html', './manifest.webmanifest',
   './assets/style.css','./assets/design-system-v18.css','./assets/design-system-v19.css','./assets/design-system-v20.css','./assets/design-system-v22.css',
   './assets/design-system-v32.css', './assets/state.js', './assets/ui.js', './assets/app.js', './assets/liveops.js',
   './assets/img/daim.png', './assets/img/sunsik.png', './assets/img/hoonmin.png',

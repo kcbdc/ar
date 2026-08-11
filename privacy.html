@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#06142b">
+  <title>조팸스 GO | 개인정보 처리방침</title>
+  <meta name="description" content="조팸스 GO 개인정보 처리방침">
+  <style>
+    :root{
+      --bg:#040b18;
+      --bg2:#07162d;
+      --card:rgba(10,31,62,.84);
+      --card2:rgba(8,24,50,.72);
+      --line:rgba(84,199,255,.20);
+      --line2:rgba(112,222,255,.10);
+      --text:#f7fbff;
+      --muted:#a8bdd2;
+      --muted2:#708aa5;
+      --cyan:#5ddcff;
+      --blue:#3b82f6;
+      --violet:#8b7bff;
+      --gold:#f4c45d;
+      --green:#49d8a4;
+      --danger:#ff7e9c;
+      --radius:24px;
+      --shadow:0 18px 60px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% -10%, rgba(28,111,192,.28), transparent 30%),
+        radial-gradient(circle at 100% 10%, rgba(54,197,255,.12), transparent 25%),
+        linear-gradient(180deg,var(--bg2),var(--bg) 42%,#020714);
+      font-family:system-ui,-apple-system,"Segoe UI","Noto Sans KR","Apple SD Gothic Neo",sans-serif;
+      line-height:1.65;
+      word-break:keep-all;
+    }
+    a{color:inherit}
+    .shell{width:min(860px,100%);margin:0 auto;padding:calc(24px + env(safe-area-inset-top)) 20px calc(72px + env(safe-area-inset-bottom))}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+    .back{
+      width:48px;height:48px;border-radius:16px;border:1px solid var(--line);
+      background:rgba(7,27,56,.78);display:grid;place-items:center;text-decoration:none;
+      color:#dff7ff;font-size:25px;box-shadow:inset 0 0 22px rgba(44,173,255,.06)
+    }
+    .brand{font-size:12px;letter-spacing:.18em;color:var(--cyan);font-weight:800}
+    .badge{padding:8px 12px;border-radius:999px;border:1px solid var(--line);color:#a9dcf5;background:rgba(9,32,64,.6);font-size:12px;font-weight:800}
+    .hero{
+      position:relative;overflow:hidden;padding:32px 28px 28px;border-radius:30px;
+      background:
+        linear-gradient(135deg,rgba(13,49,94,.96),rgba(5,24,54,.94)),
+        var(--card);
+      border:1px solid rgba(92,202,255,.30);box-shadow:var(--shadow);margin-bottom:20px
+    }
+    .hero:after{
+      content:"";position:absolute;width:260px;height:260px;border:1px solid rgba(86,211,255,.13);
+      border-radius:50%;right:-92px;top:-110px;box-shadow:0 0 0 32px rgba(66,194,255,.035),0 0 0 68px rgba(66,194,255,.02)
+    }
+    .kicker{display:block;color:var(--cyan);font-size:12px;font-weight:900;letter-spacing:.16em;margin-bottom:8px}
+    h1{font-size:32px;line-height:1.18;margin:0 0 12px;letter-spacing:-.04em}
+    .hero p{margin:0;color:#bfd1e2;font-size:15px;max-width:680px}
+    .summary{
+      margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+    }
+    .summary .item{display:flex;align-items:center;gap:12px;padding:15px;border-radius:18px;background:rgba(3,17,39,.55);border:1px solid var(--line2)}
+    .ico{
+      width:42px;height:42px;flex:0 0 42px;border-radius:14px;display:grid;place-items:center;
+      background:linear-gradient(145deg,rgba(36,144,220,.20),rgba(18,62,111,.38));border:1px solid rgba(95,208,255,.18);font-size:20px
+    }
+    .summary b{display:block;font-size:14px}.summary small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+    .notice{
+      display:flex;gap:12px;padding:16px 18px;margin:18px 0;border-radius:20px;
+      background:rgba(17,76,97,.26);border:1px solid rgba(88,224,215,.22);color:#c9f4ed;font-size:13px
+    }
+    .toc{display:flex;gap:8px;overflow:auto;padding:3px 0 15px;margin-bottom:4px;scrollbar-width:none}
+    .toc::-webkit-scrollbar{display:none}
+    .toc a{white-space:nowrap;text-decoration:none;font-size:12px;font-weight:800;padding:9px 13px;border-radius:999px;background:rgba(8,27,56,.72);border:1px solid var(--line);color:#b9cee2}
+    section.card{
+      padding:24px;margin:14px 0;border-radius:var(--radius);
+      background:linear-gradient(180deg,rgba(12,36,70,.84),rgba(6,22,47,.78));
+      border:1px solid var(--line);box-shadow:0 12px 32px rgba(0,0,0,.16)
+    }
+    h2{font-size:20px;margin:0 0 14px;letter-spacing:-.025em}
+    h3{font-size:15px;margin:20px 0 8px;color:#e5f5ff}
+    p{color:#c5d5e4;margin:9px 0;font-size:14px}
+    ul{padding-left:20px;color:#c5d5e4;font-size:14px}
+    li{margin:6px 0}
+    .table-wrap{overflow:auto;border-radius:16px;border:1px solid var(--line2)}
+    table{width:100%;border-collapse:collapse;min-width:640px;font-size:13px;background:rgba(3,15,34,.36)}
+    th,td{padding:14px 14px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(104,176,224,.10)}
+    th{color:#8fdfff;background:rgba(11,49,88,.55);font-size:12px;white-space:nowrap}
+    td{color:#c7d5e3}
+    tr:last-child td{border-bottom:0}
+    .chip{display:inline-block;padding:4px 8px;margin:2px 3px 2px 0;border-radius:999px;font-size:11px;font-weight:800;border:1px solid rgba(91,210,255,.18);background:rgba(38,134,194,.10);color:#a7e8ff}
+    .green{color:#82ebc7}.gold{color:#ffd879}.pink{color:#ffb2c3}
+    .callout{padding:16px;border-radius:16px;background:rgba(117,92,255,.09);border:1px solid rgba(145,129,255,.18);color:#d9d4ff;font-size:13px}
+    .contact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .contact>div{padding:16px;border-radius:16px;background:rgba(4,18,41,.54);border:1px solid var(--line2)}
+    .contact b{display:block;font-size:13px;color:#e7f7ff}.contact span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+    .footer{padding:24px 6px 0;text-align:center;color:#66809b;font-size:11px}
+    .footer strong{color:#8da7c0}
+    .edit-note{
+      margin-top:18px;padding:14px 16px;border-radius:16px;background:rgba(244,196,93,.07);
+      border:1px dashed rgba(244,196,93,.28);color:#e8d69e;font-size:12px
+    }
+    @media(max-width:620px){
+      .shell{padding-left:16px;padding-right:16px}
+      .hero{padding:26px 20px 22px}
+      h1{font-size:27px}
+      .summary{grid-template-columns:1fr}
+      section.card{padding:20px}
+      .contact{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a class="back" href="profile.html" aria-label="뒤로가기">←</a>
+      <div class="brand">JOPAMS GO · PRIVACY</div>
+      <div class="badge">2026.08.11</div>
+    </div>
+
+    <header class="hero">
+      <span class="kicker">PRIVACY CENTER</span>
+      <h1>개인정보 처리방침</h1>
+      <p>조팸스 GO는 AR 탐험에 필요한 정보만 최소한으로 사용하고, 카메라 영상과 센서값은 가능한 한 이용자의 기기에서 처리하는 것을 원칙으로 합니다.</p>
+
+      <div class="summary">
+        <div class="item"><div class="ico">📷</div><div><b>카메라</b><small>AR 화면 표시용 · 영상 서버 저장 안 함</small></div></div>
+        <div class="item"><div class="ico">⌖</div><div><b>현재 위치</b><small>체크포인트·날씨 조회용 · 지속 저장 안 함</small></div></div>
+        <div class="item"><div class="ico">◈</div><div><b>기기 센서</b><small>방향 탐색용 · 기기 내 실시간 처리</small></div></div>
+        <div class="item"><div class="ico">♛</div><div><b>랭킹</b><small>닉네임·소속·점수만 선택적으로 전송</small></div></div>
+      </div>
+    </header>
+
+    <div class="notice">
+      <b>🔒</b>
+      <span>카메라 영상은 AR 표현을 위해 실시간 사용되며 조팸스 GO 서버에 저장하지 않습니다. 실시간 위치도 체크포인트 탐색 후 지속적으로 보관하지 않는 것을 기본 설계로 합니다.</span>
+    </div>
+
+    <nav class="toc" aria-label="목차">
+      <a href="#purpose">처리 목적</a>
+      <a href="#items">처리 항목</a>
+      <a href="#retention">보유기간</a>
+      <a href="#third">외부 서비스</a>
+      <a href="#rights">이용자 권리</a>
+      <a href="#security">안전조치</a>
+      <a href="#contact">문의</a>
+    </nav>
+
+    <section class="card" id="purpose">
+      <span class="kicker">01 · PURPOSE</span>
+      <h2>개인정보의 처리 목적</h2>
+      <p>조팸스 GO는 다음 목적에 필요한 범위에서 개인정보 또는 이용정보를 처리합니다.</p>
+      <ul>
+        <li>현재 위치를 기반으로 가까운 AR 체크포인트와 탐험 대상을 안내하기 위한 기능 제공</li>
+        <li>카메라 화면에 AR 아이템·캐릭터·탐색 효과를 표시하기 위한 기능 제공</li>
+        <li>방향센서를 활용한 목표 방향 안내 및 좌우 탐색 인터랙션 제공</li>
+        <li>게임 진행상황, 컬렉션, 업적, 캐릭터 성장 및 환경설정 저장</li>
+        <li>이용자가 랭킹 기능을 사용하는 경우 닉네임·소속·점수를 이용한 순위 제공</li>
+        <li>현재 위치의 기상상태와 주·야간 정보를 반영한 AR 환경 연출 제공</li>
+        <li>보상 중복 수령 방지 및 서비스 안정성 확보</li>
+      </ul>
+    </section>
+
+    <section class="card" id="items">
+      <span class="kicker">02 · DATA MINIMIZATION</span>
+      <h2>처리하는 정보와 이용 방식</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>구분</th><th>처리 항목</th><th>이용 목적</th><th>저장 여부</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="chip">필수 권한</span> 카메라</td>
+              <td>실시간 카메라 영상</td>
+              <td>AR 탐험 화면, 아이템·캐릭터 표시</td>
+              <td><span class="green">서버 저장 안 함</span></td>
+            </tr>
+            <tr>
+              <td><span class="chip">필수 권한</span> 위치</td>
+              <td>위도, 경도, GPS 정확도</td>
+              <td>체크포인트 거리 계산, 내 위치 표시, 위치 기반 날씨 조회</td>
+              <td>게임 서버에 지속 저장하지 않음</td>
+            </tr>
+            <tr>
+              <td><span class="chip">권장 권한</span> 방향센서</td>
+              <td>기기 방향값·회전값</td>
+              <td>목표 방향 안내, 좌우 탐색 동작 인식</td>
+              <td><span class="green">기기 내 실시간 처리</span></td>
+            </tr>
+            <tr>
+              <td>프로필</td>
+              <td>닉네임, 소속, 대표 캐릭터</td>
+              <td>게임 화면 표시, 랭킹·본부대항전</td>
+              <td>기기 저장 / 랭킹 사용 시 서버 전송</td>
+            </tr>
+            <tr>
+              <td>게임 기록</td>
+              <td>점수, XP, 컬렉션, 업적, 퀘스트, 보상, 설정값</td>
+              <td>게임 진행 및 복원</td>
+              <td>원칙적으로 브라우저 로컬 저장소</td>
+            </tr>
+            <tr>
+              <td>보상 검증</td>
+              <td>기기에서 생성한 임의 플레이어 ID, 보상키, 보상유형, 처리시각</td>
+              <td>중복 보상 수령 방지</td>
+              <td>서버 기능 사용 시 저장 가능</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="callout">조팸스 GO는 주민등록번호, 여권번호, 계좌번호, 연락처, 사진·동영상 파일과 같은 정보의 입력을 요구하지 않는 것을 기본 원칙으로 합니다.</p>
+    </section>
+
+    <section class="card" id="retention">
+      <span class="kicker">03 · RETENTION</span>
+      <h2>보유 및 이용기간</h2>
+      <h3>기기 내부 데이터</h3>
+      <p>게임 진행정보와 설정은 웹브라우저의 로컬 저장소(localStorage)에 저장됩니다. 이용자가 브라우저 데이터 삭제, 앱 데이터 삭제 또는 초기화를 수행하면 삭제될 수 있습니다.</p>
+      <h3>랭킹 및 보상 검증 정보</h3>
+      <p>랭킹 서버가 활성화된 경우 닉네임·소속·점수·갱신시각, 그리고 보상 중복 방지를 위한 임의 플레이어 ID 등의 기록이 서버에 저장될 수 있습니다. 실제 운영 시 보유기간은 서비스 운영 목적에 필요한 최소 기간으로 설정하고, 목적이 달성되면 지체 없이 파기합니다.</p>
+    </section>
+
+    <section class="card" id="third">
+      <span class="kicker">04 · EXTERNAL SERVICE</span>
+      <h2>외부 서비스 이용 및 위치정보 전송</h2>
+      <p>현재 버전은 이용자의 위치에 맞는 현재 날씨를 표시하기 위해 외부 기상정보 API를 사용할 수 있습니다.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>서비스</th><th>전송 정보</th><th>목적</th><th>비고</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Open-Meteo 기상정보 API</td>
+              <td>현재 위치의 위도·경도</td>
+              <td>현재 기상상태·주/야간 정보 조회</td>
+              <td>앱의 날씨 효과 표시를 위해 필요한 시점에 요청</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="pink">※ 외부 API의 서버 소재지, 개인정보 처리 주체 및 국외이전 해당 여부는 실제 배포 구성과 계약관계를 기준으로 최종 확인하여 별도 고지해야 합니다.</p>
+      <h3>제3자 제공</h3>
+      <p>위 목적 외에 개인정보를 제3자에게 제공하지 않습니다. 향후 제3자 제공이 필요한 기능이 추가되는 경우 관련 법령에 따라 사전 고지 또는 동의 절차를 적용합니다.</p>
+    </section>
+
+    <section class="card">
+      <span class="kicker">05 · CAMERA & LOCATION</span>
+      <h2>카메라 및 위치정보 처리 원칙</h2>
+      <ul>
+        <li>카메라 권한은 AR 탐험 화면을 표시하기 위해 사용합니다.</li>
+        <li>카메라 영상은 게임 서버로 업로드하거나 별도의 영상 파일로 저장하지 않습니다.</li>
+        <li>위치 권한은 체크포인트 거리 계산, 지도 내 현재 위치 표시, 위치 기반 날씨 조회에 사용합니다.</li>
+        <li>지도에서 이용자가 화면을 직접 이동한 경우 GPS 업데이트가 지도를 강제로 현재 위치로 복귀시키지 않으며, ‘내 위치로’ 기능을 선택했을 때만 지도 중심을 현재 위치로 이동하도록 설계할 수 있습니다.</li>
+        <li>방향센서 값은 목표 방향 안내 및 AR 탐색 동작 인식을 위해 기기에서 실시간 처리합니다.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <span class="kicker">06 · LOCAL STORAGE</span>
+      <h2>자동으로 생성·저장되는 정보</h2>
+      <p>조팸스 GO는 로그인 계정 대신 브라우저의 로컬 저장소를 이용하여 게임 상태를 유지합니다. 이 과정에서 다음 정보가 기기에 저장될 수 있습니다.</p>
+      <p>
+        <span class="chip">캐릭터</span>
+        <span class="chip">XP·레벨</span>
+        <span class="chip">컬렉션</span>
+        <span class="chip">퀘스트</span>
+        <span class="chip">업적</span>
+        <span class="chip">효과음·진동 설정</span>
+        <span class="chip">임의 플레이어 ID</span>
+      </p>
+      <p>이 정보는 광고 추적을 목적으로 사용하지 않습니다.</p>
+    </section>
+
+    <section class="card" id="rights">
+      <span class="kicker">07 · YOUR RIGHTS</span>
+      <h2>이용자의 권리와 행사방법</h2>
+      <p>이용자는 관련 법령에 따라 자신의 개인정보에 대한 열람, 정정·삭제, 처리정지 등을 요청할 수 있습니다. 또한 기기 설정에서 카메라 및 위치 권한을 언제든지 변경할 수 있습니다.</p>
+      <ul>
+        <li>기기 내 게임 데이터: 브라우저 사이트 데이터 삭제 또는 앱 데이터 초기화</li>
+        <li>카메라·위치 권한: 운영체제 또는 브라우저의 사이트 권한 설정에서 변경</li>
+        <li>서버 랭킹 정보: 개인정보 보호 담당부서에 정정 또는 삭제 요청</li>
+      </ul>
+      <p>필수 권한을 거부하는 경우 해당 권한이 필요한 AR 탐험 기능은 이용이 제한될 수 있습니다.</p>
+    </section>
+
+    <section class="card" id="security">
+      <span class="kicker">08 · SECURITY</span>
+      <h2>개인정보의 안전성 확보조치</h2>
+      <ul>
+        <li>카메라·위치·센서 데이터의 최소 처리 및 불필요한 서버 저장 방지</li>
+        <li>HTTPS 통신을 통한 전송구간 보호</li>
+        <li>랭킹·보상 API의 입력값 길이 및 범위 제한</li>
+        <li>서버 데이터 접근권한 최소화 및 운영환경 분리</li>
+        <li>보상 중복 수령 방지용 식별값을 실제 신원정보와 분리하여 운영</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <span class="kicker">09 · DESTRUCTION</span>
+      <h2>개인정보 파기</h2>
+      <p>보유기간이 경과하거나 처리 목적이 달성된 개인정보는 복구 또는 재생되지 않도록 지체 없이 삭제합니다. 전자적 파일은 복구가 곤란한 방법으로 삭제하고, 출력물이 있는 경우 파쇄 또는 소각 등의 방법으로 파기합니다.</p>
+    </section>
+
+    <section class="card">
+      <span class="kicker">10 · CHILDREN</span>
+      <h2>아동의 개인정보</h2>
+      <p>서비스가 만 14세 미만 아동을 대상으로 제공되는 경우 법정대리인의 동의 등 관련 법령상 절차를 별도로 적용합니다. 일반 임직원 교육용으로 운영되는 경우에는 해당 이용대상에 맞게 적용 범위를 명확히 고지합니다.</p>
+    </section>
+
+    <section class="card" id="contact">
+      <span class="kicker">11 · CONTACT</span>
+      <h2>개인정보 보호 문의</h2>
+      <div class="contact">
+        <div><b>개인정보처리자</b><span>한국조폐공사</span></div>
+        <div><b>서비스</b><span>조팸스 GO</span></div>
+        <div><b>담당부서</b><span>[배포 전 담당부서 입력]</span></div>
+        <div><b>문의처</b><span>[전화번호 / 이메일 입력]</span></div>
+      </div>
+      <div class="edit-note">
+        <b>배포 전 확인사항</b><br>
+        담당부서·전화번호·이메일, 랭킹 서버 실제 운영 여부, 데이터 보유기간, Open-Meteo 관련 국외이전 또는 처리위탁 해당 여부를 실제 서비스 운영구조에 맞게 확정한 뒤 공개하세요.
+      </div>
+    </section>
+
+    <section class="card">
+      <span class="kicker">12 · POLICY UPDATE</span>
+      <h2>처리방침의 변경</h2>
+      <p>이 처리방침의 내용이 변경되는 경우 서비스 내 공지 또는 별도의 적절한 방법을 통해 변경사항과 시행일을 안내합니다.</p>
+      <p><b>공고일:</b> 2026년 8월 11일<br><b>시행일:</b> 2026년 8월 11일</p>
+    </section>
+
+    <footer class="footer">
+      <strong>조팸스 GO</strong> · LOCATION × AR × LEARNING<br>
+      본 페이지는 「개인정보 보호법」 제30조에 따른 개인정보 처리방침 공개를 고려하여 작성한 서비스용 초안입니다.
+    </footer>
+  </main>
+</body>
+</html>
