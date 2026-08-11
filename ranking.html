@@ -1,4 +1,41 @@
-<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 랭킹</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"></head><body class="app-body"><main class="app-shell page-shell ranking-shell"><header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">HALL OF FAME</span><h1>원정대 랭킹</h1></div><div class="rank-audio-tools"><button id="rankingBgmToggle" class="bgm-toggle" aria-label="로고송 켜기/끄기" aria-pressed="false"><svg class="speaker-system-icon" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><g class="speaker-waves left-waves" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M10 16.5c-2.2 2.8-2.2 8.2 0 11"/><path d="M6.5 13c-4 5-4 13 0 18"/></g><g class="speaker-waves right-waves" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M34 16.5c2.2 2.8 2.2 8.2 0 11"/><path d="M37.5 13c4 5 4 13 0 18"/></g><rect class="speaker-box" x="15.2" y="9.5" width="13.6" height="25" rx="2.8"/><circle class="speaker-cone speaker-cone-top" cx="22" cy="16" r="3.3"/><circle class="speaker-core" cx="22" cy="16" r="1.1"/><circle class="speaker-cone speaker-cone-bottom" cx="22" cy="27.6" r="5.1"/><circle class="speaker-core" cx="22" cy="27.6" r="1.7"/></svg></button><div class="counter-pill">SVP</div></div><audio id="rankingBgm" src="assets/audio/jopams.mp3" loop preload="metadata"></audio></header><section class="rank-hero premium-card"><span class="rank-crown" data-ui-icon="trophy"></span><div><span>MY EXPEDITION SCORE</span><b id="myScore">0</b><small id="rankMode">로컬 기록 기준</small></div></section><section class="rank-motivation" id="rankMotivation"><div><span>전체</span><b id="overallRank">-</b></div><div><span>내 본부</span><b id="orgRank">-</b></div><div><span>이번 주</span><b id="weekRank">-</b></div></section><section class="rank-motivation performance" id="performanceStats"><div><span>연속 탐험</span><b id="streakStat">1일</b></div><div><span>지식 보너스</span><b id="learnStat">0회</b></div><div><span>포획 성공</span><b id="captureStat">0회</b></div></section><section class="rank-tabs"><button class="active" data-tab="personal">개인 랭킹</button><button data-tab="team">본부 대항전</button></section><section class="ranking-list" id="rankingList"></section><p class="empty-hint" id="emptyHint" style="display:none;font-size:11px;opacity:.6;text-align:center;margin:10px 0;">아직 나만 있어요 · 동료를 초대하거나 서버를 연결하면 실제 순위가 채워져요</p><section class="impact-card"><span><i data-ui-icon="growth"></i> 플레이 기반 상생 지표</span><b id="impactValue">0 pt</b><small id="carbonValue">학습·탐험 활동을 게임 지표로 환산</small></section></main><nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a href="collection.html"><span>◇</span><b>컬렉션</b></a><a class="active" href="ranking.html"><span>♛</span><b>랭킹</b></a></nav><script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script><script>
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 랭킹</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
+<style>
+.rank-audio-tools{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  min-width:0;
+  margin-left:auto;
+}
+.rank-audio-tools #rankingBgmToggle{
+  order:1!important;
+  flex:0 0 42px!important;
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  outline:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.rank-audio-tools .counter-pill{
+  order:2!important;
+  margin:0!important;
+  flex:0 0 auto!important;
+}
+.rank-audio-tools #rankingBgmToggle .speaker-system-icon{
+  width:36px!important;
+  height:36px!important;
+  display:block!important;
+}
+</style>
+</head><body class="app-body"><main class="app-shell page-shell ranking-shell"><header class="page-top"><a href="index.html" class="back-btn" aria-label="뒤로가기">←</a><div><span class="section-kicker">HALL OF FAME</span><h1>원정대 랭킹</h1></div><div class="rank-audio-tools"><button id="rankingBgmToggle" class="bgm-toggle" aria-label="로고송 켜기/끄기" aria-pressed="false"><svg class="speaker-system-icon" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><g class="speaker-waves left-waves" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M10 16.5c-2.2 2.8-2.2 8.2 0 11"/><path d="M6.5 13c-4 5-4 13 0 18"/></g><g class="speaker-waves right-waves" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M34 16.5c2.2 2.8 2.2 8.2 0 11"/><path d="M37.5 13c4 5 4 13 0 18"/></g><rect class="speaker-box" x="15.2" y="9.5" width="13.6" height="25" rx="2.8"/><circle class="speaker-cone speaker-cone-top" cx="22" cy="16" r="3.3"/><circle class="speaker-core" cx="22" cy="16" r="1.1"/><circle class="speaker-cone speaker-cone-bottom" cx="22" cy="27.6" r="5.1"/><circle class="speaker-core" cx="22" cy="27.6" r="1.7"/></svg></button><div class="counter-pill">SVP</div></div><audio id="rankingBgm" src="assets/audio/jopams.mp3" loop preload="metadata"></audio></header><section class="rank-hero premium-card"><span class="rank-crown" data-ui-icon="trophy"></span><div><span>MY EXPEDITION SCORE</span><b id="myScore">0</b><small id="rankMode">로컬 기록 기준</small></div></section><section class="rank-motivation" id="rankMotivation"><div><span>전체</span><b id="overallRank">-</b></div><div><span>내 본부</span><b id="orgRank">-</b></div><div><span>이번 주</span><b id="weekRank">-</b></div></section><section class="rank-motivation performance" id="performanceStats"><div><span>연속 탐험</span><b id="streakStat">1일</b></div><div><span>지식 보너스</span><b id="learnStat">0회</b></div><div><span>포획 성공</span><b id="captureStat">0회</b></div></section><section class="rank-tabs"><button class="active" data-tab="personal">개인 랭킹</button><button data-tab="team">본부 대항전</button></section><section class="ranking-list" id="rankingList"></section><p class="empty-hint" id="emptyHint" style="display:none;font-size:11px;opacity:.6;text-align:center;margin:10px 0;">아직 나만 있어요 · 동료를 초대하거나 서버를 연결하면 실제 순위가 채워져요</p><section class="impact-card"><span><i data-ui-icon="growth"></i> 플레이 기반 상생 지표</span><b id="impactValue">0 pt</b><small id="carbonValue">학습·탐험 활동을 게임 지표로 환산</small></section></main><nav class="bottom-nav"><a href="index.html"><span>⌂</span><b>홈</b></a><a href="ar.html"><span>◎</span><b>탐험</b></a><a href="checkpoints.html"><span>⌖</span><b>지도</b></a><a href="collection.html"><span>◇</span><b>컬렉션</b></a><a class="active" href="ranking.html"><span>♛</span><b>랭킹</b></a></nav><script src="assets/state.js"></script><script src="assets/ui.js"></script><script src="assets/app.js"></script><script src="assets/liveops.js"></script><script>
 (()=>{const bgm=document.getElementById('rankingBgm'),btn=document.getElementById('rankingBgmToggle');if(!bgm||!btn)return;const KEY='jopams-ranking-bgm-on',TARGET=.16;let fade=null;const paint=on=>{btn.classList.toggle('on',on);btn.setAttribute('aria-pressed',String(on));btn.setAttribute('aria-label',on?'로고송 끄기':'로고송 켜기')};const stopFade=()=>{if(fade){clearInterval(fade);fade=null}};const play=()=>{stopFade();bgm.volume=.02;bgm.play().then(()=>{paint(true);localStorage.setItem(KEY,'1');fade=setInterval(()=>{bgm.volume=Math.min(TARGET,bgm.volume+.012);if(bgm.volume>=TARGET)stopFade()},80)}).catch(()=>{paint(false);localStorage.setItem(KEY,'0')})};const pause=()=>{stopFade();bgm.pause();paint(false);localStorage.setItem(KEY,'0')};btn.addEventListener('click',()=>bgm.paused?play():pause());paint(false);if(localStorage.getItem(KEY)==='1'){const resume=()=>{play();document.removeEventListener('pointerdown',resume)};document.addEventListener('pointerdown',resume,{once:true})}})();
 </script><script>
 let tab='personal';
