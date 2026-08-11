@@ -95,11 +95,13 @@ document.querySelectorAll('[data-close-sheet]').forEach(el=>el.onclick=()=>{shee
    clearInterval(fadeTimer);audio.pause();setUI(false);if(save)localStorage.setItem(KEY,'0');
  }
  btn.addEventListener('click',()=>audio.paused?play(true):stop(true));
- const wanted=localStorage.getItem(KEY)==='1';
+ const wanted=localStorage.getItem(KEY)!=='0';
  setUI(wanted);
  if(wanted) play(false);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){audio.pause()}else if(localStorage.getItem(KEY)==='1'){play(false)}});
 })();
 </script>
 
-</body></html>
+<script>
+(function(){function s(){const a=document.getElementById('collectionBgm');const b=document.getElementById('collectionBgmBtn');if(!a||localStorage.getItem('jopams_collection_bgm_on')==='0')return;try{a.loop=true;a.volume=.16;const p=a.play();if(p&&p.then)p.then(()=>{if(b){b.classList.add('is-on');b.setAttribute('aria-pressed','true')}}).catch(()=>{});}catch(e){}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',s,{once:true});else s();window.addEventListener('pageshow',s);})();
+</script></body></html>

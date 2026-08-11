@@ -108,4 +108,6 @@ registerPWA();let deferredInstall=null;const installCard=document.getElementById
   // 자연스럽게 멈추도록 별도 처리는 하지 않는다 — 페이지 전환 시 브라우저가
   // 알아서 문서를 새로 로드하며 재생도 함께 종료된다.
 })();
+</script><script>
+(function(){function s(){const a=document.getElementById('homeBgm')||document.querySelector('audio');if(!a)return;try{a.loop=true;a.volume=.16;const p=a.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',s,{once:true});else s();window.addEventListener('pageshow',s);})();
 </script></body></html>
