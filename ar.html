@@ -64,20 +64,29 @@ async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!naviga
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const GEO_FAST={enableHighAccuracy:false,maximumAge:15000,timeout:3500};
 const GEO_FINE={enableHighAccuracy:true,maximumAge:IS_IOS?0:1000,timeout:IS_IOS?22000:12000};
-const GEO_IOS_BOOT={enableHighAccuracy:false,maximumAge:60000,timeout:6500};
+const GEO_IOS_BOOT={enableHighAccuracy:false,maximumAge:5000,timeout:6500};
 let iosGeoRestartTimer=null,iosPoorAccuracyCount=0;
 function acceptLocation(pos){
   if(!pos||!pos.coords)return false;
+  const nowWall=Date.now();
+  const sourceTs=Number(pos.timestamp||nowWall);
+  const sourceAge=Math.max(0,nowWall-sourceTs);
   const acc=Math.max(1,Number(pos.coords.accuracy||999));
-  const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:acc,t:Date.now()};
+  const sample={lat:Number(pos.coords.latitude),lng:Number(pos.coords.longitude),accuracy:acc,t:nowWall,sourceTs};
   if(!Number.isFinite(sample.lat)||!Number.isFinite(sample.lng))return false;
-  // 아주 불안정한 순간값은 이미 양호한 위치가 있을 때만 버린다.
+  // iOS Safari/WebView가 이전 방문 시점의 캐시 좌표를 다시 전달하는 경우가 있다.
+  // 10초보다 오래된 위치는 AR 포인트 판정에 사용하지 않는다.
+  if(sourceAge>10000)return false;
   if(curLat!==null&&acc>150&&curAccuracy!==null&&curAccuracy<80)return false;
   locationSamples.push(sample);if(locationSamples.length>6)locationSamples.shift();
-  // 최근 샘플을 정확도 역가중 평균하여 실내/도심 GPS의 순간 튐을 완화한다.
-  const recent=locationSamples.filter(x=>sample.t-x.t<12000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
+  const recent=locationSamples.filter(x=>sample.t-x.t<10000).sort((a,b)=>a.accuracy-b.accuracy).slice(0,4);
   let wsum=0,lat=0,lng=0;for(const x of recent){const w=1/Math.max(8,x.accuracy);wsum+=w;lat+=x.lat*w;lng+=x.lng*w;}
-  curLat=lat/wsum;curLng=lng/wsum;curAccuracy=Math.min(...recent.map(x=>x.accuracy));lastGeoFixAt=Date.now();
+  curLat=lat/wsum;curLng=lng/wsum;
+  const accs=recent.map(x=>x.accuracy).sort((a,b)=>a-b);
+  const medianAcc=accs[Math.floor(accs.length/2)]||acc;
+  let spread=0;for(const x of recent)spread=Math.max(spread,distMeters(curLat,curLng,x.lat,x.lng));
+  curAccuracy=Math.max(1,Math.round(Math.max(medianAcc,spread)));
+  lastGeoFixAt=nowWall;
   geoRetryCount=0;
   if(geoRetryButtonShown){const b=document.getElementById('geoRetryBtn');if(b)b.remove();geoRetryButtonShown=false;}
   // v31: GPS가 수신되는 즉시 해당 좌표의 실시간 날씨를 백그라운드에서 갱신한다.
@@ -183,6 +192,7 @@ function beginTracking(oriOk){
 }
 function restartIOSGeoWatch(reason='resume'){
   if(!IS_IOS||!navigator.geolocation||document.hidden)return;
+  if(typeof resetProximityGate==='function')resetProximityGate();
   clearTimeout(iosGeoRestartTimer);
   iosGeoRestartTimer=setTimeout(()=>{
     try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}
@@ -210,7 +220,7 @@ function showGeoRetryButton(){
   document.body.appendChild(btn);
 }
 function stopLocationTracking(){try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(e){}try{if(geoFallbackWatchId!==null)navigator.geolocation.clearWatch(geoFallbackWatchId)}catch(e){}if(iosGeoRestartTimer){clearTimeout(iosGeoRestartTimer);iosGeoRestartTimer=null;}geoWatchId=geoFallbackWatchId=null;trackingStarted=false;}
-function onPosError(err){accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요\n창가나 열린 공간으로 이동해 주세요.'}}
+function onPosError(err){if(typeof resetProximityGate==='function')resetProximityGate();accuracyChip.classList.add('warn');if(err&&err.code===1){accuracyChip.textContent='위치 권한 필요';statusBanner.textContent='위치 권한을 허용해 주세요.'}else{accuracyChip.textContent='GPS 재탐색 중';statusBanner.textContent='위치 신호를 다시 잡고 있어요\n창가나 열린 공간으로 이동해 주세요.'}}
 let lastPosSample=null,spoofLockUntil=0;
 function onFilteredPosition(raw){const rawAcc=Math.max(1,Number(raw.accuracy||curAccuracy||999));accuracyChip.textContent=curAccuracy?('GPS ±'+fmtNum(Math.round(curAccuracy))+'m'):'GPS 연결됨';accuracyChip.classList.toggle('warn',curAccuracy>35);accuracyChip.title='최근 위치 정확도 ±'+Math.round(curAccuracy||rawAcc)+'m';
 // v17: 기초적인 위치 위조(GPS 스푸핑) 감지. 두 위치 샘플 사이의 "이동 속도"가
@@ -247,7 +257,25 @@ function fireToolPulse(){/* v30: scanner gun removed; compatibility no-op */}
 function updateRangeExperience(distance){let band='far',label='신호 탐색 중';if(distance<=5){band='capture';label='포획 가능 · 타깃을 유지하세요'}else if(distance<=10){band='hot';label='매우 가까움 · '+fmtNum(Math.round(distance))+'m'}else if(distance<=20){band='near';label='신호 강함 · '+fmtNum(Math.round(distance))+'m'}else if(distance<=50){band='warm';label='신호 감지 · '+fmtNum(Math.round(distance))+'m'}else label='체크포인트까지 '+fmtNum(Math.round(distance))+'m';document.body.dataset.range=band;rangeChip.textContent=label;if(band!==lastRangeBand){if(band==='warm')vibrate(25);if(band==='near')vibrate([30,45,30]);if(band==='hot')vibrate([35,25,55]);if(band==='capture')vibrate([50,25,90]);lastRangeBand=band}}
 function showCharacterReaction(text='발견했어요!'){reactionImg.src=avatarPath(activeAvatar());reactionText.textContent=text;characterReaction.classList.add('show');setTimeout(()=>characterReaction.classList.remove('show'),1800)}
 function setSignal(distance){const pct=Math.max(0,Math.min(1,1-distance/NOTIFY_RADIUS_M));const bars=Math.max(1,Math.ceil(pct*5));document.querySelectorAll('#signalBars i').forEach((el,i)=>el.classList.toggle('on',i<bars));}
-let proximityCandidateIdx=null,proximityGoodFixes=0;const MAX_CAPTURE_ACCURACY_M=35,REQUIRED_PROXIMITY_FIXES=3;function updateUI(){if(curLat===null||curLng===null){setToolMode('scan','GPS 신호 탐색');statusBanner.classList.add('show');statusBanner.textContent='위치 신호를 확인하고 있어요…';targetWrap.classList.remove('visible');return;}const done=getProgress();document.getElementById('arCount').textContent=done.length;
+let proximityCandidateIdx=null,proximityGoodFixes=0,proximityLastFixAt=0;
+const MAX_CAPTURE_ACCURACY_M=30,REQUIRED_PROXIMITY_FIXES=3,POINT_FIX_MAX_AGE_MS=5500;
+function resetProximityGate(){
+  proximityCandidateIdx=null;proximityGoodFixes=0;proximityLastFixAt=0;
+  resetPointSearch(null);
+  if(pointSearchCue)pointSearchCue.classList.remove('show','found');
+}
+function updateUI(){if(curLat===null||curLng===null){resetProximityGate();setToolMode('scan','GPS 신호 탐색');statusBanner.classList.add('show');statusBanner.textContent='위치 신호를 확인하고 있어요…';targetWrap.classList.remove('visible');return;}
+const fixAge=Date.now()-lastGeoFixAt;
+if(!lastGeoFixAt||fixAge>POINT_FIX_MAX_AGE_MS){
+  resetProximityGate();
+  setToolMode('scan','GPS 최신 위치 확인');
+  statusBanner.classList.add('show');
+  statusBanner.textContent='최신 GPS 위치를 다시 확인하고 있어요…';
+  targetWrap.classList.remove('visible');dwellRing.classList.remove('show');
+  arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');
+  return;
+}
+const done=getProgress();document.getElementById('arCount').textContent=done.length;
 // v17: 12개를 모두 모았다고 AR 탐험을 완전히 끝내지 않는다. 이후에는 이미 수집한
 // 체크포인트도 포함해 "재방문 모드"로 전환, 가벼운 보상(XP·캐릭터 성장)을 계속
 // 받을 수 있게 해 주간 퀘스트·시즌패스 같은 반복 참여형 리텐션 장치가 계속 의미를 갖도록 한다.
@@ -263,14 +291,20 @@ const effectiveNotifyRadius=Math.max(NOTIFY_RADIUS_M,Math.min(75,NOTIFY_RADIUS_M
 const effectiveCollectRadius=COLLECT_RADIUS_M;
 // 표시 거리는 Android/iOS 모두 동일한 WGS84 Haversine 결과를 사용하고 1m 단위로 반올림한다.
 const displayDistance=Math.max(0,Math.round(distance));
-radarDist.textContent=fmtNum(displayDistance)+'m';setSignal(distance);updateRangeExperience(distance);if(distance<=effectiveNotifyRadius&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast(allDone?'재방문 신호 포착! <b>'+ep.item+'</b> 지점이 근처예요':'신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>effectiveNotifyRadius+15)notifiedIdx.delete(checkpoint.idx);if(distance>effectiveNotifyRadius){statusBanner.classList.add('show');statusBanner.textContent=accuracy>40?'GPS 오차 ±'+Math.round(accuracy)+'m · 신호를 보정하며 이동하세요':(allDone?'재방문 지점 방향으로 이동해보세요':'신호를 따라 체크포인트 방향으로 이동하세요');}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else if(accuracy>MAX_CAPTURE_ACCURACY_M){statusBanner.classList.add('show');statusBanner.textContent='포인트 근처입니다 · GPS 정밀 신호를 확인하는 중 (±'+Math.round(accuracy)+'m)';}else{statusBanner.classList.remove('show');}
+radarDist.textContent=fmtNum(displayDistance)+'m';setSignal(distance);updateRangeExperience(distance);if(distance<=effectiveNotifyRadius&&!notifiedIdx.has(checkpoint.idx)){notifiedIdx.add(checkpoint.idx);vibrate([60,50,90]);playChime('near');showToast(allDone?'재방문 신호 포착! <b>'+ep.item+'</b> 지점이 근처예요':'신호 포착! <b>'+ep.item+'</b>이 근처에 있어요',{variant:'near',duration:3000});}if(distance>effectiveNotifyRadius+15)notifiedIdx.delete(checkpoint.idx);if(distance>effectiveNotifyRadius){statusBanner.classList.add('show');statusBanner.textContent=accuracy>40?'GPS 오차 ±'+Math.round(accuracy)+'m · 신호를 보정하며 이동하세요':(allDone?'재방문 지점 방향으로 이동해보세요':'신호를 따라 체크포인트 방향으로 이동하세요');}else if(distance>effectiveCollectRadius){statusBanner.classList.add('show');statusBanner.textContent='신호가 강해지고 있어요 · 조금만 더 가까이';}else if(accuracy>MAX_CAPTURE_ACCURACY_M){statusBanner.classList.add('show');statusBanner.textContent='근거리 신호 감지 · GPS 정밀 위치 확인 중 (±'+Math.round(accuracy)+'m)';}else if(proximityGoodFixes<REQUIRED_PROXIMITY_FIXES){statusBanner.classList.add('show');statusBanner.textContent='근거리 신호 확인 중 · GPS '+proximityGoodFixes+'/'+REQUIRED_PROXIMITY_FIXES;}else{statusBanner.classList.remove('show');}
 let diff=0,haveHeading=curHeading!==null;if(haveHeading){const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);diff=angleDiff(bearing,curHeading);}const spoofLocked=performance.now()<spoofLockUntil;const tooCloseToLastCollect=lastCollectPos&&distMeters(curLat,curLng,lastCollectPos.lat,lastCollectPos.lng)<POST_COLLECT_MOVE_M;
 // GPS 오차 원의 바깥쪽까지 고려한 보수적 거리. 정확도가 ±10m이고 계산거리가 15m라면
 // 실제로는 더 멀 수 있으므로 곧바로 출현시키지 않는다. Android/iOS에 똑같이 적용한다.
-const conservativeDistance=distance+Math.min(12,accuracy*.60);
-const goodProximityFix=accuracy<=MAX_CAPTURE_ACCURACY_M&&distance<=effectiveCollectRadius&&conservativeDistance<=effectiveCollectRadius;
-if(proximityCandidateIdx!==checkpoint.idx){proximityCandidateIdx=checkpoint.idx;proximityGoodFixes=0;}
-if(goodProximityFix)proximityGoodFixes=Math.min(REQUIRED_PROXIMITY_FIXES,proximityGoodFixes+1);else proximityGoodFixes=0;
+const conservativeDistance=distance+Math.min(10,accuracy*.45);
+const goodProximityFix=fixAge<=POINT_FIX_MAX_AGE_MS&&accuracy<=MAX_CAPTURE_ACCURACY_M&&distance<=effectiveCollectRadius&&conservativeDistance<=effectiveCollectRadius;
+if(proximityCandidateIdx!==checkpoint.idx){
+  proximityCandidateIdx=checkpoint.idx;proximityGoodFixes=0;proximityLastFixAt=0;resetPointSearch(checkpoint.idx);
+}
+if(lastGeoFixAt!==proximityLastFixAt){
+  proximityLastFixAt=lastGeoFixAt;
+  if(goodProximityFix)proximityGoodFixes=Math.min(REQUIRED_PROXIMITY_FIXES,proximityGoodFixes+1);
+  else proximityGoodFixes=0;
+}
 const inCollectRange=goodProximityFix&&proximityGoodFixes>=REQUIRED_PROXIMITY_FIXES;
 // 위치 오차가 큰 환경에서는 방향 UI만 완화하고, 아이템 출현 거리 조건은 완화하지 않는다.
 const effectiveFov=accuracy>45?75:accuracy>30?58:FOV_HALF_DEG,facingTarget=!haveHeading||Math.abs(diff)<=effectiveFov;if(pointSearchCheckpointIdx!==checkpoint.idx){resetPointSearch(checkpoint.idx);}if(!inCollectRange||tooCloseToLastCollect||spoofLocked){if(distance>effectiveCollectRadius+6||accuracy>MAX_CAPTURE_ACCURACY_M)resetPointSearch(checkpoint.idx);}const searchReady=inCollectRange&&!collectingLock&&!spoofLocked&&!tooCloseToLastCollect;if(searchReady&&!pointSearchFound){setToolMode('track','포인트 탐색');pointSearchCue.classList.add('show');pointSearchTitle.textContent='포인트 도착';statusBanner.classList.add('show');statusBanner.textContent=haveHeading?'기기를 좌우로 천천히 움직여 아이템을 찾아보세요':'포인트 도착 · 기기를 좌우로 움직여 주변을 탐색하세요';targetWrap.classList.remove('visible');dwellRing.classList.remove('show');dwellStart=null;dwellTargetEpId=null;arrowLeft.classList.remove('visible');arrowRight.classList.remove('visible');return;}else{pointSearchCue.classList.remove('show');}const discoverable=searchReady&&pointSearchFound;if(discoverable)setToolMode('capture','아이템 발견');else if(distance<=effectiveNotifyRadius)setToolMode('track',haveHeading?'방향 '+Math.round(Math.abs(diff))+'°':'근거리 추적');else setToolMode('scan','신호 '+fmtNum(Math.round(distance))+'m');
