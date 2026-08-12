@@ -64,7 +64,104 @@ const pointSearchCue=document.getElementById('pointSearchCue'),pointSearchFill=d
 const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
 document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>{if(document.hidden){stopScannerAmbience()}else{startScannerAmbience();if(IS_IOS&&trackingStarted)restartIOSGeoWatch('visibility');else if(geoWatchId!==null&&Date.now()-lastGeoFixAt>6000)requestOneShot(GEO_FINE)}});
 function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
-async function startCamera(){if(video.srcObject&&video.srcObject.getVideoTracks().some(t=>t.readyState==='live'))return true;if(cameraStartPromise)return cameraStartPromise;cameraStartPromise=(async()=>{if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;/* v22: 카메라를 최우선으로 표시한다. 초기 getUserMedia에는 해상도/프레임 제약을 거의 주지 않아 브라우저가 가장 빨리 열 수 있는 후면 카메라 스트림을 먼저 확보하고, 화면이 보인 뒤 품질 제약은 백그라운드로 적용한다. */const attempts=[{video:{facingMode:{ideal:'environment'}},audio:false},{video:true,audio:false}];for(const constraints of attempts){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;video.setAttribute('playsinline','');video.muted=true;try{await Promise.race([video.play(),new Promise(r=>setTimeout(r,120))])}catch(e){}permGate.classList.add('camera-ready');const track=stream.getVideoTracks&&stream.getVideoTracks()[0];if(track&&track.applyConstraints){setTimeout(()=>track.applyConstraints({width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}).catch(()=>{}),0)}return true}catch(e){}}return false})().finally(()=>cameraStartPromise=null);return cameraStartPromise;}
+let cameraHealthTimer=null,cameraRecoveryTimer=null,cameraLastFrameAt=0;
+function cameraTrackLive(){
+  const stream=video&&video.srcObject;
+  if(!stream||!stream.getVideoTracks)return false;
+  return stream.getVideoTracks().some(t=>t.readyState==='live');
+}
+async function ensureCameraPlaying(reason='health'){
+  if(document.hidden||!video)return false;
+  if(!cameraTrackLive())return startCamera(true);
+  try{
+    video.muted=true;
+    video.setAttribute('playsinline','');
+    video.setAttribute('webkit-playsinline','');
+    if(video.paused)await video.play();
+  }catch(_){}
+  if(video.videoWidth>0&&video.videoHeight>0){
+    cameraLastFrameAt=Date.now();
+    document.body.classList.remove('camera-stalled');
+    return true;
+  }
+  clearTimeout(cameraRecoveryTimer);
+  cameraRecoveryTimer=setTimeout(async()=>{
+    if(document.hidden)return;
+    if(video.videoWidth===0||video.videoHeight===0||video.paused){
+      await restartCamera('no-frame-'+reason);
+    }
+  },900);
+  return true;
+}
+async function restartCamera(reason='recovery'){
+  if(document.hidden)return false;
+  try{
+    const oldStream=video.srcObject;
+    if(oldStream&&oldStream.getTracks)oldStream.getTracks().forEach(t=>{try{t.stop()}catch(_){}});
+  }catch(_){}
+  video.srcObject=null;
+  cameraStartPromise=null;
+  return startCamera(true);
+}
+function bindCameraTrackHealth(stream){
+  if(!stream||!stream.getVideoTracks)return;
+  const track=stream.getVideoTracks()[0];
+  if(!track)return;
+  track.onended=()=>{if(!document.hidden)setTimeout(()=>restartCamera('track-ended'),120)};
+  track.onmute=()=>{if(!document.hidden)setTimeout(()=>ensureCameraPlaying('track-muted'),250)};
+  track.onunmute=()=>ensureCameraPlaying('track-unmuted');
+}
+async function startCamera(force=false){
+  if(!force&&cameraTrackLive()){
+    await ensureCameraPlaying('existing');
+    return true;
+  }
+  if(cameraStartPromise)return cameraStartPromise;
+  cameraStartPromise=(async()=>{
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;
+    const attempts=[
+      {video:{facingMode:{ideal:'environment'}},audio:false},
+      {video:{facingMode:'environment'},audio:false},
+      {video:true,audio:false}
+    ];
+    for(const constraints of attempts){
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject=stream;
+        video.muted=true;
+        video.autoplay=true;
+        video.setAttribute('playsinline','');
+        video.setAttribute('webkit-playsinline','');
+        bindCameraTrackHealth(stream);
+        await new Promise(resolve=>{
+          if(video.readyState>=1)return resolve();
+          const done=()=>resolve();
+          video.addEventListener('loadedmetadata',done,{once:true});
+          setTimeout(done,1000);
+        });
+        try{await video.play()}catch(_){}
+        permGate.classList.add('camera-ready');
+        const track=stream.getVideoTracks&&stream.getVideoTracks()[0];
+        if(track&&track.applyConstraints){
+          setTimeout(()=>track.applyConstraints({
+            width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}
+          }).catch(()=>{}),500);
+        }
+        cameraLastFrameAt=Date.now();
+        clearInterval(cameraHealthTimer);
+        cameraHealthTimer=setInterval(()=>{
+          if(document.hidden)return;
+          if(!cameraTrackLive()||video.paused||video.videoWidth===0||video.videoHeight===0){
+            ensureCameraPlaying('interval');
+          }else cameraLastFrameAt=Date.now();
+        },2500);
+        return true;
+      }catch(e){}
+    }
+    return false;
+  })().finally(()=>cameraStartPromise=null);
+  return cameraStartPromise;
+}
 async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query)return;const p=await navigator.permissions.query({name:'camera'});if(p.state==='granted'){startCamera().then(ok=>{if(ok)setStep(stepCam,true)})}}catch(e){}}
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const UA=navigator.userAgent||'';
@@ -205,6 +302,11 @@ function beginTracking(oriOk){
 }
 
 let geoResumeTimer=null;
+function recoverCameraAfterResume(){
+  if(document.hidden)return;
+  clearTimeout(cameraRecoveryTimer);
+  cameraRecoveryTimer=setTimeout(()=>ensureCameraPlaying('resume'),180);
+}
 function recoverGeoAfterResume(){
   if(document.hidden||!navigator.geolocation)return;
   clearTimeout(geoResumeTimer);
