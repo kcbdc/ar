@@ -13,12 +13,18 @@ function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}fu
 // 획득하는 것을 막기 위한 지점별 쿨다운. 한 번 보상을 받은 체크포인트는
 // 3일간 다시 발견/재방문 대상에서 제외된다.
 const CHECKPOINT_COOLDOWN_MS=3*24*60*60*1000;
+// 동일 건물/광장에 체크포인트가 여러 개 촘촘히 배치된 경우에도 연속 획득되지 않도록
+// '체크포인트 번호'뿐 아니라 실제 획득 좌표 주변 35m를 72시간 잠근다.
+const CHECKPOINT_COOLDOWN_RADIUS_M=35;
 function getCPCooldowns(){try{return window.JopamsState?JopamsState.get('cpCooldowns',{}):{}}catch(e){return{}}}
-function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m)}catch(e){}}
-function isCPCoolingDown(idx){const m=getCPCooldowns();const t=m[idx];return !!(t&&(Date.now()-t)<CHECKPOINT_COOLDOWN_MS)}
+function getSpatialCooldowns(){try{const a=window.JopamsState?JopamsState.get('cpSpatialCooldowns',[]):[];return Array.isArray(a)?a:[]}catch(e){return[]}}
+function pruneSpatialCooldowns(){const now=Date.now(),a=getSpatialCooldowns().filter(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a)}catch(e){}return a}
+function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m);const cp=CHECKPOINTS.find(x=>x.idx===idx);if(cp){const a=pruneSpatialCooldowns();a.push({idx,lat:cp.lat,lng:cp.lng,at:Date.now()});if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-80));}}catch(e){}}
+function isCPCoolingDown(idx){const m=getCPCooldowns(),t=Number(m[idx]||0);if(t&&Date.now()-t<CHECKPOINT_COOLDOWN_MS)return true;const cp=CHECKPOINTS.find(x=>x.idx===idx);if(!cp)return false;return pruneSpatialCooldowns().some(x=>distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)}
+function checkpointCooldownRemaining(idx){const now=Date.now(),m=getCPCooldowns(),cp=CHECKPOINTS.find(x=>x.idx===idx);let latest=Number(m[idx]||0);if(cp)for(const x of pruneSpatialCooldowns())if(distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)latest=Math.max(latest,Number(x.at||0));return Math.max(0,CHECKPOINT_COOLDOWN_MS-(now-latest))}
 
 function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
-// v37: 재방문 모드에서도 쿨다운 중인 지점은 대상에서 제외
+// 재방문 모드에서도 72시간/35m 공간 쿨다운 중인 지점은 대상에서 제외한다.
 function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
 function extractHeading(e){if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))return e.webkitCompassHeading;if(e.alpha!==null&&e.alpha!==undefined)return(360-e.alpha)%360;return null}
 function vibrate(p){if(!getV4().haptics)return;if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
