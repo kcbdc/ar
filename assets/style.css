@@ -1452,3 +1452,15 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
   body.ar-body .scanner-viewmodel .scanner-vm-distance{right:44px;bottom:20px;min-width:54px;max-width:84px;padding:4px 6px}
   body.ar-body .scanner-viewmodel .scanner-vm-distance b{font-size:10.5px}
 }
+
+/* v54 cross-browser camera compositor fix */
+.ar-body #cameraVideo{
+  z-index:0!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
