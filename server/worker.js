@@ -65,7 +65,28 @@ function describeError(err){
   }catch(e){return '(에러 설명 생성 실패)'}
 }
 
-export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v34-llama4',ai:!!env.AI,hasChat:true,hasQuiz:true},200,h);
+export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v35-game-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
+
+// v35: 동일 계정의 Chrome/Edge/iPhone/Android 진행률 + 72시간/12m 공간 쿨다운 동기화
+if(u.pathname==='/api/game-state'&&(req.method==='GET'||req.method==='PUT')){
+  const accountId=String(req.headers.get('X-Jopams-Account')||'').trim();
+  if(!accountId||accountId.length>180)return json({ok:false,error:'account_required'},401,h);
+  const now=Date.now(),TTL=3*24*60*60*1000;
+  const cleanProgress=v=>[...new Set((Array.isArray(v)?v:[]).map(Number).filter(x=>Number.isInteger(x)&&x>=1&&x<=12))];
+  const cleanCP=v=>{const out={};if(v&&typeof v==='object'&&!Array.isArray(v))for(const [k,val] of Object.entries(v)){const idx=Number(k),at=Number(val);if(Number.isInteger(idx)&&idx>=0&&Number.isFinite(at)&&at>0&&now-at<TTL)out[idx]=at}return out};
+  const cleanSpatial=v=>(Array.isArray(v)?v:[]).map(x=>({idx:Number(x.idx),lat:Number(x.lat),lng:Number(x.lng),at:Number(x.at)})).filter(x=>Number.isInteger(x.idx)&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&Number.isFinite(x.at)&&x.at>0&&now-x.at<TTL).slice(-200);
+  const row=await env.DB.prepare('SELECT progress_json,cp_cooldowns_json,spatial_cooldowns_json,updated_at FROM game_state WHERE account_id=?').bind(accountId).first();
+  let oldP=[],oldC={},oldS=[];if(row){try{oldP=JSON.parse(row.progress_json||'[]')}catch{}try{oldC=JSON.parse(row.cp_cooldowns_json||'{}')}catch{}try{oldS=JSON.parse(row.spatial_cooldowns_json||'[]')}catch{}}
+  oldP=cleanProgress(oldP);oldC=cleanCP(oldC);oldS=cleanSpatial(oldS);
+  if(req.method==='GET')return json({ok:true,version:2,progress:oldP,cpCooldowns:oldC,spatialCooldowns:oldS,updatedAt:Number(row&&row.updated_at||0),cooldownDays:3,cooldownRadiusM:12},200,h);
+  let b;try{b=await req.json()}catch{return json({ok:false,error:'invalid_json'},400,h)}
+  const p=[...new Set([...oldP,...cleanProgress(b.progress)])];
+  const c={...oldC};for(const [k,val] of Object.entries(cleanCP(b.cpCooldowns))){c[k]=Math.max(Number(c[k]||0),Number(val||0))}
+  const sm=new Map();for(const x of [...oldS,...cleanSpatial(b.spatialCooldowns)]){const key=String(x.idx);const prev=sm.get(key);if(!prev||x.at>prev.at)sm.set(key,x)}const s=[...sm.values()].filter(x=>now-x.at<TTL).slice(-200);
+  await env.DB.prepare(`INSERT INTO game_state(account_id,progress_json,cp_cooldowns_json,spatial_cooldowns_json,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET progress_json=excluded.progress_json,cp_cooldowns_json=excluded.cp_cooldowns_json,spatial_cooldowns_json=excluded.spatial_cooldowns_json,updated_at=excluded.updated_at`).bind(accountId,JSON.stringify(p),JSON.stringify(c),JSON.stringify(s),now).run();
+  return json({ok:true,version:2,progress:p,cpCooldowns:c,spatialCooldowns:s,updatedAt:now,cooldownDays:3,cooldownRadiusM:12},200,h);
+}
+
 if(u.pathname==='/api/score'&&req.method==='POST'){
   let b;try{b=await req.json()}catch{return json({ok:false,error:'invalid_json'},400,h)}
   const name=String(b.name||'원정대원').replace(/[<>]/g,'').trim().slice(0,30)||'원정대원';
