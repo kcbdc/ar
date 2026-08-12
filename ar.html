@@ -67,8 +67,16 @@ function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok
 async function startCamera(){if(video.srcObject&&video.srcObject.getVideoTracks().some(t=>t.readyState==='live'))return true;if(cameraStartPromise)return cameraStartPromise;cameraStartPromise=(async()=>{if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return false;/* v22: 카메라를 최우선으로 표시한다. 초기 getUserMedia에는 해상도/프레임 제약을 거의 주지 않아 브라우저가 가장 빨리 열 수 있는 후면 카메라 스트림을 먼저 확보하고, 화면이 보인 뒤 품질 제약은 백그라운드로 적용한다. */const attempts=[{video:{facingMode:{ideal:'environment'}},audio:false},{video:true,audio:false}];for(const constraints of attempts){try{const stream=await navigator.mediaDevices.getUserMedia(constraints);video.srcObject=stream;video.setAttribute('playsinline','');video.muted=true;try{await Promise.race([video.play(),new Promise(r=>setTimeout(r,120))])}catch(e){}permGate.classList.add('camera-ready');const track=stream.getVideoTracks&&stream.getVideoTracks()[0];if(track&&track.applyConstraints){setTimeout(()=>track.applyConstraints({width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30}}).catch(()=>{}),0)}return true}catch(e){}}return false})().finally(()=>cameraStartPromise=null);return cameraStartPromise;}
 async function warmStartCameraIfGranted(){try{if(!navigator.permissions||!navigator.permissions.query)return;const p=await navigator.permissions.query({name:'camera'});if(p.state==='granted'){startCamera().then(ok=>{if(ok)setStep(stepCam,true)})}}catch(e){}}
 const IS_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const UA=navigator.userAgent||'';
+const IS_ANDROID=/Android/i.test(UA);
+const IS_SAMSUNG=/SamsungBrowser/i.test(UA);
+const IS_EDGE=/EdgA|EdgiOS|Edg/i.test(UA);
+const IS_CHROME=/CriOS|Chrome|Chromium/i.test(UA)&&!IS_EDGE&&!IS_SAMSUNG;
+const IS_SAFARI=/Safari/i.test(UA)&&!/(CriOS|Chrome|Chromium|Edg|SamsungBrowser)/i.test(UA);
+const GEO_PROFILE={enableHighAccuracy:true,maximumAge:0,timeout:20000};
+
 const GEO_FAST={enableHighAccuracy:false,maximumAge:15000,timeout:3500};
-const GEO_FINE={enableHighAccuracy:true,maximumAge:IS_IOS?0:1000,timeout:IS_IOS?22000:12000};
+const GEO_FINE=GEO_PROFILE;
 const GEO_IOS_BOOT={enableHighAccuracy:false,maximumAge:5000,timeout:6500};
 let iosGeoRestartTimer=null,iosPoorAccuracyCount=0;
 let geoOneShotBusy=false,geoOneShotSeq=0,lastAcceptedSourceTs=0,bestFineFixAt=0;
@@ -195,6 +203,23 @@ function beginTracking(oriOk){
   }
   if(oriOk)enableOrientationTracking();
 }
+
+let geoResumeTimer=null;
+function recoverGeoAfterResume(){
+  if(document.hidden||!navigator.geolocation)return;
+  clearTimeout(geoResumeTimer);
+  geoResumeTimer=setTimeout(()=>{
+    if(Date.now()-lastGeoFixAt>3000){
+      if(IS_IOS)restartIOSGeoWatch('resume');
+      else{
+        try{if(geoWatchId!==null)navigator.geolocation.clearWatch(geoWatchId)}catch(_){}
+        geoWatchId=navigator.geolocation.watchPosition(acceptLocation,onPosError,GEO_FINE);
+        trackingStarted=true;
+        requestOneShot(GEO_FINE);
+      }
+    }
+  },120);
+}
 function restartIOSGeoWatch(reason='resume'){
   if(!IS_IOS||!navigator.geolocation||document.hidden)return;
   if(typeof resetProximityGate==='function')resetProximityGate();
@@ -261,7 +286,7 @@ function updateRangeExperience(distance){let band='far',label='신호 탐색 중
 function showCharacterReaction(text='발견했어요!'){reactionImg.src=avatarPath(activeAvatar());reactionText.textContent=text;characterReaction.classList.add('show');setTimeout(()=>characterReaction.classList.remove('show'),1800)}
 function setSignal(distance){const pct=Math.max(0,Math.min(1,1-distance/NOTIFY_RADIUS_M));const bars=Math.max(1,Math.ceil(pct*5));document.querySelectorAll('#signalBars i').forEach((el,i)=>el.classList.toggle('on',i<bars));}
 let proximityCandidateIdx=null,proximityGoodFixes=0,proximityLastFixAt=0;
-const MAX_CAPTURE_ACCURACY_M=30,REQUIRED_PROXIMITY_FIXES=3,POINT_FIX_MAX_AGE_MS=IS_IOS?15000:6500;
+const MAX_CAPTURE_ACCURACY_M=30,REQUIRED_PROXIMITY_FIXES=3,POINT_FIX_MAX_AGE_MS=(IS_IOS||IS_SAMSUNG)?15000:9000,NAV_GUIDE_MAX_M=100,AR_PRECISION_ENTER_M=12;
 function resetProximityGate(){
   proximityCandidateIdx=null;proximityGoodFixes=0;proximityLastFixAt=0;
   resetPointSearch(null);
@@ -280,7 +305,7 @@ function navigationDirectionLabel(diff){
   return a<=55?'왼쪽으로 이동':'왼쪽으로 크게 회전';
 }
 function updateNavigationGuide(checkpoint,ep,distance,accuracy){
-  if(!arNavGuide||!checkpoint||distance>100||distance<=Math.max(24,COLLECT_RADIUS_M+3)||collectingLock){
+  if(!arNavGuide||!checkpoint||distance>NAV_GUIDE_MAX_M||distance<=AR_PRECISION_ENTER_M||collectingLock){
     hideNavigationGuide();return;
   }
   const bearing=bearingTo(curLat,curLng,checkpoint.lat,checkpoint.lng);
