@@ -1434,51 +1434,21 @@ body.ar-body .ar-nav-guide.no-heading .ar-nav-arrow{opacity:.42;animation:navSee
 /* v49: 스캐너건 DOM에는 거리 숫자 HUD만 표시 */
 body.ar-body .scanner-viewmodel .scanner-vm-label{display:none!important}
 body.ar-body .scanner-viewmodel .scanner-vm-distance{
-  position:absolute;
-  right:42px;
-  bottom:18px;
-  z-index:7;
-  min-width:58px;
-  width:max-content;
-  max-width:92px;
-  padding:4px 7px;
-  border-radius:10px;
-  box-sizing:border-box;
-  text-align:center;
-  background:rgba(3,18,38,.78);
-  border:1px solid rgba(86,211,255,.34);
-  box-shadow:0 0 12px rgba(50,198,255,.12);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  pointer-events:none;
-  transform:translateZ(0);
-  -webkit-transform:translateZ(0);
-  white-space:nowrap;
-  overflow:hidden;
+  position:absolute;right:42px;bottom:18px;z-index:7;min-width:58px;width:max-content;max-width:92px;
+  padding:4px 7px;border-radius:10px;box-sizing:border-box;text-align:center;
+  background:rgba(3,18,38,.78);border:1px solid rgba(86,211,255,.34);
+  box-shadow:0 0 12px rgba(50,198,255,.12);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  pointer-events:none;transform:translateZ(0);-webkit-transform:translateZ(0);
+  white-space:nowrap;overflow:hidden;
 }
 body.ar-body .scanner-viewmodel .scanner-vm-distance b{
-  display:block;
-  margin:0;
-  font-size:11.5px;
-  line-height:1.1;
-  font-weight:900;
-  letter-spacing:.1px;
-  color:#fff;
-  font-variant-numeric:tabular-nums;
-  text-overflow:ellipsis;
-  overflow:hidden;
+  display:block;margin:0;font-size:11.5px;line-height:1.1;font-weight:900;letter-spacing:.1px;
+  color:#fff;font-variant-numeric:tabular-nums;text-overflow:ellipsis;overflow:hidden;
 }
 body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
-  border-color:rgba(93,241,198,.52);
-  box-shadow:0 0 13px rgba(68,235,188,.14);
+  border-color:rgba(93,241,198,.52);box-shadow:0 0 13px rgba(68,235,188,.14);
 }
 @media(max-width:390px){
-  body.ar-body .scanner-viewmodel .scanner-vm-distance{
-    right:44px;
-    bottom:20px;
-    min-width:54px;
-    max-width:84px;
-    padding:4px 6px;
-  }
+  body.ar-body .scanner-viewmodel .scanner-vm-distance{right:44px;bottom:20px;min-width:54px;max-width:84px;padding:4px 6px}
   body.ar-body .scanner-viewmodel .scanner-vm-distance b{font-size:10.5px}
 }

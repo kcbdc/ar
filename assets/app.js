@@ -5,27 +5,98 @@ const RAW_COORDS=[[36.3773307,127.3705299],[36.3777765,127.3698604],[36.3775195,
 const CHECKPOINTS=RAW_COORDS.map((c,i)=>({idx:i,lat:c[0],lng:c[1],episodeId:(i%12)+1}));
 const NOTIFY_RADIUS_M=55,COLLECT_RADIUS_M=22,FOV_HALF_DEG=45,DWELL_MS=2200,STORAGE_KEY='jopams_ar_progress_v3';
 function getProgress(){try{const a=window.JopamsState?JopamsState.get('progress',[]):JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function saveProgress(a){try{if(window.JopamsState)JopamsState.set('progress',a);else localStorage.setItem(STORAGE_KEY,JSON.stringify(a))}catch(e){}}
+function saveProgress(a){try{if(window.JopamsState)JopamsState.set('progress',a);else localStorage.setItem(STORAGE_KEY,JSON.stringify(a));if(typeof scheduleServerGameStatePush==='function')scheduleServerGameStatePush('progress')}catch(e){}}
 function markCollected(id){const a=getProgress();if(!a.includes(id)){a.push(id);saveProgress(a)}return a}
 function resetProgress(){saveProgress([])}function nextEpisodeId(){const d=getProgress();for(const e of EPISODES)if(!d.includes(e.id))return e.id;return 12}function getEpisode(id){return EPISODES.find(e=>e.id===Number(id))||EPISODES[0]}
 function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}function distMeters(a,b,c,d){const R=6371000,x=toRad(c-a),y=toRad(d-b),v=Math.sin(x/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(v),Math.sqrt(1-v))}function bearingTo(a,b,c,d){const p1=toRad(a),p2=toRad(c),dl=toRad(d-b),y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return(toDeg(Math.atan2(y,x))+360)%360}function angleDiff(t,c){return((t-c+540)%360)-180}
 // v37: 같은 물리적 지점에서 살짝 움직였다가 돌아오는 것만으로 아이템을 반복
 // 획득하는 것을 막기 위한 지점별 쿨다운. 한 번 보상을 받은 체크포인트는
 // 3일간 다시 발견/재방문 대상에서 제외된다.
+
+/* ===== v52 EXISTING WORKER + D1 ACCOUNT SYNC =====
+   기존 server/worker.js + server/wrangler.toml의 jofams D1을 그대로 사용한다.
+   동기화 대상: 수집 진행률, 체크포인트 쿨다운, 12m 공간 쿨다운.
+   별도 Pages Function / 별도 D1 / 루트 wrangler.toml은 사용하지 않는다.
+*/
+const JOPAMS_SYNC_VERSION=2;
+const JOPAMS_ACCOUNT_KEY='jopams_account_id_v2';
+let JOPAMS_SYNC_READY=false,JOPAMS_SYNC_INFLIGHT=null,JOPAMS_SYNC_TIMER=0,JOPAMS_APPLYING_SERVER=false;
+function jopamsAccountId(){
+  // 프로필 이름+소속이 실제 설정돼 있으면 브라우저/기기 공통 계정 키로 사용한다.
+  // 기본 '원정대원' 상태에서는 사용자 충돌 방지를 위해 로컬 익명 ID를 사용한다.
+  try{
+    const p=getProfile(),v=getV3(),name=String(p&&p.name||'').trim(),org=String(v&&v.org||'').trim();
+    if(name&&name!=='원정대원')return 'profile:'+encodeURIComponent(org||'본사')+':'+encodeURIComponent(name);
+  }catch(_){}
+  let id='';try{id=(localStorage.getItem(JOPAMS_ACCOUNT_KEY)||'').trim()}catch(_){}
+  if(!id){try{id=(crypto&&crypto.randomUUID)?crypto.randomUUID():('guest-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2))}catch(_){id='guest-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}try{localStorage.setItem(JOPAMS_ACCOUNT_KEY,id)}catch(_){}}
+  return 'device:'+id;
+}
+function localGameStateSnapshot(){
+  let progress=[],cpCooldowns={},spatialCooldowns=[];
+  try{progress=getProgress()}catch(_){}
+  try{cpCooldowns=getCPCooldowns()}catch(_){}
+  try{spatialCooldowns=getSpatialCooldowns()}catch(_){}
+  return {version:JOPAMS_SYNC_VERSION,progress:Array.isArray(progress)?progress:[],cpCooldowns:cpCooldowns&&typeof cpCooldowns==='object'?cpCooldowns:{},spatialCooldowns:Array.isArray(spatialCooldowns)?spatialCooldowns:[],updatedAt:Date.now()};
+}
+function applyServerGameState(s){
+  if(!s||typeof s!=='object'||!window.JopamsState)return;
+  JOPAMS_APPLYING_SERVER=true;
+  try{
+    if(Array.isArray(s.progress))JopamsState.set('progress',s.progress);
+    if(s.cpCooldowns&&typeof s.cpCooldowns==='object')JopamsState.set('cpCooldowns',s.cpCooldowns);
+    if(Array.isArray(s.spatialCooldowns))JopamsState.set('cpSpatialCooldowns',s.spatialCooldowns);
+  }finally{JOPAMS_APPLYING_SERVER=false}
+  try{window.dispatchEvent(new CustomEvent('jopams:server-state',{detail:s}))}catch(_){}
+}
+async function pullServerGameState(){
+  if(JOPAMS_SYNC_INFLIGHT)return JOPAMS_SYNC_INFLIGHT;
+  const base=serverConfig();if(!base)return null;const accountId=jopamsAccountId();
+  JOPAMS_SYNC_INFLIGHT=(async()=>{try{
+    const r=await fetch(base+'/api/game-state',{headers:{'X-Jopams-Account':accountId},cache:'no-store'});
+    if(!r.ok)throw new Error('sync pull '+r.status);const s=await r.json();applyServerGameState(s);JOPAMS_SYNC_READY=true;return s;
+  }catch(e){console.warn('[JOPAMS sync] pull fallback',e);return null}finally{JOPAMS_SYNC_INFLIGHT=null}})();return JOPAMS_SYNC_INFLIGHT;
+}
+async function pushServerGameState(reason='update'){
+  if(JOPAMS_APPLYING_SERVER)return null;const base=serverConfig();if(!base)return null;const accountId=jopamsAccountId(),state=localGameStateSnapshot();
+  try{const r=await fetch(base+'/api/game-state',{method:'PUT',headers:{'content-type':'application/json','X-Jopams-Account':accountId},body:JSON.stringify({...state,reason})});if(!r.ok)throw new Error('sync push '+r.status);const s=await r.json();applyServerGameState(s);JOPAMS_SYNC_READY=true;return s}catch(e){console.warn('[JOPAMS sync] push deferred',e);return null}
+}
+function scheduleServerGameStatePush(reason='update'){if(JOPAMS_APPLYING_SERVER)return;clearTimeout(JOPAMS_SYNC_TIMER);JOPAMS_SYNC_TIMER=setTimeout(()=>pushServerGameState(reason),220)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullServerGameState()});window.addEventListener('online',()=>pullServerGameState());setTimeout(()=>pullServerGameState(),250);
+
 const CHECKPOINT_COOLDOWN_MS=3*24*60*60*1000;
 // 동일 건물/광장에 체크포인트가 여러 개 촘촘히 배치된 경우에도 연속 획득되지 않도록
-// '체크포인트 번호'뿐 아니라 실제 획득 좌표 주변 35m를 72시간 잠근다.
-const CHECKPOINT_COOLDOWN_RADIUS_M=35;
+// '체크포인트 번호'뿐 아니라 실제 획득 좌표 주변 12m를 72시간 잠근다.
+const CHECKPOINT_COOLDOWN_RADIUS_M=12;
 function getCPCooldowns(){try{return window.JopamsState?JopamsState.get('cpCooldowns',{}):{}}catch(e){return{}}}
 function getSpatialCooldowns(){try{const a=window.JopamsState?JopamsState.get('cpSpatialCooldowns',[]):[];return Array.isArray(a)?a:[]}catch(e){return[]}}
 function pruneSpatialCooldowns(){const now=Date.now(),a=getSpatialCooldowns().filter(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a)}catch(e){}return a}
-function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m);const cp=CHECKPOINTS.find(x=>x.idx===idx);if(cp){const a=pruneSpatialCooldowns();a.push({idx,lat:cp.lat,lng:cp.lng,at:Date.now()});if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-80));}}catch(e){}}
+function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m);const cp=CHECKPOINTS.find(x=>x.idx===idx);if(cp){const a=pruneSpatialCooldowns();a.push({idx,lat:cp.lat,lng:cp.lng,at:Date.now()});if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-80));}}catch(e){};scheduleServerGameStatePush('setCPCooldown');}
 function isCPCoolingDown(idx){const m=getCPCooldowns(),t=Number(m[idx]||0);if(t&&Date.now()-t<CHECKPOINT_COOLDOWN_MS)return true;const cp=CHECKPOINTS.find(x=>x.idx===idx);if(!cp)return false;return pruneSpatialCooldowns().some(x=>distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)}
 function checkpointCooldownRemaining(idx){const now=Date.now(),m=getCPCooldowns(),cp=CHECKPOINTS.find(x=>x.idx===idx);let latest=Number(m[idx]||0);if(cp)for(const x of pruneSpatialCooldowns())if(distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)latest=Math.max(latest,Number(x.at||0));return Math.max(0,CHECKPOINT_COOLDOWN_MS-(now-latest))}
 
-function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
-// 재방문 모드에서도 72시간/35m 공간 쿨다운 중인 지점은 대상에서 제외한다.
-function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd}:null}
+function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:false}:null}
+// 실제 물리적으로 가장 가까운 체크포인트. 수집/쿨다운 상태와 무관하게 '거리 검증'에 사용한다.
+function nearestPhysicalCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:isCPCoolingDown(best.idx),cooldownRemaining:checkpointCooldownRemaining(best.idx)}:null}
+// 재방문 보상을 받을 수 있는 가장 가까운 체크포인트.
+function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:false}:null}
+// v50: 브라우저별 저장상태 차이 때문에 근처 지점들이 쿨다운이면,
+// 10km 이상 떨어진 '획득 가능 지점'이 가장 가까운 타깃처럼 보이는 문제를 방지한다.
+// 실제 근처 체크포인트가 500m 이내인데 획득 가능 타깃이 1km 밖이면,
+// 근처 체크포인트의 실제 거리를 보여주되 쿨다운 상태로 명확히 안내한다.
+function resolveRevisitTarget(lat,lng){
+  const physical=nearestPhysicalCheckpoint(lat,lng),eligible=nearestAnyCheckpoint(lat,lng);
+  if(!physical)return eligible;
+  if(!eligible)return physical;
+  if(physical.cooling&&physical.distance<=500&&eligible.distance>1000)return physical;
+  return eligible;
+}
+function formatCooldownRemaining(ms){
+  ms=Math.max(0,Number(ms||0));
+  const h=Math.ceil(ms/3600000),d=Math.floor(h/24),rh=h%24;
+  if(d>0)return d+'일 '+rh+'시간';
+  return Math.max(1,h)+'시간';
+}
 function extractHeading(e){if(typeof e.webkitCompassHeading==='number'&&!isNaN(e.webkitCompassHeading))return e.webkitCompassHeading;if(e.alpha!==null&&e.alpha!==undefined)return(360-e.alpha)%360;return null}
 function vibrate(p){if(!getV4().haptics)return;if(navigator.vibrate)try{navigator.vibrate(p)}catch(e){}}
 let _audioCtx=null;function playChime(kind){if(!getV4().sound)return;try{if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();const c=_audioCtx,n=c.currentTime,f=kind==='collect'?[660,880,1320]:[520,720];f.forEach((v,i)=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=v;g.gain.setValueAtTime(0,n+i*.09);g.gain.linearRampToValueAtTime(.14,n+i*.09+.02);g.gain.exponentialRampToValueAtTime(.001,n+i*.09+.27);o.connect(g).connect(c.destination);o.start(n+i*.09);o.stop(n+i*.09+.3)})}catch(e){}}
