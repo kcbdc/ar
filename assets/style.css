@@ -1430,3 +1430,16 @@ body.ar-body .ar-nav-guide.no-heading .ar-nav-arrow{opacity:.42;animation:navSee
 @keyframes navPulse{0%{transform:scale(.86);opacity:.7}100%{transform:scale(1.22);opacity:0}}
 @keyframes navSeek{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
 @media(max-width:380px){body.ar-body .ar-nav-guide{width:92vw;grid-template-columns:52px minmax(0,1fr);gap:9px}body.ar-body .ar-nav-arrow-wrap{width:50px;height:50px}body.ar-body .ar-nav-copy>b{font-size:12px}body.ar-body .ar-nav-copy strong{font-size:16px}body.ar-body .ar-nav-copy em{font-size:8px}}
+
+/* v48 iOS/Android 공통: 스캐너건에 직접 결합된 신호거리 HUD */
+body.ar-body .scanner-viewmodel .scanner-vm-distance{
+  position:absolute;right:8px;bottom:10px;z-index:7;min-width:78px;
+  padding:5px 9px;border-radius:12px;box-sizing:border-box;text-align:right;
+  background:rgba(3,18,38,.82);border:1px solid rgba(86,211,255,.42);
+  box-shadow:0 0 16px rgba(50,198,255,.16);backdrop-filter:blur(7px);
+  pointer-events:none;transform:translateZ(0);-webkit-transform:translateZ(0);
+}
+body.ar-body .scanner-viewmodel .scanner-vm-distance small{display:block;font-size:7px;line-height:1;letter-spacing:1.2px;color:#70dfff;font-weight:800}
+body.ar-body .scanner-viewmodel .scanner-vm-distance b{display:block;margin-top:2px;font-size:14px;line-height:1.05;color:#fff;font-variant-numeric:tabular-nums}
+body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{border-color:rgba(93,241,198,.62);box-shadow:0 0 18px rgba(68,235,188,.18)}
+body.ar-body .scanner-viewmodel .scanner-vm-distance.hot small{color:#66efc7}
