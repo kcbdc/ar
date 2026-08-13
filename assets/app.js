@@ -21,7 +21,17 @@ function toRad(d){return d*Math.PI/180}function toDeg(r){return r*180/Math.PI}fu
 const JOPAMS_SYNC_VERSION=2;
 const JOPAMS_ACCOUNT_KEY='jopams_account_id_v2';
 let JOPAMS_SYNC_READY=false,JOPAMS_SYNC_INFLIGHT=null,JOPAMS_SYNC_TIMER=0,JOPAMS_APPLYING_SERVER=false;
-function jopamsAccountId(){try{const u=window.JopamsAuth&&JopamsAuth.user&&JopamsAuth.user();if(u&&u.id)return 'user:'+String(u.id)}catch(_){}return ''}
+function jopamsAccountId(){
+  // 프로필 이름+소속이 실제 설정돼 있으면 브라우저/기기 공통 계정 키로 사용한다.
+  // 기본 '원정대원' 상태에서는 사용자 충돌 방지를 위해 로컬 익명 ID를 사용한다.
+  try{
+    const p=getProfile(),v=getV3(),name=String(p&&p.name||'').trim(),org=String(v&&v.org||'').trim();
+    if(name&&name!=='원정대원')return 'profile:'+encodeURIComponent(org||'본사')+':'+encodeURIComponent(name);
+  }catch(_){}
+  let id='';try{id=(localStorage.getItem(JOPAMS_ACCOUNT_KEY)||'').trim()}catch(_){}
+  if(!id){try{id=(crypto&&crypto.randomUUID)?crypto.randomUUID():('guest-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2))}catch(_){id='guest-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}try{localStorage.setItem(JOPAMS_ACCOUNT_KEY,id)}catch(_){}}
+  return 'device:'+id;
+}
 function localGameStateSnapshot(){
   let progress=[],cpCooldowns={},spatialCooldowns=[];
   try{progress=getProgress()}catch(_){}
@@ -43,13 +53,13 @@ async function pullServerGameState(){
   if(JOPAMS_SYNC_INFLIGHT)return JOPAMS_SYNC_INFLIGHT;
   const base=serverConfig();if(!base)return null;const accountId=jopamsAccountId();
   JOPAMS_SYNC_INFLIGHT=(async()=>{try{
-    if(!accountId||!(window.JopamsAuth&&JopamsAuth.token()))return null;const r=await fetch(base+'/api/game-state',{headers:JopamsAuth.authHeaders(),cache:'no-store'});
+    const r=await fetch(base+'/api/game-state',{headers:{'X-Jopams-Account':accountId},cache:'no-store'});
     if(!r.ok)throw new Error('sync pull '+r.status);const s=await r.json();applyServerGameState(s);JOPAMS_SYNC_READY=true;return s;
   }catch(e){console.warn('[JOPAMS sync] pull fallback',e);return null}finally{JOPAMS_SYNC_INFLIGHT=null}})();return JOPAMS_SYNC_INFLIGHT;
 }
 async function pushServerGameState(reason='update'){
   if(JOPAMS_APPLYING_SERVER)return null;const base=serverConfig();if(!base)return null;const accountId=jopamsAccountId(),state=localGameStateSnapshot();
-  try{if(!accountId||!(window.JopamsAuth&&JopamsAuth.token()))return null;const r=await fetch(base+'/api/game-state',{method:'PUT',headers:JopamsAuth.authHeaders({'content-type':'application/json'}),body:JSON.stringify({...state,reason})});if(!r.ok)throw new Error('sync push '+r.status);const s=await r.json();applyServerGameState(s);JOPAMS_SYNC_READY=true;return s}catch(e){console.warn('[JOPAMS sync] push deferred',e);return null}
+  try{const r=await fetch(base+'/api/game-state',{method:'PUT',headers:{'content-type':'application/json','X-Jopams-Account':accountId},body:JSON.stringify({...state,reason})});if(!r.ok)throw new Error('sync push '+r.status);const s=await r.json();applyServerGameState(s);JOPAMS_SYNC_READY=true;return s}catch(e){console.warn('[JOPAMS sync] push deferred',e);return null}
 }
 function scheduleServerGameStatePush(reason='update'){if(JOPAMS_APPLYING_SERVER)return;clearTimeout(JOPAMS_SYNC_TIMER);JOPAMS_SYNC_TIMER=setTimeout(()=>pushServerGameState(reason),220)}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullServerGameState()});window.addEventListener('online',()=>pullServerGameState());setTimeout(()=>pullServerGameState(),250);

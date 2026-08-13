@@ -1464,13 +1464,3 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
 }
-
-/* v55 social login */
-.auth-body{min-height:100dvh;background:radial-gradient(circle at 50% 12%,#10355f 0,#06142b 45%,#020916 100%)}
-.auth-shell{width:min(92vw,430px);margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 54px) 0 42px}
-.auth-hero{text-align:center;padding:18px 8px 28px}.auth-hero h1{font-size:46px;margin:8px 0 10px;color:#fff}.auth-hero h1 em{font-style:normal;color:#56dfff}.auth-hero p{font-size:13px;line-height:1.7;color:#b8c9dc}
-.auth-card{padding:24px}.auth-card h2{margin:0 0 5px}.auth-help{font-size:12px;color:#9fb1c7;margin-bottom:18px}
-.social-login{width:100%;height:54px;border:0;border-radius:16px;margin:8px 0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:900;cursor:pointer}.social-login.kakao{background:#fee500;color:#191919}.social-login.naver{background:#03c75a;color:#fff}.social-login span{width:24px;height:24px;display:grid;place-items:center;font-weight:950}
-.auth-note{display:block;margin-top:18px;font-size:10px;line-height:1.55;color:#8194ab}.auth-msg{margin-top:12px;color:#70dcff;font-size:11px}
-.account-summary{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:rgba(7,25,48,.56);margin:12px 0 16px}.account-provider{display:grid;place-items:center;min-width:58px;height:30px;padding:0 8px;border-radius:10px;background:rgba(80,207,255,.12);color:#69dcff;font-size:9px;font-weight:900;letter-spacing:.7px}.account-summary div{min-width:0}.account-summary b,.account-summary small{display:block}.account-summary small{margin-top:3px;font-size:10px;color:#8ea5bc}
-.logout-btn{width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,100,115,.35);background:rgba(120,20,36,.16);color:#ff9ba5;font-weight:900}
