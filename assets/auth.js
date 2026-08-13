@@ -10,11 +10,17 @@
   const authHeaders=(extra={})=>token()?{...extra,Authorization:'Bearer '+token()}:extra;
   async function verify(){
     const t=token();if(!t)return null;
+    // v58: 서버 응답이 없거나 매우 느린 경우(네트워크 불안정, 워커 다운 등) verify()가
+    // 영원히 pending 상태로 남아 화면 전환/렌더링을 기다리는 코드가 계속 대기하게 되는
+    // 문제가 있었다. 8초 안에 응답이 없으면 요청을 중단하고 캐시된 사용자로 폴백한다.
+    const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    const timer=ctrl?setTimeout(()=>{try{ctrl.abort()}catch(_){}},8000):null;
     try{
-      const r=await fetch(apiBase()+'/api/auth/me',{headers:authHeaders(),cache:'no-store'});
+      const r=await fetch(apiBase()+'/api/auth/me',{headers:authHeaders(),cache:'no-store',signal:ctrl?ctrl.signal:undefined});
       if(!r.ok){if(r.status===401)clear();return null}
       const j=await r.json();if(j&&j.user){save(t,j.user);return j.user}
     }catch(_){return user()}
+    finally{if(timer)clearTimeout(timer)}
     return null;
   }
   async function logout(){
@@ -36,10 +42,17 @@
     location.replace(next);return true;
   }
   function gate(){
-    const page=location.pathname.split('/').pop()||'index.html';
-    if(page==='auth.html'||page==='privacy.html')return;
-    if(!token()){try{sessionStorage.setItem(RETURN_KEY,page+location.search+location.hash)}catch(_){}location.replace('auth.html');return}
-    verify().then(u=>{if(!u&&!token())location.replace('auth.html?expired=1')});
+    // v58: 어떤 이유로든(예상 못한 예외) 이 함수가 던지면 로그인 판단 자체가 안 되고
+    // 화면도 아무 처리 없이 멈출 수 있었다. 문제가 생겨도 최소한 로그인 화면으로는
+    // 보낼 수 있도록 전체를 try/catch로 감싼다.
+    try{
+      const page=location.pathname.split('/').pop()||'index.html';
+      if(page==='auth.html'||page==='privacy.html')return;
+      if(!token()){try{sessionStorage.setItem(RETURN_KEY,page+location.search+location.hash)}catch(_){}location.replace('auth.html');return}
+      verify().then(u=>{if(!u&&!token())location.replace('auth.html?expired=1')}).catch(()=>{});
+    }catch(_){
+      try{location.replace('auth.html?error=1')}catch(__){}
+    }
   }
   window.JopamsAuth={apiBase,token,user,save,clear,authHeaders,verify,logout,login,consumeCallback,gate};
   gate();
