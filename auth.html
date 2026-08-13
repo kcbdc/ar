@@ -1,0 +1,8 @@
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 로그인</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><script src="assets/auth.js"></script></head><body class="app-body auth-body"><main class="auth-shell"><section class="auth-hero"><span class="section-kicker">JOPAMS GO ACCOUNT</span><h1>조팸스 <em>GO</em></h1><p>한 번 로그인하면 다음 실행부터 바로 원정을 이어갑니다.<br>같은 계정으로 로그인하면 다른 기기에서도 진행률과 3일·12m 쿨다운이 이어집니다.</p></section><section class="auth-card premium-card"><h2>원정대 로그인</h2><p class="auth-help">최초 1회 소셜 로그인이 필요합니다.</p><button class="social-login kakao" id="kakaoLogin"><span>●</span><b>카카오로 시작하기</b></button><button class="social-login naver" id="naverLogin"><span>N</span><b>네이버로 시작하기</b></button><small class="auth-note">카메라 영상과 실시간 위치는 계정 서버에 저장하지 않습니다. 소셜 로그인 식별자는 게임 진행 동기화에 사용됩니다.</small><div id="authMsg" class="auth-msg"></div></section></main><script>
+if(JopamsAuth.consumeCallback()){}
+const q=new URLSearchParams(location.search),msg=document.getElementById('authMsg');
+if(q.get('expired'))msg.textContent='로그인 유효기간이 만료되었습니다. 다시 로그인해 주세요.';
+if(q.get('loggedout'))msg.textContent='로그아웃되었습니다.';
+kakaoLogin.onclick=()=>JopamsAuth.login('kakao');naverLogin.onclick=()=>JopamsAuth.login('naver');
+if(JopamsAuth.token()){JopamsAuth.verify().then(u=>{if(u)location.replace('index.html')})}
+</script></body></html>
