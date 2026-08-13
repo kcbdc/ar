@@ -13,17 +13,21 @@
 //      항상 최신 버전을 먼저 시도하고, 오프라인일 때만 캐시로 폴백한다.
 //      (이미지·CSS·JS 같은 정적 자산은 기존처럼 캐시 우선을 유지해 로딩 속도를 지킨다.)
 
-const CACHE = 'jopams-go-v49';
+const CACHE = 'jopams-go-v50';
 const ASSETS = [
-  './', './index.html', './ar.html', './checkpoints.html', './collection.html',
+  './', './index.html', './auth.html', './ar.html', './checkpoints.html', './collection.html',
   './ranking.html', './achievements.html', './battle.html', './season.html',
   './profile.html', './expedition.html', './master.html', './chat.html', './privacy.html', './manifest.webmanifest',
   './assets/style.css','./assets/design-system-v18.css','./assets/design-system-v19.css','./assets/design-system-v20.css','./assets/design-system-v22.css',
-  './assets/design-system-v32.css', './assets/state.js', './assets/ui.js', './assets/app.js', './assets/liveops.js',
+  './assets/design-system-v32.css', './assets/state.js', './assets/ui.js', './assets/app.js', './assets/liveops.js', './assets/auth.js',
   './assets/img/daim.png', './assets/img/sunsik.png', './assets/img/hoonmin.png',
   './assets/img/icon-192.png', './assets/img/icon-512.png', './assets/img/icon-maskable-512.png', './assets/img/splash.jpg',
   './assets/audio/bgm-home.mp3'
 ];
+// v50: 인증 관련 JS(auth.js)는 로그인 판단에 직접 쓰이는 코드라 오래된 캐시가
+// 잠깐이라도 서빙되면 HTML/JS 버전이 어긋날 수 있다. 그래서 이 파일만 예외적으로
+// "네트워크 우선"으로 처리해 항상 최신 버전을 우선 시도하게 한다.
+const NETWORK_FIRST_JS = ['/assets/auth.js'];
 
 self.addEventListener('install', e => {
   self.skipWaiting();
@@ -77,6 +81,23 @@ self.addEventListener('fetch', e => {
         .catch(() =>
           caches.match(e.request).then(cached => cached || caches.match('./index.html'))
         )
+    );
+    return;
+  }
+
+  // v50: auth.js는 네트워크 우선(실패 시에만 캐시 폴백) — 로그인 로직이 구버전으로
+  // 굳어버리는 것을 막는다.
+  if (NETWORK_FIRST_JS.some(p => u.pathname.endsWith(p))) {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-store' })
+        .then(res => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
     );
     return;
   }

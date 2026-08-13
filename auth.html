@@ -3,6 +3,19 @@ if(JopamsAuth.consumeCallback()){}
 const q=new URLSearchParams(location.search),msg=document.getElementById('authMsg');
 if(q.get('expired'))msg.textContent='로그인 유효기간이 만료되었습니다. 다시 로그인해 주세요.';
 if(q.get('loggedout'))msg.textContent='로그아웃되었습니다.';
+if(q.get('error'))msg.textContent='일시적인 오류가 발생했습니다. 다시 로그인해 주세요.';
 kakaoLogin.onclick=()=>JopamsAuth.login('kakao');naverLogin.onclick=()=>JopamsAuth.login('naver');
-if(JopamsAuth.token()){JopamsAuth.verify().then(u=>{if(u)location.replace('index.html')})}
+// v58: 기존 토큰 검증 중에는 버튼을 잠깐 비활성화해 사용자가 헷갈리지 않게 하고,
+// 검증이 느리거나 실패하더라도(서버 지연/오류) 반드시 로그인 버튼이 있는 상태로
+// 되돌아오도록 finally에서 항상 복구한다.
+if(JopamsAuth.token()){
+  kakaoLogin.disabled=true;naverLogin.disabled=true;
+  msg.textContent='로그인 확인 중…';
+  JopamsAuth.verify().then(u=>{
+    if(u){location.replace('index.html');return}
+    msg.textContent='';
+  }).catch(()=>{msg.textContent='';}).finally(()=>{
+    kakaoLogin.disabled=false;naverLogin.disabled=false;
+  });
+}
 </script></body></html>

@@ -15,7 +15,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="조팸스 GO 공공구매 AR 어드벤처">
-</head>
+<script src="assets/auth.js"></script></head>
 <body class="app-body"><div id="appSplash"></div><main class="app-shell hub-shell">
 <header class="hero-panel"><div class="top-utility"><div class="brand-line"><span class="brand-mark">✦</span><span>KOMSCO PLAY LAB</span></div><button id="bgmToggle" class="bgm-toggle" aria-label="배경음악 켜기/끄기" aria-pressed="false">
   <svg class="speaker-system-icon" viewBox="0 0 44 44" aria-hidden="true" focusable="false">
@@ -49,9 +49,15 @@ function renderHome(){syncAvatarUI();const done=getProgress(),count=done.length,
 function renderWeeklyPreview(){const q=JopamsLive.quests('weekly');const done=q.filter(x=>x.complete).length;weeklyDoneCount.textContent=done}
 function renderDaily(){const missions=JopamsLive.quests('daily'),done=missions.filter(m=>m.complete).length;dailyDone.textContent=done;dailyList.innerHTML=missions.map(m=>`<div class="daily-item ${m.complete?'done':''}"><span class="daily-icon">${uiIcon(m.icon)}</span><span><b>${m.title}</b><small>${m.desc}</small></span><em>${fmtNum(m.now)}/${fmtNum(m.goal)}</em></div>`).join('');dailyReward.disabled=!JopamsLive.dailyMasterReady();if(JopamsLive.dailyMasterClaimed()){dailyReward.classList.add('claimed');dailyReward.innerHTML='<span class="icon-orb">'+uiIcon('trophy')+'</span><b>올 클리어 완료</b><small>내일 다시 도전</small>'}else{dailyReward.classList.remove('claimed')}dailyChest.disabled=!JopamsLive.chestReady('daily');const lv=JopamsLive.load();if(lv.lastDailyChest===todayKey()){dailyChest.classList.add('claimed');dailyChest.innerHTML='<span class="icon-orb">'+uiIcon('chest')+'</span><b>상자 획득 완료</b><small>내일 다시 오픈</small>'}else{dailyChest.classList.remove('claimed')}}
 dailyReward.onclick=()=>{const r=JopamsLive.claimDailyMaster();if(r){playChime('collect');showToast('올 클리어! <b>+'+fmtNum(r.xp)+' XP</b>',{variant:'near'});renderHome()}};dailyChest.onclick=()=>{const item=JopamsLive.openChest('daily');if(item){playSfx('chest');JopamsLive.impactHaptic(item.type==='shard'?'rare':'capture');JopamsLive.cameraShake(item.type==='shard'?'strong':'soft');showToast('보급상자: <b>'+item.name+'</b>',{variant:'near'});renderHome()}};
+// v58: 아래 초기화 코드 중 하나라도 예외를 던지면(예: 저장 데이터 손상, 확장 오류 등)
+// 같은 <script> 블록 뒤쪽에 있는 스플래시 제거 코드까지 실행되지 않아 화면이 영구히
+// 스플래시에 멈춰 있는 것처럼 보일 수 있었다. try/catch로 감싸 초기화 실패가 있어도
+// 최소한 화면 전환/스플래시 해제는 항상 진행되도록 한다.
+try{
 checkAchievements(false);badgeCount.textContent=earnedAchievements().filter(x=>x.earned).length;renderHome();window.addEventListener('pageshow',renderHome);document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderHome()});
 const ob=onboard,prefs=getV4();if(!prefs.onboarded){ob.classList.add('show');ob.setAttribute('aria-hidden','false')}let step=0;const pages=[...document.querySelectorAll('.onboard-page')],dots=[...document.querySelectorAll('.onboard-dots i')];function setStep(n){step=n;pages.forEach((x,i)=>x.classList.toggle('active',i===step));dots.forEach((x,i)=>x.classList.toggle('active',i===step));onboardNext.textContent=step===2?'탐험 시작':'다음'}onboardNext.onclick=()=>{if(step<2)setStep(step+1);else{markOnboarded();ob.classList.remove('show')}};skipOnboard.onclick=()=>{markOnboarded();ob.classList.remove('show')};
 registerPWA();let deferredInstall=null;const installCard=document.getElementById('installCard'),installBtn=document.getElementById('installBtn'),installClose=document.getElementById('installClose');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;if(!getV4().installDismissed&&!installState().standalone)installCard.hidden=false});installBtn.onclick=async()=>{if(!deferredInstall)return;playSfx('tap');deferredInstall.prompt();await deferredInstall.userChoice;installCard.hidden=true;deferredInstall=null};installClose.onclick=()=>{const v=getV4();v.installDismissed=true;saveV4(v);installCard.hidden=true};
+}catch(initErr){console.error('[JOPAMS init]',initErr)}
 // v47: 스플래시를 최소 노출 시간(700ms) 확보 후, 페이지 로드가 끝나면 자연스럽게 사라지게 한다.
 (function(){
   const splash = document.getElementById('appSplash');
