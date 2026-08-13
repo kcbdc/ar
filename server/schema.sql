@@ -29,3 +29,11 @@ CREATE TABLE IF NOT EXISTS game_state (
  updated_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_game_state_updated_at ON game_state(updated_at);
+
+-- v55 Kakao/Naver social account auth
+CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY,provider TEXT NOT NULL,provider_user_id TEXT NOT NULL,nickname TEXT,profile_image TEXT,created_at INTEGER NOT NULL,last_login_at INTEGER NOT NULL,UNIQUE(provider,provider_user_id));
+CREATE INDEX IF NOT EXISTS idx_users_provider_uid ON users(provider,provider_user_id);
+CREATE TABLE IF NOT EXISTS auth_states (state TEXT PRIMARY KEY,provider TEXT NOT NULL,return_to TEXT NOT NULL,created_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_auth_states_created ON auth_states(created_at);
+CREATE TABLE IF NOT EXISTS auth_sessions (token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,last_seen_at INTEGER NOT NULL,FOREIGN KEY(user_id) REFERENCES users(id));
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id,expires_at);
