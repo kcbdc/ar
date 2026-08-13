@@ -12,4 +12,3 @@ binding = "AI"
 
 [vars]
 ALLOWED_ORIGIN = "https://jofams.pages.dev"
-PUBLIC_APP_ORIGIN = "https://jofams.pages.dev"
