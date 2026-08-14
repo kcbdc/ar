@@ -68,6 +68,53 @@ function describeError(err){
 
 // v55 Kakao/Naver OAuth + persistent account sessions
 const AUTH_SESSION_MS=180*24*60*60*1000,AUTH_STATE_MS=10*60*1000;
+const enc = new TextEncoder();
+function utf8b64url(s){
+  const bytes=enc.encode(s);
+  return b64url(bytes);
+}
+function b64urlToUtf8(s){
+  s=String(s||'').replace(/-/g,'+').replace(/_/g,'/');
+  while(s.length%4)s+='=';
+  const bin=atob(s),bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function timingSafeEqual(a,b){
+  a=String(a||'');b=String(b||'');
+  if(a.length!==b.length)return false;
+  let out=0;for(let i=0;i<a.length;i++)out|=a.charCodeAt(i)^b.charCodeAt(i);
+  return out===0;
+}
+async function hmacState(secret,payloadB64){
+  const key=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const sig=await crypto.subtle.sign('HMAC',key,enc.encode(payloadB64));
+  return b64url(new Uint8Array(sig));
+}
+async function createOAuthState(env,provider,returnTo){
+  if(!env.OAUTH_STATE_SECRET)throw new Error('OAUTH_STATE_SECRET missing');
+  const payload={v:1,p:provider,r:returnTo,iat:Date.now(),n:randomToken(12)};
+  const p=utf8b64url(JSON.stringify(payload));
+  const sig=await hmacState(env.OAUTH_STATE_SECRET,p);
+  return p+'.'+sig;
+}
+async function verifyOAuthState(env,state){
+  try{
+    if(!env.OAUTH_STATE_SECRET)return null;
+    const parts=String(state||'').split('.');
+    if(parts.length!==2)return null;
+    const [p,sig]=parts;
+    const expected=await hmacState(env.OAUTH_STATE_SECRET,p);
+    if(!timingSafeEqual(sig,expected))return null;
+    const data=JSON.parse(b64urlToUtf8(p));
+    if(!data||data.v!==1||!['kakao','naver'].includes(data.p))return null;
+    const age=Date.now()-Number(data.iat||0);
+    if(!Number.isFinite(age)||age<0||age>AUTH_STATE_MS)return null;
+    data.r=safeReturnTo(data.r,env);
+    return data;
+  }catch(_){return null}
+}
+
 const b64url=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 function randomToken(n=32){const a=new Uint8Array(n);crypto.getRandomValues(a);return b64url(a)}
 async function sha256(s){const a=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(a)].map(x=>x.toString(16).padStart(2,'0')).join('')}
@@ -81,18 +128,20 @@ export default {async fetch(req,env){const u=new URL(req.url);const allow=env.AL
 if(u.pathname==='/api/auth/start'&&req.method==='GET'){
   const provider=String(u.searchParams.get('provider')||''),returnTo=safeReturnTo(u.searchParams.get('return_to'),env);
   if(!['kakao','naver'].includes(provider))return json({ok:false,error:'bad_provider'},400,h);
-  const state=randomToken(24),now=Date.now();await env.DB.prepare('DELETE FROM auth_states WHERE created_at<?').bind(now-AUTH_STATE_MS).run().catch(()=>{});await env.DB.prepare('INSERT INTO auth_states(state,provider,return_to,created_at) VALUES(?,?,?,?)').bind(state,provider,returnTo,now).run();
+  let state;
+  try{state=await createOAuthState(env,provider,returnTo)}
+  catch(_){return json({ok:false,error:'oauth_state_not_configured'},503,h)}
   const callback=new URL('/api/auth/callback',u.origin).href;
   if(provider==='kakao'){if(!env.KAKAO_REST_API_KEY)return json({ok:false,error:'kakao_not_configured'},503,h);const a=new URL('https://kauth.kakao.com/oauth/authorize');a.searchParams.set('client_id',env.KAKAO_REST_API_KEY);a.searchParams.set('redirect_uri',callback);a.searchParams.set('response_type','code');a.searchParams.set('state',state);return redirect(a.href)}
   if(!env.NAVER_CLIENT_ID)return json({ok:false,error:'naver_not_configured'},503,h);const a=new URL('https://nid.naver.com/oauth2.0/authorize');a.searchParams.set('client_id',env.NAVER_CLIENT_ID);a.searchParams.set('redirect_uri',callback);a.searchParams.set('response_type','code');a.searchParams.set('state',state);return redirect(a.href)
 }
 if(u.pathname==='/api/auth/callback'&&req.method==='GET'){
   const code=String(u.searchParams.get('code')||''),state=String(u.searchParams.get('state')||'');if(!code||!state)return json({ok:false,error:'missing_oauth_params'},400,h);
-  const st=await env.DB.prepare('SELECT provider,return_to,created_at FROM auth_states WHERE state=?').bind(state).first();if(!st||Date.now()-Number(st.created_at)>AUTH_STATE_MS)return json({ok:false,error:'invalid_state'},400,h);await env.DB.prepare('DELETE FROM auth_states WHERE state=?').bind(state).run();
+  const st=await verifyOAuthState(env,state);if(!st)return json({ok:false,error:'invalid_state'},400,h);
   const callback=new URL('/api/auth/callback',u.origin).href;let social;
-  if(st.provider==='kakao'){const body=new URLSearchParams({grant_type:'authorization_code',client_id:env.KAKAO_REST_API_KEY,redirect_uri:callback,code});if(env.KAKAO_CLIENT_SECRET)body.set('client_secret',env.KAKAO_CLIENT_SECRET);const tr=await fetch('https://kauth.kakao.com/oauth/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded;charset=utf-8'},body});if(!tr.ok)return json({ok:false,error:'kakao_token_failed'},502,h);const tok=await tr.json();const ur=await fetch('https://kapi.kakao.com/v2/user/me',{headers:{Authorization:'Bearer '+tok.access_token}});if(!ur.ok)return json({ok:false,error:'kakao_profile_failed'},502,h);const x=await ur.json(),p=x.properties||{},ka=x.kakao_account||{};social=await upsertSocialUser(env,'kakao',String(x.id),p.nickname||ka.profile?.nickname||'카카오 사용자',p.profile_image||ka.profile?.profile_image_url||'')}
+  if(st.p==='kakao'){const body=new URLSearchParams({grant_type:'authorization_code',client_id:env.KAKAO_REST_API_KEY,redirect_uri:callback,code});if(env.KAKAO_CLIENT_SECRET)body.set('client_secret',env.KAKAO_CLIENT_SECRET);const tr=await fetch('https://kauth.kakao.com/oauth/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded;charset=utf-8'},body});if(!tr.ok)return json({ok:false,error:'kakao_token_failed'},502,h);const tok=await tr.json();const ur=await fetch('https://kapi.kakao.com/v2/user/me',{headers:{Authorization:'Bearer '+tok.access_token}});if(!ur.ok)return json({ok:false,error:'kakao_profile_failed'},502,h);const x=await ur.json(),p=x.properties||{},ka=x.kakao_account||{};social=await upsertSocialUser(env,'kakao',String(x.id),p.nickname||ka.profile?.nickname||'카카오 사용자',p.profile_image||ka.profile?.profile_image_url||'')}
   else{const t=new URL('https://nid.naver.com/oauth2.0/token');t.searchParams.set('grant_type','authorization_code');t.searchParams.set('client_id',env.NAVER_CLIENT_ID);t.searchParams.set('client_secret',env.NAVER_CLIENT_SECRET||'');t.searchParams.set('code',code);t.searchParams.set('state',state);const tr=await fetch(t.href);if(!tr.ok)return json({ok:false,error:'naver_token_failed'},502,h);const tok=await tr.json();const ur=await fetch('https://openapi.naver.com/v1/nid/me',{headers:{Authorization:'Bearer '+tok.access_token}});if(!ur.ok)return json({ok:false,error:'naver_profile_failed'},502,h);const x=await ur.json(),p=x.response||{};social=await upsertSocialUser(env,'naver',String(p.id),p.nickname||p.name||'네이버 사용자',p.profile_image||'')}
-  const sess=await issueSession(env,social.id),dest=new URL(String(st.return_to));dest.hash='session='+encodeURIComponent(sess.token)+'&user='+encodeURIComponent(JSON.stringify(social));return redirect(dest.href)
+  const sess=await issueSession(env,social.id),dest=new URL(String(st.r));dest.hash='session='+encodeURIComponent(sess.token)+'&user='+encodeURIComponent(JSON.stringify(social));return redirect(dest.href)
 }
 if(u.pathname==='/api/auth/me'&&req.method==='GET'){const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);return json({ok:true,user:{id:su.id,provider:su.provider,nickname:su.nickname,profileImage:su.profileImage}},200,h)}
 if(u.pathname==='/api/auth/logout'&&req.method==='POST'){const su=await sessionUser(req,env);if(su)await env.DB.prepare('DELETE FROM auth_sessions WHERE token_hash=?').bind(su.tokenHash).run();return json({ok:true},200,h)}
