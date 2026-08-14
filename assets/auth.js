@@ -1,5 +1,5 @@
 'use strict';
-window.__JOPAMS_AUTH_VERSION__='61';
+window.__JOPAMS_AUTH_VERSION__='62';
 /* 조팸스 GO v55 - Kakao/Naver persistent account authentication */
 (()=>{
   const TOKEN_KEY='jopams_auth_token_v1',USER_KEY='jopams_auth_user_v1',RETURN_KEY='jopams_auth_return_v1';
