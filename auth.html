@@ -1,21 +1,69 @@
-<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 로그인</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><script src="assets/auth.js"></script></head><body class="app-body auth-body"><main class="auth-shell"><section class="auth-hero"><span class="section-kicker">JOPAMS GO ACCOUNT</span><h1>조팸스 <em>GO</em></h1><p>한 번 로그인하면 다음 실행부터 바로 원정을 이어갑니다.<br>같은 계정으로 로그인하면 다른 기기에서도 진행률과 3일·12m 쿨다운이 이어집니다.</p></section><section class="auth-card premium-card"><h2>원정대 로그인</h2><p class="auth-help">최초 1회 소셜 로그인이 필요합니다.</p><button class="social-login kakao" id="kakaoLogin"><span>●</span><b>카카오로 시작하기</b></button><button class="social-login naver" id="naverLogin"><span>N</span><b>네이버로 시작하기</b></button><small class="auth-note">카메라 영상과 실시간 위치는 계정 서버에 저장하지 않습니다. 소셜 로그인 식별자는 게임 진행 동기화에 사용됩니다.</small><div id="authMsg" class="auth-msg"></div></section></main><script>
-if(JopamsAuth.consumeCallback()){}
-const q=new URLSearchParams(location.search),msg=document.getElementById('authMsg');
-if(q.get('expired'))msg.textContent='로그인 유효기간이 만료되었습니다. 다시 로그인해 주세요.';
-if(q.get('loggedout'))msg.textContent='로그아웃되었습니다.';
-if(q.get('error'))msg.textContent='일시적인 오류가 발생했습니다. 다시 로그인해 주세요.';
-kakaoLogin.onclick=()=>JopamsAuth.login('kakao');naverLogin.onclick=()=>JopamsAuth.login('naver');
-// v58: 기존 토큰 검증 중에는 버튼을 잠깐 비활성화해 사용자가 헷갈리지 않게 하고,
-// 검증이 느리거나 실패하더라도(서버 지연/오류) 반드시 로그인 버튼이 있는 상태로
-// 되돌아오도록 finally에서 항상 복구한다.
-if(JopamsAuth.token()){
-  kakaoLogin.disabled=true;naverLogin.disabled=true;
-  msg.textContent='로그인 확인 중…';
-  JopamsAuth.verify().then(u=>{
-    if(u){location.replace('index.html');return}
-    msg.textContent='';
-  }).catch(()=>{msg.textContent='';}).finally(()=>{
-    kakaoLogin.disabled=false;naverLogin.disabled=false;
-  });
-}
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 로그인</title><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css"><script src="/assets/auth.js?v=59" defer></script>
+<style id="auth-critical-v59">
+html,body{margin:0;min-height:100%;background:#06152d;color:#fff;font-family:Arial,"Noto Sans KR",sans-serif}
+body.auth-body{min-height:100vh;display:block!important;visibility:visible!important;opacity:1!important}
+.auth-shell{box-sizing:border-box;width:min(92vw,520px);margin:0 auto;padding:54px 20px 40px;display:block!important;visibility:visible!important;opacity:1!important}
+.auth-brand,.auth-card,.auth-note{display:block!important;visibility:visible!important;opacity:1!important}
+.auth-brand .eyebrow{font-size:12px;letter-spacing:.22em;color:#55d7ff;font-weight:800}
+.auth-brand h1{margin:8px 0 8px;font-size:42px;line-height:1.05}
+.auth-brand p{margin:0 0 28px;color:#c7d7ea;line-height:1.55}
+.auth-card{padding:22px;border:1px solid rgba(91,207,255,.28);border-radius:24px;background:rgba(8,28,56,.92);box-shadow:0 18px 50px rgba(0,0,0,.28)}
+.auth-card h2{margin:0 0 8px;font-size:23px}
+.auth-card p{margin:0 0 18px;color:#b9c9dc}
+.social-btn{box-sizing:border-box;width:100%;min-height:54px;margin:8px 0;border:0;border-radius:15px;font-size:17px;font-weight:800;cursor:pointer}
+.social-btn.kakao{background:#FEE500;color:#171717}
+.social-btn.naver{background:#03C75A;color:#fff}
+.auth-msg{min-height:22px;margin-top:12px;color:#9edfff;font-size:14px;line-height:1.45}
+.auth-note{margin-top:18px;color:#91a9c4;font-size:13px;line-height:1.55}
+</style>
+
+</head><body class="app-body auth-body"><noscript><div style="padding:24px;color:white">JavaScript를 허용하면 카카오/네이버 로그인을 사용할 수 있습니다.</div></noscript><main class="auth-shell"><section class="auth-hero"><span class="section-kicker">JOPAMS GO ACCOUNT</span><h1>조팸스 <em>GO</em></h1><p>한 번 로그인하면 다음 실행부터 바로 원정을 이어갑니다.<br>같은 계정으로 로그인하면 다른 기기에서도 진행률과 3일·12m 쿨다운이 이어집니다.</p></section><section class="auth-card premium-card"><h2>원정대 로그인</h2><p class="auth-help">최초 1회 소셜 로그인이 필요합니다.</p><button class="social-login kakao" id="kakaoLogin"><span>●</span><b>카카오로 시작하기</b></button><button class="social-login naver" id="naverLogin"><span>N</span><b>네이버로 시작하기</b></button><small class="auth-note">카메라 영상과 실시간 위치는 계정 서버에 저장하지 않습니다. 소셜 로그인 식별자는 게임 진행 동기화에 사용됩니다.</small><div id="authMsg" class="auth-msg"></div></section></main>
+<script>
+(function(){
+  function boot(){
+    const msg=document.getElementById('authMsg');
+    const kakao=document.getElementById('kakaoLogin');
+    const naver=document.getElementById('naverLogin');
+    const show=t=>{if(msg)msg.textContent=t||''};
+
+    // Buttons remain visible even if the module fails.
+    function fallback(provider){
+      show('로그인 모듈을 다시 불러오는 중입니다…');
+      const s=document.createElement('script');
+      s.src='/assets/auth.js?v=59&retry='+Date.now();
+      s.onload=()=>window.JopamsAuth ? JopamsAuth.login(provider) : show('로그인 모듈을 불러오지 못했습니다. 네트워크를 확인해 주세요.');
+      s.onerror=()=>show('로그인 모듈을 불러오지 못했습니다. 네트워크를 확인해 주세요.');
+      document.head.appendChild(s);
+    }
+    if(kakao)kakao.onclick=()=>window.JopamsAuth?JopamsAuth.login('kakao'):fallback('kakao');
+    if(naver)naver.onclick=()=>window.JopamsAuth?JopamsAuth.login('naver'):fallback('naver');
+
+    if(!window.JopamsAuth){
+      show('로그인 준비 중입니다. 버튼은 바로 사용할 수 있습니다.');
+      return;
+    }
+    try{
+      if(JopamsAuth.consumeCallback())return;
+      const q=new URLSearchParams(location.search);
+      if(q.get('expired'))show('로그인 유효기간이 만료되었습니다. 다시 로그인해 주세요.');
+      else if(q.get('loggedout'))show('로그아웃되었습니다.');
+
+      if(JopamsAuth.token()){
+        show('기존 로그인 상태를 확인하고 있습니다…');
+        Promise.race([
+          JopamsAuth.verify(6000),
+          new Promise(resolve=>setTimeout(()=>resolve('__timeout__'),6500))
+        ]).then(u=>{
+          if(u&&u!=='__timeout__'){location.replace('/');return}
+          show(u==='__timeout__'?'서버 응답이 늦습니다. 소셜 로그인 버튼을 다시 눌러도 됩니다.':'');
+        }).catch(()=>show('로그인 상태 확인에 실패했습니다. 다시 로그인해 주세요.'));
+      }
+    }catch(e){
+      console.error('[AUTH V59]',e);
+      show('로그인 화면은 정상입니다. 소셜 로그인 버튼을 다시 눌러 주세요.');
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
 </script></body></html>
