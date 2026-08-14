@@ -1,10 +1,15 @@
 'use strict';
-window.__JOPAMS_AUTH_VERSION__='59';
+window.__JOPAMS_AUTH_VERSION__='61';
 /* 조팸스 GO v55 - Kakao/Naver persistent account authentication */
 (()=>{
   const TOKEN_KEY='jopams_auth_token_v1',USER_KEY='jopams_auth_user_v1',RETURN_KEY='jopams_auth_return_v1';
-  const API_FALLBACK='https://jofams-go.junewoopark16.workers.dev';
-  const apiBase=()=>{try{const v=JSON.parse(localStorage.getItem('jopams_v3')||'{}');return String(v.serverUrl||API_FALLBACK).replace(/\/$/,'')}catch(_){return API_FALLBACK}};
+  const API_FALLBACK='https://jofams-go.junewoopark16.workers.dev',LEGACY_API='https://jofams-go.junewoopark16.workers.dev',BAD_V60_API='https://jopams-go-ranking.junewoopark16.workers.dev';
+  const apiBase=()=>{try{
+    const v=JSON.parse(localStorage.getItem('jopams_v3')||'{}');
+    let url=String(v.serverUrl||'').trim().replace(/\/$/,'');
+    if(!url||url===LEGACY_API||url===BAD_V60_API)url=API_FALLBACK;
+    return url;
+  }catch(_){return API_FALLBACK}};
   const token=()=>{try{return localStorage.getItem(TOKEN_KEY)||''}catch(_){return''}};
   const user=()=>{try{return JSON.parse(localStorage.getItem(USER_KEY)||'null')}catch(_){return null}};
   const save=(t,u)=>{try{if(t)localStorage.setItem(TOKEN_KEY,t);if(u)localStorage.setItem(USER_KEY,JSON.stringify(u));return true}catch(_){return false}};
