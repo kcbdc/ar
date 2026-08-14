@@ -37,3 +37,5 @@ CREATE TABLE IF NOT EXISTS auth_states (state TEXT PRIMARY KEY,provider TEXT NOT
 CREATE INDEX IF NOT EXISTS idx_auth_states_created ON auth_states(created_at);
 CREATE TABLE IF NOT EXISTS auth_sessions (token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,last_seen_at INTEGER NOT NULL,FOREIGN KEY(user_id) REFERENCES users(id));
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id,expires_at);
+
+-- v62: auth_states is retained only for backward compatibility; OAuth state now uses signed stateless HMAC.
