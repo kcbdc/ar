@@ -1,4 +1,4 @@
-name = "jopams-go-ranking"
+name = "jofams-go"
 main = "worker.js"
 compatibility_date = "2026-08-01"
 
