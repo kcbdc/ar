@@ -120,36 +120,22 @@ function randomToken(n=32){const a=new Uint8Array(n);crypto.getRandomValues(a);r
 async function sha256(s){const a=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(a)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 function safeReturnTo(raw,env){const base=String(env.PUBLIC_APP_ORIGIN||env.ALLOWED_ORIGIN||'https://jofams.pages.dev').replace(/\/$/,'');try{const x=new URL(String(raw||base+'/auth.html'));if(x.origin!==new URL(base).origin)return base+'/auth.html';return x.href}catch{return base+'/auth.html'}}
 async function sessionUser(req,env){const a=String(req.headers.get('Authorization')||'');if(!a.startsWith('Bearer '))return null;const token=a.slice(7).trim();if(token.length<20)return null;const hash=await sha256(token),now=Date.now();const row=await env.DB.prepare(`SELECT s.token_hash,s.user_id,s.expires_at,u.provider,u.nickname,u.profile_image FROM auth_sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>?`).bind(hash,now).first();if(!row)return null;env.DB.prepare('UPDATE auth_sessions SET last_seen_at=? WHERE token_hash=?').bind(now,hash).run().catch(()=>{});return {tokenHash:hash,id:row.user_id,provider:row.provider,nickname:row.nickname||'원정대원',profileImage:row.profile_image||''}}
-
-async function createGuestUser(env){
-  const now=Date.now();
-  const socialId='guest_'+randomToken(18);
-  const id='guest:'+socialId;
-  const displayName='게스트';
-  await env.DB.prepare(
-    `INSERT INTO users(id,provider,social_id,display_name,created_at,updated_at)
-     VALUES(?,?,?,?,?,?)
-     ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at`
-  ).bind(id,'guest',socialId,displayName,now,now).run();
-  return {id,provider:'guest',displayName};
-}
-
 async function issueSession(env,userId){const token=randomToken(40),hash=await sha256(token),now=Date.now(),exp=now+AUTH_SESSION_MS;await env.DB.prepare('INSERT INTO auth_sessions(token_hash,user_id,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)').bind(hash,userId,now,exp,now).run();return {token,expiresAt:exp}}
 async function upsertSocialUser(env,provider,pid,nickname='',profileImage=''){const now=Date.now(),old=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();const candidate=old&&old.id?String(old.id):('usr_'+randomToken(18));await env.DB.prepare(`INSERT INTO users(id,provider,provider_user_id,nickname,profile_image,created_at,last_login_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(provider,provider_user_id) DO UPDATE SET nickname=excluded.nickname,profile_image=excluded.profile_image,last_login_at=excluded.last_login_at`).bind(candidate,provider,pid,String(nickname||'').slice(0,80),String(profileImage||'').slice(0,500),now,now).run();const row=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();return {id:String(row&&row.id||candidate),provider,nickname:String(nickname||'원정대원').slice(0,80),profileImage:String(profileImage||'').slice(0,500)}}
 function redirect(location){return new Response(null,{status:302,headers:{location,'cache-control':'no-store'}})}
 
 export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,PUT,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account,authorization','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v35-game-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
-
-  if(u.pathname==='/api/auth/guest' && req.method==='POST'){
-    try{
-      const guest=await createGuestUser(env);
-      const sess=await issueSession(env,guest.id);
-      return json({ok:true,token:sess.token,user:guest},200,h);
-    }catch(e){
-      return json({ok:false,error:'guest_login_failed'},500,h);
-    }
+if(u.pathname==='/api/auth/guest'&&req.method==='POST'){
+  try{
+    const guestPid='guest_'+randomToken(24);
+    const guest=await upsertSocialUser(env,'guest',guestPid,'게스트','');
+    const sess=await issueSession(env,guest.id);
+    return json({ok:true,token:sess.token,expiresAt:sess.expiresAt,user:guest},200,h);
+  }catch(err){
+    console.error('guest auth failed',describeError(err));
+    return json({ok:false,error:'guest_login_failed',detail:describeError(err)},500,h);
   }
-
+}
 if(u.pathname==='/api/auth/start'&&req.method==='GET'){
   const provider=String(u.searchParams.get('provider')||''),returnTo=safeReturnTo(u.searchParams.get('return_to'),env);
   if(!['kakao','naver'].includes(provider))return json({ok:false,error:'bad_provider'},400,h);
