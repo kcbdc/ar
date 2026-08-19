@@ -1,5 +1,5 @@
 'use strict';
-window.__JOPAMS_AUTH_VERSION__='62';
+window.__JOPAMS_AUTH_VERSION__='63';
 /* 조팸스 GO v55 - Kakao/Naver persistent account authentication */
 (()=>{
   const TOKEN_KEY='jopams_auth_token_v1',USER_KEY='jopams_auth_user_v1',RETURN_KEY='jopams_auth_return_v1';
@@ -37,6 +37,21 @@ window.__JOPAMS_AUTH_VERSION__='62';
     try{sessionStorage.setItem(RETURN_KEY,returnTo)}catch(_){}
     const u=new URL(apiBase()+'/api/auth/start');u.searchParams.set('provider',provider);u.searchParams.set('return_to',location.origin+'/auth');location.href=u.toString();
   }
+  async function guestLogin(){
+    const msg=document.getElementById('authMsg');
+    try{
+      if(msg)msg.textContent='게스트 계정을 준비하고 있습니다...';
+      const r=await fetch(apiBase()+'/api/auth/guest',{method:'POST',headers:{'content-type':'application/json','accept':'application/json'},cache:'no-store'});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok||!j.token||!j.user)throw new Error(j.error||('HTTP '+r.status));
+      if(!save(j.token,j.user))throw new Error('local_storage_failed');
+      let next='index.html';try{next=sessionStorage.getItem(RETURN_KEY)||next;sessionStorage.removeItem(RETURN_KEY)}catch(_){}
+      location.replace(next);
+    }catch(e){
+      console.error('[guestLogin]',e);
+      if(msg)msg.textContent='게스트 로그인에 실패했습니다. ('+(e&&e.message?e.message:'unknown')+')';
+    }
+  }
   function isAuthPage(){
     const p=(location.pathname||'/').replace(/\/+$/,'').split('/').pop()||'';
     return p==='auth'||p==='auth.html';
@@ -66,29 +81,6 @@ window.__JOPAMS_AUTH_VERSION__='62';
     }
     verify().then(u=>{if(!u&&!token())location.replace('auth.html?expired=1')});
   }
-  
-  async function guestLogin(){
-    try{
-      const r=await fetch(apiBase()+'/api/auth/guest',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        cache:'no-store'
-      });
-      const j=await r.json().catch(()=>({}));
-      if(!r.ok||!j||!j.token||!j.user){
-        throw new Error(j&&j.error?j.error:'guest_login_failed');
-      }
-      save(j.token,j.user);
-      let dest='index.html';
-      try{dest=sessionStorage.getItem(RETURN_KEY)||'index.html';sessionStorage.removeItem(RETURN_KEY)}catch(_){}
-      location.replace(dest);
-    }catch(e){
-      console.error('[GUEST LOGIN]',e);
-      const msg=document.getElementById('authMsg');
-      if(msg)msg.textContent='게스트 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.';
-    }
-  }
-
-window.JopamsAuth={apiBase,token,user,save,clear,authHeaders,verify,logout,login,consumeCallback,gate,isAuthPage,guestLogin};
+  window.JopamsAuth={apiBase,token,user,save,clear,authHeaders,verify,logout,login,guestLogin,consumeCallback,gate,isAuthPage};
   gate();
 })();
