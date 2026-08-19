@@ -17,7 +17,19 @@ body.auth-body{min-height:100vh;display:block!important;visibility:visible!impor
 .auth-note{margin-top:18px;color:#91a9c4;font-size:13px;line-height:1.55}
 </style>
 
-</head><body class="app-body auth-body"><noscript><div style="padding:24px;color:white">JavaScript를 허용하면 카카오/네이버 로그인을 사용할 수 있습니다.</div></noscript><main class="auth-shell"><section class="auth-hero"><span class="section-kicker">JOFAMS GO ACCOUNT</span><h1>조팸스 <em>GO</em></h1><p>한 번 로그인하면 다음 실행부터 바로 원정을 이어갑니다.<br>같은 계정으로 로그인하면 다른 기기에서도 진행률과 3일·12m 쿨다운이 이어집니다.</p></section><section class="auth-card premium-card"><h2>원정대 로그인</h2><p class="auth-help">최초 1회 소셜 로그인이 필요합니다.</p><button class="social-login kakao" id="kakaoLogin"><span>●</span><b>카카오로 시작하기</b></button><button class="social-login naver" id="naverLogin"><span>N</span><b>네이버로 시작하기</b></button><small class="auth-note">카메라 영상과 실시간 위치는 계정 서버에 저장하지 않습니다. 소셜 로그인 식별자는 게임 진행 동기화에 사용됩니다.</small><div id="authMsg" class="auth-msg"></div></section></main>
+
+<style id="guest-login-style">
+.auth-divider{display:flex;align-items:center;gap:12px;margin:14px 0;color:#8ea6c3;font-size:13px}
+.auth-divider::before,.auth-divider::after{content:"";height:1px;background:rgba(142,166,195,.28);flex:1}
+.social-btn.guest{background:rgba(255,255,255,.08)!important;color:#eef7ff!important;border:1px solid rgba(126,210,255,.30)!important}
+.social-btn.guest:active{transform:translateY(1px)}
+.guest-note{margin:8px 4px 0;color:#8ea6c3;font-size:12px;line-height:1.45}
+</style>
+
+</head><body class="app-body auth-body"><noscript><div style="padding:24px;color:white">JavaScript를 허용하면 카카오/네이버 로그인을 사용할 수 있습니다.</div></noscript><main class="auth-shell"><section class="auth-hero"><span class="section-kicker">JOFAMS GO ACCOUNT</span><h1>조팸스 <em>GO</em></h1><p>한 번 로그인하면 다음 실행부터 바로 원정을 이어갑니다.<br>같은 계정으로 로그인하면 다른 기기에서도 진행률과 3일·12m 쿨다운이 이어집니다.</p></section><section class="auth-card premium-card"><h2>원정대 로그인</h2><p class="auth-help">최초 1회 소셜 로그인이 필요합니다.</p><button class="social-login kakao" id="kakaoLogin"><span>●</span><b>카카오로 시작하기</b></button><button class="social-login naver" id="naverLogin"><span>N</span><b>네이버로 시작하기</b></button>
+        <div class="auth-divider" aria-hidden="true"><span>또는</span></div>
+        <button id="guestLogin" class="social-btn guest" type="button">게스트로 체험하기</button>
+        <p class="guest-note">게스트는 현재 기기에서 진행상태가 유지됩니다. 다른 기기와의 계정 동기화는 소셜 로그인이 필요합니다.</p><small class="auth-note">카메라 영상과 실시간 위치는 계정 서버에 저장하지 않습니다. 소셜 로그인 식별자는 게임 진행 동기화에 사용됩니다.</small><div id="authMsg" class="auth-msg"></div></section></main>
 <script>
 (function(){
   function boot(){
@@ -66,4 +78,17 @@ body.auth-body{min-height:100vh;display:block!important;visibility:visible!impor
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();
 })();
-</script></body></html>
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const g=document.getElementById('guestLogin');
+  if(g && !g.dataset.bound){
+    g.dataset.bound='1';
+    g.addEventListener('click',()=>{
+      if(window.JopamsAuth && JopamsAuth.guestLogin) JopamsAuth.guestLogin();
+    });
+  }
+});
+</script>
+
+</body></html>
