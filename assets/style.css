@@ -1494,32 +1494,23 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
   .map-shell > .nearby-card + #socialIntro { margin-top: 16px !important; }
 }
 
-
-/* v66.1: 탐험지도 카드 간격 보정
-   DOM상 nearby-card와 socialIntro 사이에 #gameMapPanels가 있으므로
-   socialIntro 자체에 상단 여백을 부여한다. */
-.map-shell > .premium-card + .nearby-card {
-  margin-top: 18px !important;
+/* v66.2: 사진 촬영 / 앨범 선택을 명시적으로 분리 */
+.social-photo-source{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
 }
-
-.map-shell > .nearby-card + #gameMapPanels {
-  margin-top: 18px !important;
+.social-photo-source button{
+  min-height:48px;
+  border:1px solid rgba(78,190,255,.35);
+  border-radius:15px;
+  background:#102f55;
+  color:#eaf7ff;
+  font-weight:800;
+  font-size:14px;
 }
-
-/* 소셜 탭에서 NEAREST SIGNAL 박스와 SOCIAL EXPEDITION 박스 사이 간격 */
-#socialIntro {
-  margin-top: 18px !important;
-  margin-bottom: 18px !important;
-}
-
-@media (max-width: 420px) {
-  .map-shell > .premium-card + .nearby-card,
-  .map-shell > .nearby-card + #gameMapPanels {
-    margin-top: 16px !important;
-  }
-
-  #socialIntro {
-    margin-top: 16px !important;
-    margin-bottom: 16px !important;
-  }
+.social-photo-source button:active{transform:scale(.985)}
+@media(max-width:380px){
+  .social-photo-source{grid-template-columns:1fr}
 }
