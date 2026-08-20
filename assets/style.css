@@ -1494,23 +1494,34 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
   .map-shell > .nearby-card + #socialIntro { margin-top: 16px !important; }
 }
 
-/* v66.2: 사진 촬영 / 앨범 선택을 명시적으로 분리 */
-.social-photo-source{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:12px;
+
+
+/* v67: 단일 네이티브 사진 선택 UI
+   capture 속성을 사용하지 않아 Android 시스템 선택기에서
+   카메라 촬영 + 갤러리/파일 선택을 함께 사용할 수 있다. */
+.social-upload-picker{
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:230px;
+  text-align:center;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:border-color .18s ease,background-color .18s ease,transform .12s ease;
 }
-.social-photo-source button{
-  min-height:48px;
-  border:1px solid rgba(78,190,255,.35);
-  border-radius:15px;
-  background:#102f55;
-  color:#eaf7ff;
-  font-weight:800;
-  font-size:14px;
+.social-upload-picker:hover,
+.social-upload-picker:focus-visible{
+  border-color:rgba(77,211,255,.72);
+  background-color:rgba(18,63,105,.72);
+  outline:none;
 }
-.social-photo-source button:active{transform:scale(.985)}
-@media(max-width:380px){
-  .social-photo-source{grid-template-columns:1fr}
-}
+.social-upload-picker:active{transform:scale(.995)}
+.social-upload-picker-icon{font-size:28px;line-height:1}
+.social-upload-picker strong{font-size:17px;color:#f2f8ff;font-weight:900}
+.social-upload-picker small{max-width:280px;font-size:12px;line-height:1.55;color:#93abc4;font-weight:600}
+.social-upload-preview[style*="background-image"] strong,
+.social-upload-preview[style*="background-image"] small,
+.social-upload-preview[style*="background-image"] .social-upload-picker-icon{display:none}
