@@ -55,7 +55,13 @@ function openGallery(items){
 }
 function closeAll(){
  if(uploading)return;
- document.querySelectorAll('.social-modal').forEach(x=>x.classList.remove('show'));closeCamera()
+ // 작성/갤러리 팝업의 X 버튼은 모든 소셜 모달을 닫아야 한다.
+ // closeCamera()는 카메라 취소 시 작성 모달을 다시 띄우는 함수이므로 여기서 호출하면
+ // X 버튼으로 닫은 직후 socialUploadModal이 다시 열리는 충돌이 발생한다.
+ stopCameraStream();
+ const camera=$('socialCameraModal');
+ if(camera){camera.classList.remove('show');camera.setAttribute('aria-hidden','true')}
+ document.querySelectorAll('.social-modal').forEach(x=>x.classList.remove('show'));
 }
 function openUpload(){
  const u=JopamsAuth.user&&JopamsAuth.user();
