@@ -39,3 +39,21 @@ CREATE TABLE IF NOT EXISTS auth_sessions (token_hash TEXT PRIMARY KEY,user_id TE
 CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id,expires_at);
 
 -- v62: auth_states is retained only for backward compatibility; OAuth state now uses signed stateless HMAC.
+
+-- v64: 위치 기반 소셜 탐험 사진
+CREATE TABLE IF NOT EXISTS social_photos (
+ id TEXT PRIMARY KEY,
+ user_id TEXT NOT NULL,
+ checkpoint_id INTEGER,
+ latitude REAL NOT NULL,
+ longitude REAL NOT NULL,
+ accuracy REAL,
+ caption TEXT NOT NULL DEFAULT '',
+ object_key TEXT NOT NULL UNIQUE,
+ mime_type TEXT NOT NULL,
+ created_at INTEGER NOT NULL,
+ FOREIGN KEY(user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_social_photos_created ON social_photos(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_photos_checkpoint ON social_photos(checkpoint_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_photos_geo ON social_photos(latitude,longitude);
