@@ -2,13 +2,25 @@
 (()=>{
 const $=id=>document.getElementById(id),api=()=>window.JopamsAuth?JopamsAuth.apiBase():'';
 let socialMode=false,socialOverlays=[],socialItems=[],selectedSocialFile=null,selectedPreviewUrl=null;
-let cameraStream=null,cameraFacing='environment',cameraStarting=false;
+let cameraStream=null,cameraFacing='environment',cameraStarting=false,uploading=false;
+
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function headers(){return window.JopamsAuth?JopamsAuth.authHeaders():{}}
 function nearestCP(lat,lng){let best=null;CHECKPOINTS.forEach((c,i)=>{const d=distMeters(lat,lng,c.lat,c.lng);if(!best||d<best.d)best={i,d,cp:c}});return best}
 function clearSocial(){socialOverlays.forEach(x=>x.setMap(null));socialOverlays=[]}
 function setGameMarkers(on){markers.forEach(m=>m.setMap(on?map:null))}
 function group(items){const m=new Map();items.forEach(x=>{const key=x.checkpoint_id!==null&&x.checkpoint_id!==undefined?'cp:'+x.checkpoint_id:'geo:'+Number(x.latitude).toFixed(4)+','+Number(x.longitude).toFixed(4);if(!m.has(key))m.set(key,[]);m.get(key).push(x)});return [...m.values()]}
+
+function setProgress(pct,text,detail){
+ const box=$('socialUploadProgress'),bar=$('socialProgressBar'),num=$('socialProgressPct'),title=$('socialProgressText'),sub=$('socialProgressDetail');
+ box.hidden=false;
+ const n=Math.max(0,Math.min(100,Math.round(Number(pct)||0)));
+ bar.style.width=n+'%';num.textContent=n+'%';title.textContent=text||'처리 중…';sub.textContent=detail||'';
+}
+function resetProgress(){
+ const box=$('socialUploadProgress');box.hidden=true;
+ $('socialProgressBar').style.width='0%';$('socialProgressPct').textContent='0%';
+}
 async function loadSocial(){
  if(!map||!window.kakao)return;
  clearSocial();
@@ -41,26 +53,28 @@ function openGallery(items){
  $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
  $('socialGalleryModal').classList.add('show');
 }
-function closeAll(){document.querySelectorAll('.social-modal').forEach(x=>x.classList.remove('show'));closeCamera()}
+function closeAll(){
+ if(uploading)return;
+ document.querySelectorAll('.social-modal').forEach(x=>x.classList.remove('show'));closeCamera()
+}
 function openUpload(){
  const u=JopamsAuth.user&&JopamsAuth.user();
  if(!u||u.provider==='guest'){if(window.showToast)showToast('사진 등록은 카카오·네이버 로그인 후 이용할 수 있어요',{variant:'error'});return}
  if(!cur){if(window.showToast)showToast('GPS 위치 확인 후 사진을 등록할 수 있어요',{variant:'error'});return}
  const n=nearestCP(cur.lat,cur.lng);
  $('socialLocationNote').textContent='📍 현재 위치 · GPS ±'+Math.round(cur.accuracy||0)+'m'+(n?' · 가장 가까운 탐험 포인트 '+Math.round(n.d)+'m':'');
- $('socialUploadModal').classList.add('show');
+ resetProgress();$('socialUploadModal').classList.add('show');
 }
 function canvasBlob(canvas,quality){
  return new Promise((resolve,reject)=>{
-  const done=b=>b?resolve(b):reject(Error('image_encode_failed'));
-  try{canvas.toBlob(b=>{if(b&&b.size){resolve(b);return}canvas.toBlob(done,'image/jpeg',Math.min(.84,quality+.08))},'image/webp',quality)}
-  catch(_){canvas.toBlob(done,'image/jpeg',Math.min(.84,quality+.08))}
+  const jpeg=()=>canvas.toBlob(b=>b?resolve(b):reject(Error('image_encode_failed')),'image/jpeg',Math.min(.84,quality+.08));
+  try{canvas.toBlob(b=>{if(b&&b.size){resolve(b);return}jpeg()},'image/webp',quality)}catch(_){jpeg()}
  });
 }
 async function decodeImage(file){
  if(window.createImageBitmap){
   try{
-   const bmp=await createImageBitmap(file);
+   const bmp=await createImageBitmap(file,{imageOrientation:'from-image'});
    return {width:bmp.width,height:bmp.height,draw:(ctx,w,h)=>ctx.drawImage(bmp,0,0,w,h),close:()=>bmp.close&&bmp.close()};
   }catch(_){}
  }
@@ -83,7 +97,8 @@ function resetSelectedPhoto(){
  selectedSocialFile=null;
  if(selectedPreviewUrl){URL.revokeObjectURL(selectedPreviewUrl);selectedPreviewUrl=null}
  $('socialPreview').style.backgroundImage='';
- $('socialPreview').innerHTML='<span class="social-upload-picker-icon" aria-hidden="true">📷</span><strong>사진 촬영 또는 선택</strong><small>누르면 카메라가 열립니다 · 카메라 왼쪽 아래에서 앨범 선택 가능</small>';
+ $('socialPreview').innerHTML='<span class="social-upload-picker-icon" aria-hidden="true">📷</span><strong>사진 촬영 또는 선택</strong><small>누르면 카메라가 열립니다 · 왼쪽 아래 앨범에서 기존 사진도 선택 가능</small>';
+ resetProgress();
 }
 function selectSocialPhoto(file){
  if(!file)return;
@@ -93,46 +108,81 @@ function selectSocialPhoto(file){
  selectedPreviewUrl=URL.createObjectURL(file);
  $('socialPreview').innerHTML='';
  $('socialPreview').style.backgroundImage='url("'+selectedPreviewUrl+'")';
+ resetProgress();
+ if(window.showToast)showToast('사진이 선택되었습니다. 내용을 확인한 뒤 지도에 등록하세요.');
+}
+function xhrUpload(url,fd,auth,onProgress){
+ return new Promise((resolve,reject)=>{
+  const xhr=new XMLHttpRequest();
+  xhr.open('POST',url,true);
+  Object.entries(auth||{}).forEach(([k,v])=>{if(String(k).toLowerCase()!=='content-type')xhr.setRequestHeader(k,v)});
+  xhr.upload.onprogress=e=>{
+   if(e.lengthComputable&&onProgress)onProgress(e.loaded/e.total);
+  };
+  xhr.onerror=()=>reject(Error('network_error'));
+  xhr.ontimeout=()=>reject(Error('upload_timeout'));
+  xhr.timeout=45000;
+  xhr.onload=()=>{
+   let j={};try{j=JSON.parse(xhr.responseText||'{}')}catch(_){}
+   if(xhr.status>=200&&xhr.status<300&&j.ok)resolve(j);
+   else reject(Error(j.error||(j.detail?String(j.detail):'HTTP_'+xhr.status)));
+  };
+  xhr.send(fd);
+ });
 }
 async function submit(e){
  e.preventDefault();
  const file=selectedSocialFile;
+ if(uploading)return;
  if(!file||!cur){if(window.showToast)showToast('먼저 사진을 촬영하거나 앨범에서 선택해주세요',{variant:'error'});return}
- const b=$('socialSubmit');b.disabled=true;b.textContent='사진 최적화 중…';
+ const b=$('socialSubmit');uploading=true;b.disabled=true;
  try{
-  const n=nearestCP(cur.lat,cur.lng);
-  let photo=await compressImage(file,1280,.72),thumb=await compressImage(file,320,.66);
-  if(photo.size>900*1024)photo=await compressImage(file,1024,.58);
+  setProgress(5,'사진 확인 중…','선택한 이미지를 읽고 있습니다.');
+  await new Promise(r=>setTimeout(r,20));
+  setProgress(18,'사진 최적화 중…','지도용 사진 크기를 줄이고 있습니다.');
+  let photo=await compressImage(file,1280,.72);
+  setProgress(36,'썸네일 생성 중…','지도에서 빠르게 표시할 미리보기를 만들고 있습니다.');
+  let thumb=await compressImage(file,320,.66);
+  if(photo.size>900*1024){setProgress(47,'사진 추가 압축 중…','용량을 안전한 범위로 줄이고 있습니다.');photo=await compressImage(file,1024,.58)}
   if(photo.size>900*1024)throw Error('compressed_photo_too_large');
   if(thumb.size>220*1024)thumb=await compressImage(file,240,.55);
-  const fd=new FormData();
+  const n=nearestCP(cur.lat,cur.lng),fd=new FormData();
   fd.append('photo',photo,photo.type==='image/jpeg'?'photo.jpg':'photo.webp');
   fd.append('thumbnail',thumb,thumb.type==='image/jpeg'?'thumb.jpg':'thumb.webp');
   fd.append('latitude',String(cur.lat));fd.append('longitude',String(cur.lng));
   fd.append('accuracy',String(cur.accuracy||999));fd.append('caption',$('socialCaption').value||'');
   if(n&&n.d<=30)fd.append('checkpoint_id',String(n.i));
-  b.textContent='등록 중…';
-  const r=await fetch(api()+'/api/social/photos',{method:'POST',headers:headers(),body:fd,cache:'no-store'});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.ok)throw Error(j.error||(j.detail?String(j.detail):'upload_failed'));
-  closeAll();$('socialUploadForm').reset();resetSelectedPhoto();
+  setProgress(55,'서버로 전송 중…','네트워크 상태에 따라 잠시 걸릴 수 있습니다.');
+  await xhrUpload(api()+'/api/social/photos',fd,headers(),ratio=>{
+    setProgress(55+Math.round(ratio*35),'서버로 전송 중…',Math.round(ratio*100)+'% 전송');
+  });
+  setProgress(94,'D1에 저장 확인 중…','사진 등록을 마무리하고 있습니다.');
+  await new Promise(r=>setTimeout(r,120));
+  setProgress(100,'등록 완료','지도의 소셜 사진을 새로고침합니다.');
+  $('socialUploadForm').reset();resetSelectedPhoto();
+  document.querySelectorAll('.social-modal').forEach(x=>x.classList.remove('show'));
   if(window.showToast)showToast('탐험 사진이 지도에 등록되었습니다',{variant:'near'});
   await loadSocial();
  }catch(err){
   console.error('[social upload]',err);
   const code=String(err&&err.message||'upload_failed');
+  setProgress(0,'등록 실패','오류: '+code);
   let msg='사진 등록에 실패했습니다';
   if(code.includes('too_large'))msg='사진 용량을 줄이지 못했습니다. 다른 사진을 선택해주세요';
   else if(code==='unauthorized')msg='로그인이 만료되었습니다. 다시 로그인해주세요';
-  else if(code==='db_error')msg='사진 저장소(D1) 설정을 확인해주세요';
+  else if(code==='social_login_required')msg='게스트가 아닌 소셜 로그인이 필요합니다';
+  else if(code==='db_error')msg='D1 사진 테이블/Worker 배포 상태를 확인해주세요';
+  else if(code==='network_error'||code==='upload_timeout')msg='네트워크 연결이 불안정합니다. 다시 시도해주세요';
   if(window.showToast)showToast(msg,{variant:'error'});
- }finally{b.disabled=false;b.textContent='지도에 등록'}
+ }finally{
+  uploading=false;b.disabled=false;b.textContent='지도에 등록';
+ }
 }
 
-/* ---------- in-app camera: Android Chrome/Edge/Samsung + iOS Safari/WKWebView ---------- */
+/* ---------- camera ---------- */
 function stopCameraStream(){
  if(cameraStream){cameraStream.getTracks().forEach(t=>{try{t.stop()}catch(_){}});cameraStream=null}
- const v=$('socialCameraVideo');if(v){v.pause();v.srcObject=null}
+ const v=$('socialCameraVideo');if(v){try{v.pause()}catch(_){}v.srcObject=null}
 }
 function closeCamera(){
  stopCameraStream();
@@ -142,26 +192,17 @@ async function startCamera(){
  if(cameraStarting)return;
  cameraStarting=true;
  const modal=$('socialCameraModal'),video=$('socialCameraVideo');
- modal.classList.add('show');modal.setAttribute('aria-hidden','false');
- stopCameraStream();
+ modal.classList.add('show');modal.setAttribute('aria-hidden','false');stopCameraStream();
  try{
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw Error('media_devices_unavailable');
-  const constraints={audio:false,video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}}};
-  cameraStream=await navigator.mediaDevices.getUserMedia(constraints);
-  video.srcObject=cameraStream;
-  await video.play();
+  cameraStream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:cameraFacing},width:{ideal:1920},height:{ideal:1080}}});
+  video.srcObject=cameraStream;video.setAttribute('playsinline','');await video.play();
  }catch(err){
-  console.warn('[camera fallback]',err);
-  closeCamera();
-  // Native camera fallback. capture=environment opens camera directly.
-  $('socialCameraFile').value='';
-  $('socialCameraFile').click();
+  console.warn('[camera fallback]',err);closeCamera();
+  const f=$('socialCameraFile');f.value='';f.click();
  }finally{cameraStarting=false}
 }
-async function flipCamera(){
- cameraFacing=cameraFacing==='environment'?'user':'environment';
- await startCamera();
-}
+async function flipCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';await startCamera()}
 async function captureFrame(){
  const v=$('socialCameraVideo');
  if(!v||!v.videoWidth||!v.videoHeight){if(window.showToast)showToast('카메라 준비 중입니다. 잠시 후 다시 눌러주세요',{variant:'error'});return}
@@ -172,13 +213,8 @@ async function captureFrame(){
  ctx.drawImage(v,0,0,c.width,c.height);
  try{
   const blob=await canvasBlob(c,.90);
-  const file=new File([blob],'camera-'+Date.now()+(blob.type==='image/jpeg'?'.jpg':'.webp'),{type:blob.type||'image/webp'});
-  selectSocialPhoto(file);closeCamera();
+  selectSocialPhoto(blob);closeCamera();
  }catch(e){console.error(e);if(window.showToast)showToast('사진 촬영에 실패했습니다',{variant:'error'})}
-}
-function openGalleryPicker(){
- closeCamera();
- const f=$('socialGalleryFile');f.value='';f.click();
 }
 
 /* ---------- bindings ---------- */
@@ -191,12 +227,19 @@ $('socialPreview').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' 
 $('socialCameraClose').onclick=closeCamera;
 $('socialCameraFlip').onclick=flipCamera;
 $('socialCameraShutter').onclick=captureFrame;
-$('socialGalleryOpen').onclick=openGalleryPicker;
-$('socialGalleryFile').addEventListener('change',()=>selectSocialPhoto($('socialGalleryFile').files&&$('socialGalleryFile').files[0]));
-$('socialCameraFile').addEventListener('change',()=>selectSocialPhoto($('socialCameraFile').files&&$('socialCameraFile').files[0]));
+/* 앨범 버튼은 <label for="socialGalleryFile">이므로 iOS/Android 모두 브라우저 기본 선택기를 직접 연다. */
+$('socialGalleryFile').addEventListener('change',()=>{
+ const f=$('socialGalleryFile').files&&$('socialGalleryFile').files[0];
+ stopCameraStream();$('socialCameraModal').classList.remove('show');
+ if(f)selectSocialPhoto(f);
+});
+$('socialCameraFile').addEventListener('change',()=>{
+ const f=$('socialCameraFile').files&&$('socialCameraFile').files[0];
+ if(f)selectSocialPhoto(f);
+});
 $('socialUploadForm').onsubmit=submit;
 document.querySelectorAll('[data-social-close]').forEach(b=>b.onclick=closeAll);
 document.querySelectorAll('.social-modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeAll()}));
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stopCameraStream()});
-window.addEventListener('pagehide',stopCameraStream);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!uploading)stopCameraStream()});
+window.addEventListener('pagehide',()=>{if(!uploading)stopCameraStream()});
 })();

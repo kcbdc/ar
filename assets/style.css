@@ -1577,3 +1577,51 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
 @supports (-webkit-touch-callout:none){
   .social-camera-bottom{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 28px)}
 }
+
+/* v69 FINAL OVERRIDES ------------------------------------------------------ */
+/* 소셜 모드에서 NEAREST SIGNAL과 SOCIAL EXPEDITION이 붙어 보이지 않도록 강제 간격.
+   중간에 hidden #gameMapPanels가 있어도 general sibling(~)로 안정적으로 적용한다. */
+.map-shell > .nearby-card ~ #socialIntro{
+  margin-top:22px !important;
+  margin-bottom:22px !important;
+}
+@media(max-width:420px){
+  .map-shell > .nearby-card ~ #socialIntro{
+    margin-top:18px !important;
+    margin-bottom:18px !important;
+  }
+}
+
+/* 세련된 앨범 버튼 */
+.social-gallery-thumb{
+  text-decoration:none;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,.16) !important;
+  background:linear-gradient(145deg,rgba(45,50,61,.96),rgba(20,24,31,.98)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.22);
+}
+.social-gallery-thumb svg{
+  width:29px;height:29px;fill:none;stroke:#fff;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round;opacity:.95;
+}
+.social-gallery-thumb small{color:#fff;opacity:.9;letter-spacing:.02em}
+
+/* 사진 압축/업로드 진행상태 */
+.social-upload-progress{
+  margin:12px 0 14px;padding:12px 13px;border-radius:15px;
+  background:rgba(6,28,53,.72);border:1px solid rgba(62,184,255,.22);
+}
+.social-upload-progress[hidden]{display:none !important}
+.social-upload-progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.social-upload-progress-head strong{font-size:13px;color:#e8f7ff}
+.social-upload-progress-head span{font-size:12px;color:#57d7ff;font-weight:900;font-variant-numeric:tabular-nums}
+.social-upload-progress-track{
+  height:8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.09);
+}
+.social-upload-progress-track i{
+  display:block;width:0;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#35d4ed,#2ca9ff 55%,#6e7cff);
+  box-shadow:0 0 12px rgba(47,184,255,.48);
+  transition:width .18s ease;
+}
+.social-upload-progress small{display:block;margin-top:8px;color:#8ca9c2;font-size:11px;line-height:1.45}
