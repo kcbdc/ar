@@ -1,0 +1,20 @@
+조팸스 GO v70 - 팝업 X 버튼 수정
+
+원인
+- v70의 closeAll()이 모든 모달의 show 클래스를 제거한 뒤 closeCamera()를 호출함.
+- closeCamera()는 '카메라 취소 시 작성 모달 유지'를 위해 socialUploadModal에 show 클래스를 다시 추가함.
+- 따라서 우측 상단 X 버튼을 눌러도 작성 팝업이 즉시 다시 열려 닫히지 않는 충돌이 발생함.
+
+수정
+- X 버튼용 closeAll()에서는 closeCamera()를 호출하지 않음.
+- 카메라 스트림만 직접 종료하고 모든 소셜 모달을 닫음.
+- 카메라 화면의 X 버튼은 기존 closeCamera()를 그대로 사용하므로 카메라만 닫고 작성 화면으로 복귀함.
+- UI/CSS/사진선택/업로드 로직은 v70 그대로 유지.
+- 캐시 갱신을 위해 social-map.js?v=70x1, Service Worker 캐시 v70-xfix1 적용.
+
+교체 파일
+1. checkpoints.html
+2. assets/social-map.js
+3. sw.js
+
+assets/style.css 및 Worker는 v70 그대로 사용.
