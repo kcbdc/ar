@@ -195,7 +195,8 @@ if(u.pathname==='/api/social/photos'&&req.method==='POST'){
   if(!file||typeof file.arrayBuffer!=='function')return json({ok:false,error:'photo_required'},400,h);
   if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return json({ok:false,error:'bad_location'},400,h);
   const type=String(file.type||'');if(!/^image\/(jpeg|png|webp)$/i.test(type))return json({ok:false,error:'unsupported_image'},415,h);
-  const bytes=await file.arrayBuffer(),thumbBytes=thumb&&typeof thumb.arrayBuffer==='function'?await thumb.arrayBuffer():bytes;
+  const bytesAB=await file.arrayBuffer(),thumbAB=thumb&&typeof thumb.arrayBuffer==='function'?await thumb.arrayBuffer():bytesAB;
+  const bytes=new Uint8Array(bytesAB),thumbBytes=new Uint8Array(thumbAB);
   // D1의 단일 BLOB/row 한도(2 MB)보다 충분히 작게 제한. 클라이언트는 보통 120~350 KB로 압축한다.
   if(bytes.byteLength>900*1024||thumbBytes.byteLength>220*1024)return json({ok:false,error:'photo_too_large_after_compression'},413,h);
   const id='pic_'+randomToken(18),now=Date.now(),validCp=Number.isInteger(cp)&&cp>=0&&cp<12?cp:null;
@@ -210,8 +211,13 @@ if(u.pathname.startsWith('/api/social/photo/')&&req.method==='GET'){
   const id=decodeURIComponent(u.pathname.slice('/api/social/photo/'.length)),thumb=u.searchParams.get('thumb')==='1';
   const row=await env.DB.prepare(`SELECT ${thumb?'thumb_blob':'image_blob'} AS body,mime_type FROM social_photos_v66 WHERE id=?`).bind(id).first();
   if(!row||!row.body)return new Response('Not found',{status:404});
-  const hh=new Headers({'content-type':row.mime_type||'image/webp','cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});
-  return new Response(row.body,{status:200,headers:hh});
+  // D1 Workers API는 BLOB을 읽을 때 일반 number[] 배열로 반환한다.
+  // Response body에는 배열을 직접 넘기지 말고 Uint8Array로 복원해야 실제 이미지 바이트가 전송된다.
+  const raw=row.body;
+  const body=raw instanceof ArrayBuffer?new Uint8Array(raw):ArrayBuffer.isView(raw)?new Uint8Array(raw.buffer,raw.byteOffset,raw.byteLength):Array.isArray(raw)?Uint8Array.from(raw):null;
+  if(!body||!body.byteLength)return new Response('Invalid image blob',{status:500});
+  const hh=new Headers({'content-type':row.mime_type||'image/webp','content-length':String(body.byteLength),'cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});
+  return new Response(body,{status:200,headers:hh});
 }
 
 if(u.pathname==='/api/score'&&req.method==='POST'){
