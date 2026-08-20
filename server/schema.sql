@@ -57,3 +57,23 @@ CREATE TABLE IF NOT EXISTS social_photos (
 CREATE INDEX IF NOT EXISTS idx_social_photos_created ON social_photos(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_social_photos_checkpoint ON social_photos(checkpoint_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_social_photos_geo ON social_photos(latitude,longitude);
+
+
+-- v66: R2 없이 D1에 압축 이미지 저장 (기존 social_photos는 보존)
+CREATE TABLE IF NOT EXISTS social_photos_v66 (
+ id TEXT PRIMARY KEY,
+ user_id TEXT NOT NULL,
+ checkpoint_id INTEGER,
+ latitude REAL NOT NULL,
+ longitude REAL NOT NULL,
+ accuracy REAL,
+ caption TEXT NOT NULL DEFAULT '',
+ image_blob BLOB NOT NULL,
+ thumb_blob BLOB NOT NULL,
+ mime_type TEXT NOT NULL DEFAULT 'image/webp',
+ created_at INTEGER NOT NULL,
+ FOREIGN KEY(user_id) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_social_photos_v66_created ON social_photos_v66(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_photos_v66_checkpoint ON social_photos_v66(checkpoint_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_social_photos_v66_user_checkpoint ON social_photos_v66(user_id,checkpoint_id);

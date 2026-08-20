@@ -14,6 +14,3 @@ binding = "AI"
 ALLOWED_ORIGIN = "https://jofams.pages.dev"
 PUBLIC_APP_ORIGIN = "https://jofams.pages.dev"
 
-[[r2_buckets]]
-binding = "SOCIAL_MEDIA"
-bucket_name = "jofams-go-social"

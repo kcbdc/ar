@@ -179,34 +179,39 @@ if(u.pathname==='/api/game-state'&&(req.method==='GET'||req.method==='PUT')){
 }
 
 
-// v64: 위치 기반 소셜 탐험 사진. 원본 이미지는 R2, 메타데이터는 D1에 저장한다.
+// v66: 무료 D1 사진 저장. 브라우저에서 WebP로 축소한 이미지/썸네일을 D1 BLOB에 저장한다.
 if(u.pathname==='/api/social/photos'&&req.method==='GET'){
   const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
   const cpRaw=u.searchParams.get('checkpoint'),cp=cpRaw===null?null:Number(cpRaw);
-  const sql=Number.isInteger(cp)?`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos p JOIN users u ON u.id=p.user_id WHERE p.checkpoint_id=? ORDER BY p.created_at DESC LIMIT 100`:`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos p JOIN users u ON u.id=p.user_id ORDER BY p.created_at DESC LIMIT 150`;
+  const sql=Number.isInteger(cp)?`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos_v66 p JOIN users u ON u.id=p.user_id WHERE p.checkpoint_id=? ORDER BY p.created_at DESC LIMIT 100`:`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos_v66 p JOIN users u ON u.id=p.user_id ORDER BY p.created_at DESC LIMIT 150`;
   const q=Number.isInteger(cp)?env.DB.prepare(sql).bind(cp):env.DB.prepare(sql);const {results}=await q.all();
-  return json({ok:true,items:(results||[]).map(x=>({...x,imageUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id)}))},200,h);
+  return json({ok:true,storage:'d1',items:(results||[]).map(x=>({...x,imageUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id),thumbnailUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id)+'?thumb=1'}))},200,h);
 }
 if(u.pathname==='/api/social/photos'&&req.method==='POST'){
   const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
   if(su.provider==='guest')return json({ok:false,error:'social_login_required'},403,h);
-  if(!env.SOCIAL_MEDIA)return json({ok:false,error:'r2_not_configured'},503,h);
   let form;try{form=await req.formData()}catch{return json({ok:false,error:'invalid_form'},400,h)}
-  const file=form.get('photo'),lat=Number(form.get('latitude')),lng=Number(form.get('longitude')),accuracy=Number(form.get('accuracy')||999),caption=String(form.get('caption')||'').replace(/[<>]/g,'').trim().slice(0,160),cp=Number(form.get('checkpoint_id'));
+  const file=form.get('photo'),thumb=form.get('thumbnail'),lat=Number(form.get('latitude')),lng=Number(form.get('longitude')),accuracy=Number(form.get('accuracy')||999),caption=String(form.get('caption')||'').replace(/[<>]/g,'').trim().slice(0,160),cp=Number(form.get('checkpoint_id'));
   if(!file||typeof file.arrayBuffer!=='function')return json({ok:false,error:'photo_required'},400,h);
   if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return json({ok:false,error:'bad_location'},400,h);
-  const type=String(file.type||'');if(!/^image\/(jpeg|png|webp|heic|heif)$/i.test(type))return json({ok:false,error:'unsupported_image'},415,h);
-  const bytes=await file.arrayBuffer();if(bytes.byteLength>8*1024*1024)return json({ok:false,error:'photo_too_large'},413,h);
-  const id='pic_'+randomToken(18),ext=type.includes('png')?'png':type.includes('webp')?'webp':type.includes('hei')?'heic':'jpg',key='social/'+new Date().toISOString().slice(0,10)+'/'+id+'.'+ext,now=Date.now();
-  await env.SOCIAL_MEDIA.put(key,bytes,{httpMetadata:{contentType:type||'image/jpeg',cacheControl:'public, max-age=31536000, immutable'}});
-  try{await env.DB.prepare('INSERT INTO social_photos(id,user_id,checkpoint_id,latitude,longitude,accuracy,caption,object_key,mime_type,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(id,su.id,Number.isInteger(cp)&&cp>=0&&cp<12?cp:null,lat,lng,Math.max(1,Math.min(999,accuracy||999)),caption,key,type||'image/jpeg',now).run()}
-  catch(e){await env.SOCIAL_MEDIA.delete(key).catch(()=>{});return json({ok:false,error:'db_error',detail:describeError(e)},500,h)}
-  return json({ok:true,id,imageUrl:u.origin+'/api/social/photo/'+id},201,h);
+  const type=String(file.type||'');if(!/^image\/(jpeg|png|webp)$/i.test(type))return json({ok:false,error:'unsupported_image'},415,h);
+  const bytes=await file.arrayBuffer(),thumbBytes=thumb&&typeof thumb.arrayBuffer==='function'?await thumb.arrayBuffer():bytes;
+  // D1의 단일 BLOB/row 한도(2 MB)보다 충분히 작게 제한. 클라이언트는 보통 120~350 KB로 압축한다.
+  if(bytes.byteLength>900*1024||thumbBytes.byteLength>220*1024)return json({ok:false,error:'photo_too_large_after_compression'},413,h);
+  const id='pic_'+randomToken(18),now=Date.now(),validCp=Number.isInteger(cp)&&cp>=0&&cp<12?cp:null;
+  try{
+    // 체크포인트별 1인 대표사진: 다시 등록하면 기존 사진을 교체한다.
+    if(validCp!==null)await env.DB.prepare('DELETE FROM social_photos_v66 WHERE user_id=? AND checkpoint_id=?').bind(su.id,validCp).run();
+    await env.DB.prepare('INSERT INTO social_photos_v66(id,user_id,checkpoint_id,latitude,longitude,accuracy,caption,image_blob,thumb_blob,mime_type,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id,su.id,validCp,lat,lng,Math.max(1,Math.min(999,accuracy||999)),caption,bytes,thumbBytes,type||'image/webp',now).run();
+  }catch(e){return json({ok:false,error:'db_error',detail:describeError(e)},500,h)}
+  return json({ok:true,id,storage:'d1',imageUrl:u.origin+'/api/social/photo/'+id},201,h);
 }
 if(u.pathname.startsWith('/api/social/photo/')&&req.method==='GET'){
-  if(!env.SOCIAL_MEDIA)return new Response('R2 not configured',{status:503});const id=decodeURIComponent(u.pathname.slice('/api/social/photo/'.length));
-  const row=await env.DB.prepare('SELECT object_key,mime_type FROM social_photos WHERE id=?').bind(id).first();if(!row)return new Response('Not found',{status:404});const obj=await env.SOCIAL_MEDIA.get(row.object_key);if(!obj)return new Response('Not found',{status:404});
-  const hh=new Headers();obj.writeHttpMetadata(hh);hh.set('etag',obj.httpEtag);hh.set('cache-control','public, max-age=86400');return new Response(obj.body,{headers:hh});
+  const id=decodeURIComponent(u.pathname.slice('/api/social/photo/'.length)),thumb=u.searchParams.get('thumb')==='1';
+  const row=await env.DB.prepare(`SELECT ${thumb?'thumb_blob':'image_blob'} AS body,mime_type FROM social_photos_v66 WHERE id=?`).bind(id).first();
+  if(!row||!row.body)return new Response('Not found',{status:404});
+  const hh=new Headers({'content-type':row.mime_type||'image/webp','cache-control':'public, max-age=86400','x-content-type-options':'nosniff'});
+  return new Response(row.body,{status:200,headers:hh});
 }
 
 if(u.pathname==='/api/score'&&req.method==='POST'){
