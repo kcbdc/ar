@@ -61,6 +61,7 @@ function openUpload(){
  const u=JopamsAuth.user&&JopamsAuth.user();
  if(!u||u.provider==='guest'){if(window.showToast)showToast('사진 등록은 카카오·네이버 로그인 후 이용할 수 있어요',{variant:'error'});return}
  if(!cur){if(window.showToast)showToast('GPS 위치 확인 후 사진을 등록할 수 있어요',{variant:'error'});return}
+ closeCamera();
  const n=nearestCP(cur.lat,cur.lng);
  $('socialLocationNote').textContent='📍 현재 위치 · GPS ±'+Math.round(cur.accuracy||0)+'m'+(n?' · 가장 가까운 탐험 포인트 '+Math.round(n.d)+'m':'');
  resetProgress();$('socialUploadModal').classList.add('show');
@@ -187,6 +188,8 @@ function stopCameraStream(){
 function closeCamera(){
  stopCameraStream();
  const m=$('socialCameraModal');if(m){m.classList.remove('show');m.setAttribute('aria-hidden','true')}
+ // 카메라를 취소/닫아도 작성 중인 탐험기록 모달은 그대로 유지한다.
+ const upload=$('socialUploadModal');if(upload&&!uploading)upload.classList.add('show');
 }
 async function startCamera(){
  if(cameraStarting)return;
@@ -213,7 +216,7 @@ async function captureFrame(){
  ctx.drawImage(v,0,0,c.width,c.height);
  try{
   const blob=await canvasBlob(c,.90);
-  selectSocialPhoto(blob);closeCamera();
+  closeCamera();selectSocialPhoto(blob);$('socialUploadModal').classList.add('show');setTimeout(()=>{try{$('socialCaption').focus({preventScroll:true})}catch(_){}},80);
  }catch(e){console.error(e);if(window.showToast)showToast('사진 촬영에 실패했습니다',{variant:'error'})}
 }
 
@@ -231,11 +234,19 @@ $('socialCameraShutter').onclick=captureFrame;
 $('socialGalleryFile').addEventListener('change',()=>{
  const f=$('socialGalleryFile').files&&$('socialGalleryFile').files[0];
  stopCameraStream();$('socialCameraModal').classList.remove('show');
- if(f)selectSocialPhoto(f);
+ if(f){
+   selectSocialPhoto(f);
+   $('socialUploadModal').classList.add('show');
+   setTimeout(()=>{try{$('socialCaption').focus({preventScroll:true})}catch(_){}},80);
+ }
 });
 $('socialCameraFile').addEventListener('change',()=>{
  const f=$('socialCameraFile').files&&$('socialCameraFile').files[0];
- if(f)selectSocialPhoto(f);
+ if(f){
+   selectSocialPhoto(f);
+   $('socialUploadModal').classList.add('show');
+   setTimeout(()=>{try{$('socialCaption').focus({preventScroll:true})}catch(_){}},80);
+ }
 });
 $('socialUploadForm').onsubmit=submit;
 document.querySelectorAll('[data-social-close]').forEach(b=>b.onclick=closeAll);

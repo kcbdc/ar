@@ -1625,3 +1625,27 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
   transition:width .18s ease;
 }
 .social-upload-progress small{display:block;margin-top:8px;color:#8ca9c2;font-size:11px;line-height:1.45}
+
+/* v70 photo flow --------------------------------------------------------- */
+.social-photo-picker{display:grid;grid-template-columns:1fr;gap:10px}
+.social-upload-preview{min-height:210px}
+.social-upload-gallery{
+  display:flex;align-items:center;gap:12px;width:100%;padding:13px 15px;
+  border:1px solid rgba(82,181,255,.28);border-radius:16px;
+  background:rgba(15,52,88,.72);cursor:pointer;text-decoration:none;color:#fff;
+  box-sizing:border-box;
+}
+.social-upload-gallery:active{transform:scale(.992)}
+.social-upload-gallery svg{
+  flex:0 0 30px;width:30px;height:30px;fill:none;stroke:#5edcff;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round
+}
+.social-upload-gallery span{display:flex;flex-direction:column;gap:2px;text-align:left}
+.social-upload-gallery strong{font-size:14px;color:#f4fbff}
+.social-upload-gallery small{font-size:11px;color:#8eabc3}
+.social-record-fields{display:flex;flex-direction:column;gap:7px;margin-top:3px}
+.social-record-fields>label{font-size:13px;font-weight:800;color:#dceeff}
+.social-record-fields>label small{font-weight:500;color:#7895ad;margin-left:5px}
+.social-record-fields textarea{display:block!important;width:100%!important;min-height:92px!important;box-sizing:border-box}
+#socialUploadModal.show{z-index:9000}
+#socialCameraModal.show{z-index:10000}
