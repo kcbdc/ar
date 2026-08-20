@@ -92,7 +92,8 @@ function teamRowsFromRemote(rows){
 }
 
 function renderRows(rows){
-  rankingList.innerHTML=rows.map((r,i)=>`<article class="rank-row ${r.isMe?'me':''} ${i<3&&r.score!=null?'top top'+(i+1):''}"><div class="rank-no">${i<3&&r.score!=null?uiIcon('trophy'):(i+1)+'위'}</div><div class="rank-user"><b>${r.name}${r.isMe?' · MY':''}</b><small>${r.dept||r.org||''}</small></div><strong>${fmtScore(r.score)}</strong></article>`).join('');
+  const medalClass=i=>i===0?'medal-gold':i===1?'medal-silver':'medal-bronze';
+  rankingList.innerHTML=rows.map((r,i)=>`<article class="rank-row ${r.isMe?'me':''} ${i<3&&r.score!=null?'top top'+(i+1):''}"><div class="rank-no ${i<3&&r.score!=null?'rank-medal '+medalClass(i):''}">${i<3&&r.score!=null?uiIcon('trophy'):(i+1)+'위'}</div><div class="rank-user"><b>${r.name}${r.isMe?' · MY':''}</b><small>${r.dept||r.org||''}</small></div><strong>${fmtScore(r.score)}</strong></article>`).join('');
   emptyHint.style.display=rows.length<=1&&!rows[0]?.score?'block':'none';
 }
 
