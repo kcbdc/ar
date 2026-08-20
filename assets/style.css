@@ -1649,3 +1649,35 @@ body.ar-body .scanner-viewmodel .scanner-vm-distance.hot{
 .social-record-fields textarea{display:block!important;width:100%!important;min-height:92px!important;box-sizing:border-box}
 #socialUploadModal.show{z-index:9000}
 #socialCameraModal.show{z-index:10000}
+
+
+/* Ranking medal colors: 개인 랭킹 / 본부 대항전 공통 1~3위 */
+body.app-body .ranking-list .rank-no.rank-medal{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+body.app-body .ranking-list .rank-no.rank-medal svg{
+  width:26px;
+  height:26px;
+  stroke:currentColor;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.28));
+}
+body.app-body .ranking-list .rank-no.rank-medal.medal-gold{
+  color:#FFD54A !important;
+}
+body.app-body .ranking-list .rank-no.rank-medal.medal-silver{
+  color:#DCE6F2 !important;
+}
+body.app-body .ranking-list .rank-no.rank-medal.medal-bronze{
+  color:#CD7F32 !important;
+}
+body.app-body .ranking-list .rank-row.top1 .rank-medal svg{
+  filter:drop-shadow(0 0 7px rgba(255,213,74,.42));
+}
+body.app-body .ranking-list .rank-row.top2 .rank-medal svg{
+  filter:drop-shadow(0 0 6px rgba(220,230,242,.28));
+}
+body.app-body .ranking-list .rank-row.top3 .rank-medal svg{
+  filter:drop-shadow(0 0 6px rgba(205,127,50,.30));
+}
