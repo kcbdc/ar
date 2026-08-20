@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 카카오 라이브 맵</title><link rel="stylesheet" href="assets/style.css?v=68"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 카카오 라이브 맵</title><link rel="stylesheet" href="assets/style.css?v=69"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
 <style>
 .map-head-actions{display:flex;align-items:center;gap:8px;min-width:0}
 .map-bgm-toggle{appearance:none;-webkit-appearance:none;width:42px;height:42px;min-width:42px;padding:0;margin:0;border:0!important;outline:0;background:transparent!important;box-shadow:none!important;border-radius:0;display:grid;place-items:center;cursor:pointer;color:#fff;-webkit-tap-highlight-color:transparent}
@@ -38,7 +38,12 @@
   <small>카메라로 촬영하거나 갤러리·파일에서 이미지를 선택하세요</small>
 </label>
 <input id="socialGalleryFile" type="file" accept="image/*" hidden>
-<input id="socialCameraFile" type="file" accept="image/*" capture="environment" hidden><textarea id="socialCaption" maxlength="160" placeholder="이 장소의 한 줄 탐험 기록을 남겨보세요. (선택)"></textarea><div class="social-location-note" id="socialLocationNote">GPS 위치를 확인합니다.</div><button class="social-primary" id="socialSubmit" type="submit">지도에 등록</button></form></div></div><div class="social-camera-modal" id="socialCameraModal" aria-hidden="true">
+<input id="socialCameraFile" type="file" accept="image/*" capture="environment" hidden><textarea id="socialCaption" maxlength="160" placeholder="이 장소의 한 줄 탐험 기록을 남겨보세요. (선택)"></textarea><div class="social-location-note" id="socialLocationNote">GPS 위치를 확인합니다.</div><div class="social-upload-progress" id="socialUploadProgress" hidden aria-live="polite">
+  <div class="social-upload-progress-head"><strong id="socialProgressText">사진 준비 중…</strong><span id="socialProgressPct">0%</span></div>
+  <div class="social-upload-progress-track"><i id="socialProgressBar"></i></div>
+  <small id="socialProgressDetail">사진을 최적화한 뒤 안전하게 등록합니다.</small>
+</div>
+<button class="social-primary" id="socialSubmit" type="submit">지도에 등록</button></form></div></div><div class="social-camera-modal" id="socialCameraModal" aria-hidden="true">
   <div class="social-camera-stage">
     <video id="socialCameraVideo" autoplay playsinline muted></video>
     <div class="social-camera-grid" aria-hidden="true"></div>
@@ -48,7 +53,10 @@
       <button id="socialCameraFlip" class="social-camera-circle" type="button" aria-label="카메라 전환">↻</button>
     </div>
     <div class="social-camera-bottom">
-      <button id="socialGalleryOpen" class="social-gallery-thumb" type="button" aria-label="앨범에서 이미지 선택"><span>▧</span><small>앨범</small></button>
+      <label id="socialGalleryOpen" class="social-gallery-thumb" for="socialGalleryFile" role="button" aria-label="앨범에서 이미지 선택">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17l4.2-4.2 3.2 3.1 2.3-2.3L20 18"/></svg>
+      <small>앨범</small>
+    </label>
       <button id="socialCameraShutter" class="social-camera-shutter" type="button" aria-label="사진 촬영"><span></span></button>
       <div class="social-camera-spacer"></div>
     </div>
@@ -246,4 +254,4 @@ renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{docu
   }
 })();
 </script>
-<script src="assets/social-map.js?v=68"></script></body></html>
+<script src="assets/social-map.js?v=69"></script></body></html>
