@@ -187,6 +187,13 @@ if(u.pathname==='/api/social/photos'&&req.method==='GET'){
   const q=Number.isInteger(cp)?env.DB.prepare(sql).bind(cp):env.DB.prepare(sql);const {results}=await q.all();
   return json({ok:true,storage:'d1',items:(results||[]).map(x=>({...x,imageUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id),thumbnailUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id)+'?thumb=1'}))},200,h);
 }
+if(u.pathname==='/api/social/photos/ready'&&req.method==='GET'){
+  const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
+  try{
+    const row=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='social_photos_v66'").first();
+    return json({ok:!!row,table:'social_photos_v66',storage:'d1'},row?200:503,h);
+  }catch(e){return json({ok:false,error:'db_check_failed',detail:describeError(e)},500,h)}
+}
 if(u.pathname==='/api/social/photos'&&req.method==='POST'){
   const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
   if(su.provider==='guest')return json({ok:false,error:'social_login_required'},403,h);
@@ -201,10 +208,19 @@ if(u.pathname==='/api/social/photos'&&req.method==='POST'){
   if(bytes.byteLength>900*1024||thumbBytes.byteLength>220*1024)return json({ok:false,error:'photo_too_large_after_compression'},413,h);
   const id='pic_'+randomToken(18),now=Date.now(),validCp=Number.isInteger(cp)&&cp>=0&&cp<12?cp:null;
   try{
-    // 체크포인트별 1인 대표사진: 다시 등록하면 기존 사진을 교체한다.
-    if(validCp!==null)await env.DB.prepare('DELETE FROM social_photos_v66 WHERE user_id=? AND checkpoint_id=?').bind(su.id,validCp).run();
-    await env.DB.prepare('INSERT INTO social_photos_v66(id,user_id,checkpoint_id,latitude,longitude,accuracy,caption,image_blob,thumb_blob,mime_type,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id,su.id,validCp,lat,lng,Math.max(1,Math.min(999,accuracy||999)),caption,bytes,thumbBytes,type||'image/webp',now).run();
-  }catch(e){return json({ok:false,error:'db_error',detail:describeError(e)},500,h)}
+    const insert=env.DB.prepare('INSERT INTO social_photos_v66(id,user_id,checkpoint_id,latitude,longitude,accuracy,caption,image_blob,thumb_blob,mime_type,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id,su.id,validCp,lat,lng,Math.max(1,Math.min(999,accuracy||999)),caption,bytes,thumbBytes,type||'image/webp',now);
+    // 체크포인트별 1인 대표사진 교체는 batch로 묶어 INSERT 실패 시 기존 사진 삭제까지 롤백되게 한다.
+    if(validCp!==null){
+      const del=env.DB.prepare('DELETE FROM social_photos_v66 WHERE user_id=? AND checkpoint_id=?').bind(su.id,validCp);
+      await env.DB.batch([del,insert]);
+    }else{
+      await insert.run();
+    }
+  }catch(e){
+    const detail=describeError(e);
+    const missing=/no such table|social_photos_v66/i.test(detail);
+    return json({ok:false,error:missing?'photo_table_missing':'db_error',detail},500,h)
+  }
   return json({ok:true,id,storage:'d1',imageUrl:u.origin+'/api/social/photo/'+id},201,h);
 }
 if(u.pathname.startsWith('/api/social/photo/')&&req.method==='GET'){
