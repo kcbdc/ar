@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 카카오 라이브 맵</title><link rel="stylesheet" href="assets/style.css?v=69"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
+<!doctype html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06142b"><title>조팸스 GO | 카카오 라이브 맵</title><link rel="stylesheet" href="assets/style.css?v=70"><link rel="stylesheet" href="assets/design-system-v18.css"><link rel="stylesheet" href="assets/design-system-v19.css">
 <style>
 .map-head-actions{display:flex;align-items:center;gap:8px;min-width:0}
 .map-bgm-toggle{appearance:none;-webkit-appearance:none;width:42px;height:42px;min-width:42px;padding:0;margin:0;border:0!important;outline:0;background:transparent!important;box-shadow:none!important;border-radius:0;display:grid;place-items:center;cursor:pointer;color:#fff;-webkit-tap-highlight-color:transparent}
@@ -32,13 +32,26 @@
   </svg>
 </button>
 <div class="counter-pill" id="gpsState">GPS</div>
-</div></header><div class="map-mode-tabs" role="tablist"><button class="active" id="mapTabBtn" type="button">🧭 지도</button><button id="socialTabBtn" type="button">📸 소셜</button></div><section class="premium-card" style="padding:10px"><div id="kakaoMap" class="kakao-map"><div class="kakao-map-status" id="mapStatus"><b>카카오맵 준비 중</b><span>현재 위치를 확인하고 있습니다.</span></div></div><div class="kakao-map-actions"><a id="openKakao" href="https://map.kakao.com" target="_blank" rel="noopener">카카오맵에서 열기</a><button id="recenterBtn" type="button">내 위치로</button></div><div class="social-map-toolbar" id="socialToolbar"><button id="socialRefresh" type="button">↻ 사진 새로고침</button><button id="socialUploadOpen" type="button">＋ 사진 남기기</button></div></section><section class="nearby-card premium-card compact"><span class="section-kicker">NEAREST SIGNAL</span><div class="nearby-main"><span id="nearIcon">◎</span><div><b id="nearTitle">가장 가까운 신호 찾는 중</b><small id="nearDesc">위치 권한을 허용하면 거리를 표시합니다.</small></div><strong id="nearDist">--m</strong></div><a href="ar.html" class="sheet-primary">AR 탐험 시작</a></section><div id="gameMapPanels"><div class="filter-row"><button class="filter active" data-filter="all">전체</button><button class="filter" data-filter="open">미발견</button><button class="filter" data-filter="done">발견</button></div><section class="spot-list" id="cpList"></section></div><section id="socialIntro" class="premium-card compact" hidden><span class="section-kicker">SOCIAL EXPEDITION</span><h2 style="margin:5px 0 7px">이 장소에서 남긴 탐험 기록</h2><p style="margin:0;color:#9fb8cf;font-size:13px;line-height:1.65">지도 위 사진을 누르면 같은 위치의 탐험 기록을 볼 수 있어요. 정확한 좌표 대신 탐험 포인트 단위로 묶어 표시합니다.</p></section></main><div class="social-modal" id="socialUploadModal"><div class="social-sheet"><div class="social-sheet-head"><h2>탐험 기록 남기기</h2><button class="social-close" data-social-close>×</button></div><form class="social-form" id="socialUploadForm"><button class="social-upload-preview social-upload-picker" id="socialPreview" type="button" aria-label="카메라 열기">
-  <span class="social-upload-picker-icon" aria-hidden="true">📷</span>
-  <strong>사진 촬영 또는 선택</strong>
-  <small>카메라로 촬영하거나 갤러리·파일에서 이미지를 선택하세요</small>
-</label>
+</div></header><div class="map-mode-tabs" role="tablist"><button class="active" id="mapTabBtn" type="button">🧭 지도</button><button id="socialTabBtn" type="button">📸 소셜</button></div><section class="premium-card" style="padding:10px"><div id="kakaoMap" class="kakao-map"><div class="kakao-map-status" id="mapStatus"><b>카카오맵 준비 중</b><span>현재 위치를 확인하고 있습니다.</span></div></div><div class="kakao-map-actions"><a id="openKakao" href="https://map.kakao.com" target="_blank" rel="noopener">카카오맵에서 열기</a><button id="recenterBtn" type="button">내 위치로</button></div><div class="social-map-toolbar" id="socialToolbar"><button id="socialRefresh" type="button">↻ 사진 새로고침</button><button id="socialUploadOpen" type="button">＋ 사진 남기기</button></div></section><section class="nearby-card premium-card compact"><span class="section-kicker">NEAREST SIGNAL</span><div class="nearby-main"><span id="nearIcon">◎</span><div><b id="nearTitle">가장 가까운 신호 찾는 중</b><small id="nearDesc">위치 권한을 허용하면 거리를 표시합니다.</small></div><strong id="nearDist">--m</strong></div><a href="ar.html" class="sheet-primary">AR 탐험 시작</a></section><div id="gameMapPanels"><div class="filter-row"><button class="filter active" data-filter="all">전체</button><button class="filter" data-filter="open">미발견</button><button class="filter" data-filter="done">발견</button></div><section class="spot-list" id="cpList"></section></div><section id="socialIntro" class="premium-card compact" hidden><span class="section-kicker">SOCIAL EXPEDITION</span><h2 style="margin:5px 0 7px">이 장소에서 남긴 탐험 기록</h2><p style="margin:0;color:#9fb8cf;font-size:13px;line-height:1.65">지도 위 사진을 누르면 같은 위치의 탐험 기록을 볼 수 있어요. 정확한 좌표 대신 탐험 포인트 단위로 묶어 표시합니다.</p></section></main><div class="social-modal" id="socialUploadModal"><div class="social-sheet"><div class="social-sheet-head"><h2>탐험 기록 남기기</h2><button class="social-close" data-social-close>×</button></div><form class="social-form" id="socialUploadForm">
+<div class="social-photo-picker">
+  <button class="social-upload-preview social-upload-picker" id="socialPreview" type="button" aria-label="카메라 열기">
+    <span class="social-upload-picker-icon" aria-hidden="true">📷</span>
+    <strong>사진 촬영</strong>
+    <small>카메라를 열어 탐험 사진을 촬영합니다.</small>
+  </button>
+  <label class="social-upload-gallery" for="socialGalleryFile" role="button" aria-label="앨범에서 이미지 선택">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17l4.2-4.2 3.2 3.1 2.3-2.3L20 18"/></svg>
+    <span><strong>앨범에서 선택</strong><small>휴대폰에 저장된 사진 사용</small></span>
+  </label>
+</div>
 <input id="socialGalleryFile" type="file" accept="image/*" hidden>
-<input id="socialCameraFile" type="file" accept="image/*" capture="environment" hidden><textarea id="socialCaption" maxlength="160" placeholder="이 장소의 한 줄 탐험 기록을 남겨보세요. (선택)"></textarea><div class="social-location-note" id="socialLocationNote">GPS 위치를 확인합니다.</div><div class="social-upload-progress" id="socialUploadProgress" hidden aria-live="polite">
+<input id="socialCameraFile" type="file" accept="image/*" capture="environment" hidden>
+<div class="social-record-fields">
+  <label for="socialCaption">탐험 기록 <small>선택사항</small></label>
+  <textarea id="socialCaption" maxlength="160" placeholder="이 장소에서 발견한 것, 느낀 점을 남겨보세요."></textarea>
+</div>
+<div class="social-location-note" id="socialLocationNote">GPS 위치를 확인합니다.</div>
+<div class="social-upload-progress" id="socialUploadProgress" hidden aria-live="polite">
   <div class="social-upload-progress-head"><strong id="socialProgressText">사진 준비 중…</strong><span id="socialProgressPct">0%</span></div>
   <div class="social-upload-progress-track"><i id="socialProgressBar"></i></div>
   <small id="socialProgressDetail">사진을 최적화한 뒤 안전하게 등록합니다.</small>
@@ -254,4 +267,4 @@ renderList();document.querySelectorAll('.filter').forEach(b=>b.onclick=()=>{docu
   }
 })();
 </script>
-<script src="assets/social-map.js?v=69"></script></body></html>
+<script src="assets/social-map.js?v=70"></script></body></html>

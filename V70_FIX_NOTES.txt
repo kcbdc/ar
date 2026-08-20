@@ -1,0 +1,18 @@
+v70 핵심 수정
+- v69 checkpoints.html의 치명적 HTML 오류 수정: <button id="socialPreview">를 </label>로 닫던 잘못된 마크업 제거.
+  이 오류 때문에 모바일 브라우저가 DOM을 임의 보정하면서 클릭 이벤트, textarea, 모달 상태가 불안정해질 수 있었음.
+- 사진 촬영과 앨범 선택을 명확한 2개 영역으로 구성.
+- 카메라 X/취소 후에도 '탐험 기록 남기기' 작성 모달 유지.
+- 촬영 성공/앨범 선택 성공 후 작성 모달 복귀 + 사진 미리보기 유지 + 탐험 기록 textarea 유지.
+- 사진을 선택하지 않아도 카메라를 닫은 뒤 다시 '사진 남기기' 버튼 정상 작동.
+- v69 업로드 프로그레스/D1 저장 안정화 로직 유지.
+- Service Worker 캐시 v70으로 갱신.
+
+Pages 교체:
+checkpoints.html
+assets/social-map.js
+assets/style.css
+sw.js
+
+Worker:
+v69 worker.js와 동일한 D1 업로드 안정화 버전을 그대로 포함.
