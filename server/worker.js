@@ -228,14 +228,28 @@ if(u.pathname==='/api/social/photos/ready'&&req.method==='GET'){
 if(/^\/api\/social\/photos\/[^/]+\/like$/.test(u.pathname)){
   const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
   const photoId=decodeURIComponent(u.pathname.split('/')[4]||'');
+  if(!photoId)return json({ok:false,error:'bad_photo_id'},400,h);
   try{
     await env.DB.prepare('CREATE TABLE IF NOT EXISTS social_photo_likes(photo_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(photo_id,user_id))').run();
-    if(req.method==='POST')await env.DB.prepare('INSERT OR IGNORE INTO social_photo_likes(photo_id,user_id,created_at) VALUES(?,?,?)').bind(photoId,su.id,Date.now()).run();
-    else if(req.method==='DELETE')await env.DB.prepare('DELETE FROM social_photo_likes WHERE photo_id=? AND user_id=?').bind(photoId,su.id).run();
-    else return json({ok:false,error:'method_not_allowed'},405,h);
+    const photo=await env.DB.prepare('SELECT id FROM social_photos_v66 WHERE id=?').bind(photoId).first();
+    if(!photo)return json({ok:false,error:'photo_not_found'},404,h);
+
+    let liked;
+    if(req.method==='POST'){
+      await env.DB.prepare('INSERT OR IGNORE INTO social_photo_likes(photo_id,user_id,created_at) VALUES(?,?,?)').bind(photoId,su.id,Date.now()).run();
+      liked=true;
+    }else if(req.method==='DELETE'){
+      await env.DB.prepare('DELETE FROM social_photo_likes WHERE photo_id=? AND user_id=?').bind(photoId,su.id).run();
+      liked=false;
+    }else{
+      return json({ok:false,error:'method_not_allowed'},405,h);
+    }
+
     const row=await env.DB.prepare('SELECT COUNT(*) n FROM social_photo_likes WHERE photo_id=?').bind(photoId).first();
-    return json({ok:true,likes:Number(row?.n||0)},200,h);
-  }catch(e){return json({ok:false,error:'like_db_error',detail:describeError(e)},500,h)}
+    return json({ok:true,liked,likes:Number(row?.n||0)},200,h);
+  }catch(e){
+    return json({ok:false,error:'like_db_error',detail:describeError(e)},500,h)
+  }
 }
 
 if(u.pathname==='/api/social/photos'&&req.method==='POST'){
