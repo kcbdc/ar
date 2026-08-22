@@ -1,0 +1,18 @@
+조팸스 GO v74 - 소셜 하트 저장/복원 수정
+
+확인된 원인
+- POST/DELETE /api/social/photos/:id/like 로 D1 저장 자체는 되었음.
+- 하지만 GET /api/social/photos 목록 API가 likes 수와 현재 사용자의 liked 상태를 반환하지 않았음.
+- 따라서 모달을 닫고 다시 열면 socialItems가 서버에서 새로 로드되면서 likes=0으로 렌더링되어 하트가 사라져 보였음.
+
+수정
+1. GET /api/social/photos에서 사진별 likes COUNT 반환
+2. 현재 로그인 사용자의 liked_by_me 상태 반환
+3. 클라이언트가 likedByMe에 따라 ♡/♥ 상태 복원
+4. 하트 클릭 후 서버가 반환한 실제 likes 값을 UI에 반영
+5. socialItems 메모리에도 likes/likedByMe 갱신
+6. Service Worker cache v74로 갱신
+
+필수 배포
+- Pages: assets/social-map.js, sw.js
+- Worker: server/worker.js
