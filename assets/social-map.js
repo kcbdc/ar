@@ -50,35 +50,53 @@ function switchMode(social){
 function openGallery(items){
  const cp=items[0]&&items[0].checkpoint_id!==null&&items[0].checkpoint_id!==undefined&&Number.isInteger(Number(items[0].checkpoint_id))?CHECKPOINTS[Number(items[0].checkpoint_id)]:null;
  $('socialGalleryTitle').textContent=cp?'이 탐험 포인트의 기록 '+items.length+'개':'이 위치의 탐험 기록 '+items.length+'개';
- $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small><button type="button" class="social-like '+(x.likedByMe?'liked':'')+'" data-photo-id="'+esc(x.id)+'">'+(x.likedByMe?'♥':'♡')+' <span>'+Number(x.likes||0)+'</span></button></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
+ $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small><button type="button" class="social-like '+(x.likedByMe?'liked':'')+'" data-photo-id="'+esc(x.id)+'" data-liked="'+(x.likedByMe?'1':'0')+'" aria-pressed="'+(x.likedByMe?'true':'false')+'"><span class="social-like-heart">'+(x.likedByMe?'♥':'♡')+'</span><span class="social-like-count">'+Number(x.likes||0)+'</span><span class="social-like-label">'+(x.likedByMe?'좋아요 취소':'좋아요')+'</span></button></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
  $('socialGalleryModal').classList.add('show');
 }
 
 async function toggleSocialLike(btn){
- if(btn.disabled)return;
+ if(!btn||btn.disabled)return;
  btn.disabled=true;
- const id=btn.dataset.photoId;
- const span=btn.querySelector('span');
- const was=btn.classList.contains('liked');
+ const id=String(btn.dataset.photoId||'');
+ const wasLiked=btn.dataset.liked==='1'||btn.classList.contains('liked');
+ const method=wasLiked?'DELETE':'POST';
  try{
   const r=await fetch(api()+'/api/social/photos/'+encodeURIComponent(id)+'/like',{
-    method:was?'DELETE':'POST',
+    method,
     headers:headers(),
     cache:'no-store'
   });
   const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.ok)throw Error(j.error||'like_failed');
-  const nowLiked=!was;
+  if(!r.ok||!j.ok)throw Error(j.error||'like_toggle_failed');
+
+  // 서버 응답을 최종 상태의 기준으로 사용
+  const nowLiked=typeof j.liked==='boolean'?j.liked:!wasLiked;
+  const likes=Math.max(0,Number(j.likes||0));
+
+  btn.dataset.liked=nowLiked?'1':'0';
   btn.classList.toggle('liked',nowLiked);
-  btn.firstChild.nodeValue=nowLiked?'♥ ':'♡ ';
-  span.textContent=String(Number(j.likes||0));
-  // 현재 메모리의 사진 목록도 갱신해 모달을 다시 열 때 같은 값 유지
-  const item=socialItems.find(x=>String(x.id)===String(id));
-  if(item){item.likes=Number(j.likes||0);item.likedByMe=nowLiked}
+  btn.setAttribute('aria-pressed',nowLiked?'true':'false');
+
+  const heart=btn.querySelector('.social-like-heart');
+  const count=btn.querySelector('.social-like-count');
+  const label=btn.querySelector('.social-like-label');
+  if(heart)heart.textContent=nowLiked?'♥':'♡';
+  if(count)count.textContent=String(likes);
+  if(label)label.textContent=nowLiked?'좋아요 취소':'좋아요';
+
+  // 모달을 닫았다 다시 열어도 즉시 같은 상태로 보이도록 메모리 동기화
+  const item=socialItems.find(x=>String(x.id)===id);
+  if(item){item.likes=likes;item.likedByMe=nowLiked}
+
+  if(window.showToast){
+    showToast(nowLiked?'♥ 좋아요를 표시했습니다':'♡ 좋아요를 취소했습니다',{duration:1500});
+  }
  }catch(e){
-  console.error('[social like]',e);
-  if(window.showToast)showToast('반응 저장에 실패했습니다',{variant:'error'});
- }finally{btn.disabled=false}
+  console.error('[social like toggle]',e);
+  if(window.showToast)showToast(wasLiked?'좋아요 취소에 실패했습니다':'좋아요 저장에 실패했습니다',{variant:'error'});
+ }finally{
+  btn.disabled=false;
+ }
 }
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.social-like');if(b)toggleSocialLike(b)});
 function closeAll(){
