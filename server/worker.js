@@ -181,11 +181,41 @@ if(u.pathname==='/api/game-state'&&(req.method==='GET'||req.method==='PUT')){
 
 // v66: 무료 D1 사진 저장. 브라우저에서 WebP로 축소한 이미지/썸네일을 D1 BLOB에 저장한다.
 if(u.pathname==='/api/social/photos'&&req.method==='GET'){
-  const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
-  const cpRaw=u.searchParams.get('checkpoint'),cp=cpRaw===null?null:Number(cpRaw);
-  const sql=Number.isInteger(cp)?`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos_v66 p JOIN users u ON u.id=p.user_id WHERE p.checkpoint_id=? ORDER BY p.created_at DESC LIMIT 100`:`SELECT p.id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.created_at,u.nickname,u.provider FROM social_photos_v66 p JOIN users u ON u.id=p.user_id ORDER BY p.created_at DESC LIMIT 150`;
-  const q=Number.isInteger(cp)?env.DB.prepare(sql).bind(cp):env.DB.prepare(sql);const {results}=await q.all();
-  return json({ok:true,storage:'d1',items:(results||[]).map(x=>({...x,imageUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id),thumbnailUrl:u.origin+'/api/social/photo/'+encodeURIComponent(x.id)+'?thumb=1'}))},200,h);
+  const su=await sessionUser(req,env);
+  if(!su)return json({ok:false,error:'unauthorized'},401,h);
+  try{
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS social_photo_likes(photo_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(photo_id,user_id))').run();
+    const q=await env.DB.prepare(`
+      SELECT
+        p.id,p.user_id,p.checkpoint_id,p.latitude,p.longitude,p.accuracy,p.caption,p.mime_type,p.created_at,
+        u.nickname,
+        (SELECT COUNT(*) FROM social_photo_likes l WHERE l.photo_id=p.id) AS likes,
+        EXISTS(SELECT 1 FROM social_photo_likes ml WHERE ml.photo_id=p.id AND ml.user_id=?) AS liked_by_me
+      FROM social_photos_v66 p
+      LEFT JOIN users u ON u.id=p.user_id
+      ORDER BY p.created_at DESC
+      LIMIT 120
+    `).bind(su.id).all();
+    const origin=u.origin;
+    const items=(q.results||[]).map(r=>({
+      id:r.id,
+      user_id:r.user_id,
+      checkpoint_id:r.checkpoint_id,
+      latitude:r.latitude,
+      longitude:r.longitude,
+      accuracy:r.accuracy,
+      caption:r.caption,
+      nickname:r.nickname||'원정대원',
+      created_at:r.created_at,
+      likes:Number(r.likes||0),
+      likedByMe:!!r.liked_by_me,
+      imageUrl:origin+'/api/social/photo/'+encodeURIComponent(r.id),
+      thumbnailUrl:origin+'/api/social/photo/'+encodeURIComponent(r.id)+'?thumb=1'
+    }));
+    return json({ok:true,items},200,h);
+  }catch(e){
+    return json({ok:false,error:'social_list_failed',detail:describeError(e)},500,h);
+  }
 }
 if(u.pathname==='/api/social/photos/ready'&&req.method==='GET'){
   const su=await sessionUser(req,env);if(!su)return json({ok:false,error:'unauthorized'},401,h);
