@@ -1681,3 +1681,7 @@ body.app-body .ranking-list .rank-row.top2 .rank-medal svg{
 body.app-body .ranking-list .rank-row.top3 .rank-medal svg{
   filter:drop-shadow(0 0 6px rgba(205,127,50,.30));
 }
+
+/* v73 social reaction */
+.social-like{margin-top:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#a9bfd2;border-radius:999px;padding:5px 10px;font-weight:800}
+.social-like.liked{color:#ff6f91;border-color:rgba(255,111,145,.35);background:rgba(255,111,145,.10)}

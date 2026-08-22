@@ -388,3 +388,36 @@ function publicPurchaseIcon(id, unlocked=true){
   const body=unlocked?(paths[id]||paths[1]):'<path d="M14 18a6 6 0 0 1 12 0c0 5-6 5-6 9"/><circle cx="20" cy="32" r="1"/>';
   return `<svg class="pp-icon" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="ppg${id}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2f80ed"/><stop offset="1" stop-color="#6c5ce7"/></linearGradient></defs><g fill="none" stroke="url(#ppg${id})" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`;
 }
+
+
+/* v73 ENGAGEMENT: daily mission + rare signal */
+const DAILY_MISSION_TARGET=3,DAILY_MISSION_BONUS=300,RARE_SIGNAL_RATE=.04,RARE_SIGNAL_BONUS=400;
+function localDayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function getDailyMission(){
+ const key=localDayKey(),m=JopamsState.get('dailyMission',{});
+ if(m.day!==key)return {day:key,count:0,done:false,bonusClaimed:false};
+ return m
+}
+function recordDailyDiscovery(epId){
+ let m=getDailyMission(); if(m.done)return m;
+ const seen=Array.isArray(m.seen)?m.seen:[];
+ if(!seen.includes(epId))seen.push(epId);
+ m={day:localDayKey(),seen,count:Math.min(DAILY_MISSION_TARGET,seen.length),done:seen.length>=DAILY_MISSION_TARGET,bonusClaimed:false};
+ if(m.done&&!m.bonusClaimed){
+   const score=Number(JopamsState.get('score',0)||0)+DAILY_MISSION_BONUS;
+   JopamsState.set('score',score);m.bonusClaimed=true;
+   try{showToast('TODAY MISSION COMPLETE · <b>+'+DAILY_MISSION_BONUS+'P</b>',{variant:'near',duration:4200})}catch(_){}
+ }
+ JopamsState.set('dailyMission',m);scheduleServerGameStatePush('dailyMission');return m
+}
+function rollRareSignal(){
+ const rare=Math.random()<RARE_SIGNAL_RATE;
+ if(rare)try{showToast('✨ <b>RARE SIGNAL DETECTED</b> · 황금 신호 포착!',{variant:'near',duration:4000})}catch(_){}
+ return rare
+}
+function applyRareBonus(){
+ const score=Number(JopamsState.get('score',0)||0)+RARE_SIGNAL_BONUS;
+ JopamsState.set('score',score);scheduleServerGameStatePush('rareBonus');
+ try{showToast('🏆 RARE CAPTURE · <b>+'+RARE_SIGNAL_BONUS+'P</b>',{variant:'near',duration:4200})}catch(_){}
+}
+window.JopamsEngagement={getDailyMission,recordDailyDiscovery,rollRareSignal,applyRareBonus,DAILY_MISSION_TARGET};

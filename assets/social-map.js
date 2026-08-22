@@ -50,9 +50,23 @@ function switchMode(social){
 function openGallery(items){
  const cp=items[0]&&items[0].checkpoint_id!==null&&items[0].checkpoint_id!==undefined&&Number.isInteger(Number(items[0].checkpoint_id))?CHECKPOINTS[Number(items[0].checkpoint_id)]:null;
  $('socialGalleryTitle').textContent=cp?'이 탐험 포인트의 기록 '+items.length+'개':'이 위치의 탐험 기록 '+items.length+'개';
- $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
+ $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small><button type="button" class="social-like" data-photo-id="'+esc(x.id)+'">♡ <span>'+Number(x.likes||0)+'</span></button></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
  $('socialGalleryModal').classList.add('show');
 }
+
+async function toggleSocialLike(btn){
+ if(btn.disabled)return;btn.disabled=true;
+ const id=btn.dataset.photoId,span=btn.querySelector('span'),was=btn.classList.contains('liked');
+ btn.classList.toggle('liked',!was);btn.firstChild.nodeValue=was?'♡ ':'♥ ';span.textContent=Math.max(0,Number(span.textContent||0)+(was?-1:1));
+ try{
+  const r=await fetch(api()+'/api/social/photos/'+encodeURIComponent(id)+'/like',{method:was?'DELETE':'POST',headers:headers()});
+  if(!r.ok)throw Error('like_failed');
+ }catch(e){
+  btn.classList.toggle('liked',was);btn.firstChild.nodeValue=was?'♥ ':'♡ ';span.textContent=Math.max(0,Number(span.textContent||0)+(was?1:-1));
+  if(window.showToast)showToast('반응 저장에 실패했습니다',{variant:'error'});
+ }finally{btn.disabled=false}
+}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.social-like');if(b)toggleSocialLike(b)});
 function closeAll(){
  if(uploading)return;
  // 작성/갤러리 팝업의 X 버튼은 모든 소셜 모달을 닫아야 한다.
