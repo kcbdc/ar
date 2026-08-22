@@ -1,0 +1,33 @@
+조팸스 GO v82 - 좋아요/취소 반복 토글 안정화
+
+확인된 핵심 원인
+- Pages(jofams.pages.dev)와 Worker(workers.dev)는 서로 다른 Origin.
+- Worker의 CORS allow-methods가 GET,POST,PUT,OPTIONS만 허용하고 DELETE가 빠져 있었음.
+- 좋아요 추가는 POST라 정상 동작하지만, 좋아요 취소는 DELETE라 브라우저의 CORS preflight에서 차단될 수 있었음.
+- 이 경우 화면에서 취소를 눌러도 D1 레코드가 삭제되지 않아 숫자가 감소하지 않음.
+
+v82 개선
+1. Worker CORS에 DELETE 추가
+2. 더 안정적인 구조를 위해 클라이언트는 DELETE를 사용하지 않음
+3. 좋아요/취소 모두 POST /api/social/photos/:id/like 로 통일
+4. body:
+   {"liked": true}  -> 좋아요 추가
+   {"liked": false} -> 좋아요 삭제
+5. 서버는 DB 처리 후
+   - 현재 사용자의 실제 liked 상태
+   - 해당 사진의 실제 likes COUNT
+   를 다시 SELECT하여 반환
+6. 화면은 서버가 반환한 최종 숫자로만 갱신
+7. 따라서
+   ♡ 0 -> ♥ 1 -> ♡ 0 -> ♥ 1 ...
+   형태로 반복 토글 가능
+8. v81의 DELETE 요청도 서버에서는 하위 호환으로 계속 지원
+
+필수 배포
+Pages:
+- assets/social-map.js
+- checkpoints.html
+- sw.js
+
+Worker:
+- server/worker.js
