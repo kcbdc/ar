@@ -209,6 +209,7 @@ if(u.pathname==='/api/social/photos'&&req.method==='GET'){
       created_at:r.created_at,
       likes:Number(r.likes||0),
       likedByMe:!!r.liked_by_me,
+      isMine:String(r.user_id)===String(su.id),
       imageUrl:origin+'/api/social/photo/'+encodeURIComponent(r.id),
       thumbnailUrl:origin+'/api/social/photo/'+encodeURIComponent(r.id)+'?thumb=1'
     }));
@@ -223,6 +224,37 @@ if(u.pathname==='/api/social/photos/ready'&&req.method==='GET'){
     const row=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='social_photos_v66'").first();
     return json({ok:!!row,table:'social_photos_v66',storage:'d1'},row?200:503,h);
   }catch(e){return json({ok:false,error:'db_check_failed',detail:describeError(e)},500,h)}
+}
+
+
+if(/^\/api\/social\/photos\/[^/]+\/delete$/.test(u.pathname)&&req.method==='POST'){
+  const su=await sessionUser(req,env);
+  if(!su)return json({ok:false,error:'unauthorized'},401,h);
+
+  const photoId=decodeURIComponent(u.pathname.split('/')[4]||'');
+  if(!photoId)return json({ok:false,error:'bad_photo_id'},400,h);
+
+  try{
+    const photo=await env.DB.prepare('SELECT id,user_id FROM social_photos_v66 WHERE id=?').bind(photoId).first();
+    if(!photo)return json({ok:false,error:'photo_not_found'},404,h);
+
+    // 보안 핵심: 화면에서 버튼을 숨기는 것과 별개로 서버에서 소유권을 반드시 재검증.
+    if(String(photo.user_id)!==String(su.id)){
+      return json({ok:false,error:'not_photo_owner'},403,h);
+    }
+
+    await env.DB.prepare('CREATE TABLE IF NOT EXISTS social_photo_likes(photo_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(photo_id,user_id))').run();
+
+    // 사진과 관련 좋아요를 함께 삭제. D1 batch로 처리해 중간 실패 가능성을 줄임.
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM social_photo_likes WHERE photo_id=?').bind(photoId),
+      env.DB.prepare('DELETE FROM social_photos_v66 WHERE id=? AND user_id=?').bind(photoId,su.id)
+    ]);
+
+    return json({ok:true,deleted:true,id:photoId},200,h);
+  }catch(e){
+    return json({ok:false,error:'photo_delete_failed',detail:describeError(e)},500,h);
+  }
 }
 
 if(/^\/api\/social\/photos\/[^/]+\/like$/.test(u.pathname)){
