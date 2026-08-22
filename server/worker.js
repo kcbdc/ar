@@ -124,7 +124,7 @@ async function issueSession(env,userId){const token=randomToken(40),hash=await s
 async function upsertSocialUser(env,provider,pid,nickname='',profileImage=''){const now=Date.now(),old=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();const candidate=old&&old.id?String(old.id):('usr_'+randomToken(18));await env.DB.prepare(`INSERT INTO users(id,provider,provider_user_id,nickname,profile_image,created_at,last_login_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(provider,provider_user_id) DO UPDATE SET nickname=excluded.nickname,profile_image=excluded.profile_image,last_login_at=excluded.last_login_at`).bind(candidate,provider,pid,String(nickname||'').slice(0,80),String(profileImage||'').slice(0,500),now,now).run();const row=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();return {id:String(row&&row.id||candidate),provider,nickname:String(nickname||'원정대원').slice(0,80),profileImage:String(profileImage||'').slice(0,500)}}
 function redirect(location){return new Response(null,{status:302,headers:{location,'cache-control':'no-store'}})}
 
-export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,PUT,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account,authorization','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v35-game-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
+export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account,authorization','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v35-game-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
 if(u.pathname==='/api/auth/guest'&&req.method==='POST'){
   try{
     const guestPid='guest_'+randomToken(24);
@@ -236,17 +236,29 @@ if(/^\/api\/social\/photos\/[^/]+\/like$/.test(u.pathname)){
 
     let liked;
     if(req.method==='POST'){
-      await env.DB.prepare('INSERT OR IGNORE INTO social_photo_likes(photo_id,user_id,created_at) VALUES(?,?,?)').bind(photoId,su.id,Date.now()).run();
-      liked=true;
+      // v82: POST 하나로 좋아요/취소 모두 처리.
+      // body가 없으면 기존 호환을 위해 좋아요(true)로 처리한다.
+      let body={};
+      try{body=await req.json()}catch(_){}
+      liked=body&&typeof body.liked==='boolean'?body.liked:true;
+
+      if(liked){
+        await env.DB.prepare('INSERT OR IGNORE INTO social_photo_likes(photo_id,user_id,created_at) VALUES(?,?,?)').bind(photoId,su.id,Date.now()).run();
+      }else{
+        await env.DB.prepare('DELETE FROM social_photo_likes WHERE photo_id=? AND user_id=?').bind(photoId,su.id).run();
+      }
     }else if(req.method==='DELETE'){
+      // 이전 v81 클라이언트 호환
       await env.DB.prepare('DELETE FROM social_photo_likes WHERE photo_id=? AND user_id=?').bind(photoId,su.id).run();
       liked=false;
     }else{
       return json({ok:false,error:'method_not_allowed'},405,h);
     }
 
+    // DB의 실제 상태를 다시 읽어 최종 liked/likes를 확정.
+    const mine=await env.DB.prepare('SELECT 1 ok FROM social_photo_likes WHERE photo_id=? AND user_id=?').bind(photoId,su.id).first();
     const row=await env.DB.prepare('SELECT COUNT(*) n FROM social_photo_likes WHERE photo_id=?').bind(photoId).first();
-    return json({ok:true,liked,likes:Number(row?.n||0)},200,h);
+    return json({ok:true,liked:!!mine,likes:Number(row?.n||0)},200,h);
   }catch(e){
     return json({ok:false,error:'like_db_error',detail:describeError(e)},500,h)
   }
