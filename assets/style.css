@@ -1690,11 +1690,11 @@ body.app-body .ranking-list .rank-row.top3 .rank-medal svg{
 
 
 
-/* v79: 첨부 시안 기반 AR 쉐브론 유도선
-   - 넓은 도로 면/양측 레일 제거
-   - 하단의 굵은 노란 쉐브론 → 전방의 작은 청록 쉐브론로 자연스럽게 원근 표현
-   - 화면 중앙까지 길게 이어지는 발광 화살표 트레일
-   - 끝점 거리 숫자 제거 */
+
+/* v80: 상향(▲ 방향) 쉐브론 유도선
+   - 기존 V(∨)처럼 보일 수 있는 2-bar 회전 방식 제거
+   - 하나의 polygon으로 꼭지점이 명확히 화면 위쪽을 향하는 ∧ 형태 구현
+   - 시작점 노란 원형 파장 완전 제거 */
 body.ar-body .ar-route-lane{
   --route-turn:0deg;
   position:fixed;
@@ -1728,157 +1728,100 @@ body.ar-body .ar-route-lane.show{
 }
 body.ar-body .ar-route-lane.no-heading{opacity:.20}
 
-/* 불필요한 도로 면은 거의 투명하게: 첨부처럼 화살표만 공중에 떠 보이게 */
+/* 화살표 트레일만 보이도록 배경은 최소화 */
 body.ar-body .route-road-bed{
   position:absolute;
   left:50%;
   bottom:0;
-  width:74%;
+  width:72%;
   height:96%;
   transform:translateX(-50%);
-  clip-path:polygon(44% 0,56% 0,94% 100%,6% 100%);
-  background:
-    radial-gradient(ellipse at 50% 90%,rgba(255,216,58,.13),transparent 46%),
-    linear-gradient(to top,rgba(255,215,56,.06),rgba(51,220,255,.04) 54%,transparent 90%);
+  clip-path:polygon(45% 0,55% 0,92% 100%,8% 100%);
+  background:linear-gradient(
+    to top,
+    rgba(255,214,55,.045),
+    rgba(53,220,255,.030) 55%,
+    transparent 92%
+  );
   filter:blur(8px);
-  opacity:.68;
+  opacity:.46;
 }
-
-/* 중앙 점선도 제거하여 첨부 스타일처럼 간결하게 */
 body.ar-body .route-center-line{display:none}
 
-/* 기본 쉐브론 */
+/* 
+   핵심: 꼭지점(50% 0)이 화면 위쪽을 향하는 단일 polygon.
+   따라서 브라우저별 rotate 해석 차이 없이 항상 '∧' 방향으로 보인다.
+*/
 body.ar-body .route-chevron{
   position:absolute;
   left:50%;
   width:132px;
-  height:88px;
+  height:76px;
   margin-left:-66px;
-  border:0;
   transform-origin:center;
-  opacity:.94;
-  animation:routePulseV79 1.24s ease-in-out infinite;
+  clip-path:polygon(
+    50% 0%,
+    100% 58%,
+    82% 78%,
+    50% 39%,
+    18% 78%,
+    0% 58%
+  );
+  background:linear-gradient(180deg,#fff58a 0%,#ffd638 48%,#ffbd1d 100%);
+  box-shadow:
+    0 0 10px rgba(255,235,105,.92),
+    0 0 24px rgba(255,205,38,.70);
+  filter:
+    drop-shadow(0 0 8px rgba(255,226,70,.95))
+    drop-shadow(0 0 18px rgba(255,197,28,.55));
+  opacity:.95;
+  animation:routePulseV80 1.24s ease-in-out infinite;
 }
+
+/* pseudo element를 사용하지 않아 V/∧ 방향 반전 가능성 제거 */
 body.ar-body .route-chevron::before,
-body.ar-body .route-chevron::after{
-  content:"";
-  position:absolute;
-  top:26px;
-  width:80px;
-  height:23px;
-  border-radius:13px;
-  background:linear-gradient(90deg,#fff07b 0%,#ffd333 50%,#ffbd1b 100%);
-  box-shadow:
-    0 0 8px rgba(255,232,93,.98),
-    0 0 18px rgba(255,207,34,.86),
-    0 0 34px rgba(255,185,19,.38);
-}
-body.ar-body .route-chevron::before{
-  left:4px;
-  transform:rotate(30deg);
-  transform-origin:right center;
-}
-body.ar-body .route-chevron::after{
-  right:4px;
-  transform:rotate(-30deg);
-  transform-origin:left center;
-}
+body.ar-body .route-chevron::after{display:none!important}
 
-/* 첨부처럼 가까운 구간은 크고 굵은 노랑, 멀어질수록 작고 청록 */
-body.ar-body .route-chevron.c1{
-  bottom:2%;
-  transform:scale(1.28);
-  animation-delay:0s;
-}
-body.ar-body .route-chevron.c2{
-  bottom:16%;
-  transform:scale(1.10);
-  animation-delay:.11s;
-}
+/* 가까운 곳은 크고, 전방으로 갈수록 작아지는 원근 */
+body.ar-body .route-chevron.c1{bottom:2%;transform:scale(1.30);animation-delay:0s}
+body.ar-body .route-chevron.c2{bottom:16%;transform:scale(1.10);animation-delay:.11s}
+body.ar-body .route-chevron.c3{bottom:30%;transform:scale(.90);animation-delay:.22s}
+body.ar-body .route-chevron.c4{bottom:44%;transform:scale(.72);animation-delay:.33s}
+body.ar-body .route-chevron.c5{bottom:58%;transform:scale(.56);animation-delay:.44s}
+body.ar-body .route-chevron.c6{bottom:71%;transform:scale(.42);animation-delay:.55s}
+
+/* 중간은 노랑 → 청록 전환 */
 body.ar-body .route-chevron.c3{
-  bottom:30%;
-  transform:scale(.90);
-  animation-delay:.22s;
+  background:linear-gradient(180deg,#e5fb91 0%,#78e9d6 55%,#47d6f5 100%);
+  filter:
+    drop-shadow(0 0 8px rgba(119,238,221,.88))
+    drop-shadow(0 0 18px rgba(58,207,255,.48));
 }
-body.ar-body .route-chevron.c4{
-  bottom:44%;
-  transform:scale(.72);
-  animation-delay:.33s;
-}
-body.ar-body .route-chevron.c5{
-  bottom:58%;
-  transform:scale(.56);
-  animation-delay:.44s;
-}
+
+/* 먼 쪽은 청록/하늘색 */
+body.ar-body .route-chevron.c4,
+body.ar-body .route-chevron.c5,
 body.ar-body .route-chevron.c6{
-  bottom:71%;
-  transform:scale(.42);
-  animation-delay:.55s;
+  background:linear-gradient(180deg,#7cf6ee 0%,#43d8f7 48%,#29affd 100%);
+  filter:
+    drop-shadow(0 0 8px rgba(86,235,238,.90))
+    drop-shadow(0 0 18px rgba(47,194,255,.58));
 }
 
-/* 중간 단계: 노랑에서 청록으로 전환 */
-body.ar-body .route-chevron.c3::before,
-body.ar-body .route-chevron.c3::after{
-  background:linear-gradient(90deg,#d9f67e,#70e8d8,#48d9f8);
-  box-shadow:
-    0 0 8px rgba(119,238,221,.90),
-    0 0 20px rgba(58,207,255,.50);
+/* 시작점 파장 없음 */
+body.ar-body .route-glow{display:none!important}
+
+body.ar-body .ar-route-lane.aligned .route-chevron.c1,
+body.ar-body .ar-route-lane.aligned .route-chevron.c2{
+  filter:
+    drop-shadow(0 0 10px rgba(255,242,128,1))
+    drop-shadow(0 0 25px rgba(255,211,42,.95))
+    drop-shadow(0 0 40px rgba(255,183,12,.40));
 }
 
-/* 먼 거리: 청록/하늘색 */
-body.ar-body .route-chevron.c4::before,
-body.ar-body .route-chevron.c4::after,
-body.ar-body .route-chevron.c5::before,
-body.ar-body .route-chevron.c5::after,
-body.ar-body .route-chevron.c6::before,
-body.ar-body .route-chevron.c6::after{
-  background:linear-gradient(90deg,#72f0e9,#3bd4f6,#28aefd);
-  box-shadow:
-    0 0 8px rgba(86,235,238,.92),
-    0 0 18px rgba(47,194,255,.64),
-    0 0 30px rgba(35,159,255,.28);
-}
-
-/* 하단에 첨부처럼 노란 원형 스캔 파장 */
-body.ar-body .route-glow{
-  position:absolute;
-  left:50%;
-  bottom:-3%;
-  width:82%;
-  height:42%;
-  transform:translateX(-50%);
-  background:
-    radial-gradient(ellipse at 50% 72%,
-      transparent 0 23%,
-      rgba(255,216,56,.32) 24% 25%,
-      transparent 26% 38%,
-      rgba(255,216,56,.22) 39% 40%,
-      transparent 41% 55%,
-      rgba(255,216,56,.13) 56% 57%,
-      transparent 58%);
-  filter:drop-shadow(0 0 10px rgba(255,209,45,.42));
-  opacity:.92;
-  animation:routeRadarV79 1.8s ease-in-out infinite;
-}
-
-/* 정확한 방향일 때 가장 가까운 노란 쉐브론을 강조 */
-body.ar-body .ar-route-lane.aligned .route-chevron.c1::before,
-body.ar-body .ar-route-lane.aligned .route-chevron.c1::after,
-body.ar-body .ar-route-lane.aligned .route-chevron.c2::before,
-body.ar-body .ar-route-lane.aligned .route-chevron.c2::after{
-  box-shadow:
-    0 0 9px rgba(255,238,118,1),
-    0 0 23px rgba(255,211,42,.98),
-    0 0 42px rgba(255,183,12,.48);
-}
-
-@keyframes routePulseV79{
-  0%,100%{opacity:.46;filter:brightness(.92)}
-  50%{opacity:1;filter:brightness(1.22)}
-}
-@keyframes routeRadarV79{
-  0%,100%{opacity:.50;transform:translateX(-50%) scale(.93)}
-  50%{opacity:.95;transform:translateX(-50%) scale(1.03)}
+@keyframes routePulseV80{
+  0%,100%{opacity:.46;filter:brightness(.93) drop-shadow(0 0 7px currentColor)}
+  50%{opacity:1;filter:brightness(1.18) drop-shadow(0 0 14px currentColor)}
 }
 
 @media(max-width:420px){
@@ -1890,13 +1833,8 @@ body.ar-body .ar-route-lane.aligned .route-chevron.c2::after{
   }
   body.ar-body .route-chevron{
     width:118px;
-    height:84px;
+    height:70px;
     margin-left:-59px;
-  }
-  body.ar-body .route-chevron::before,
-  body.ar-body .route-chevron::after{
-    width:72px;
-    height:21px;
   }
 }
 
