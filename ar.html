@@ -13,12 +13,28 @@
   <div class="ar-nav-arrow-wrap"><svg class="ar-nav-arrow" id="arNavArrow" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 7 52 35 39 32 32 57 25 32 12 35Z"/></svg><i class="ar-nav-pulse"></i></div>
   <div class="ar-nav-copy"><small>NEAREST SIGNAL</small><b id="arNavText">가까운 아이템 방향 확인 중</b><span><strong id="arNavDist">--m</strong><em id="arNavHint">방향 확인 중</em></span></div>
 </div>
+<div class="ar-route-lane" id="arRouteLane" aria-hidden="true">
+  <div class="route-destination"><span class="route-pin-core">◇</span><b id="routeLaneDist">--m</b></div>
+  <div class="route-chevron c1"></div><div class="route-chevron c2"></div><div class="route-chevron c3"></div>
+  <div class="route-chevron c4"></div><div class="route-chevron c5"></div><div class="route-chevron c6"></div>
+  <div class="route-glow"></div>
+</div>
 <div class="ar-step-guide" id="arStepGuide"><span>1 거리</span><span>2 방향</span><span>3 포착</span><span>4 유지</span></div>
 <div class="edge-arrow left" id="arrowLeft"><span>‹</span><small>LEFT</small></div><div class="edge-arrow right" id="arrowRight"><span>›</span><small>RIGHT</small></div>
 <div class="target-reticle"><i></i><i></i><i></i><i></i><span>SCAN</span></div>
 <div class="scanner-viewmodel" id="scannerViewmodel"><div class="scanner-vm-glow"></div><div class="scanner-vm-waves"><i></i><i></i><i></i></div><img id="scannerVmImg" alt="KOMSCO 스캐너 툴" decoding="async"><div class="scanner-vm-distance" id="scannerVmDistance" aria-label="아이템까지 거리"><b>--m</b></div></div>
 <div class="point-search-cue" id="pointSearchCue" aria-live="polite"><div class="point-beacon"><i></i><i></i><span>POINT</span></div><b id="pointSearchTitle">포인트 도착</b><small>기기를 좌우로 움직여 숨은 아이템을 찾아보세요</small><div class="point-search-track"><i id="pointSearchFill"></i></div></div>
-<div class="target-wrap item-mode" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt=""><div class="spark-item" id="sparkItem"><i class="spark-core"></i><i class="spark-orbit o1"></i><i class="spark-orbit o2"></i><i class="spark-star s1"></i><i class="spark-star s2"></i><i class="spark-star s3"></i><span id="sparkIcon"></span></div><div class="target-label" id="targetLabel">중소기업제품</div></div>
+<div class="target-wrap item-mode" id="targetWrap"><div class="world-anchor"><i class="anchor-ring a1"></i><i class="anchor-ring a2"></i><i class="ground-shadow"></i></div><div class="target-glow"></div><img id="targetImg" src="assets/img/sunsik.png" alt=""><div class="spark-item cube-item" id="sparkItem">
+  <div class="item-cube-scene">
+    <div class="item-cube">
+      <i class="cube-face front"></i><i class="cube-face back"></i><i class="cube-face right"></i>
+      <i class="cube-face left"></i><i class="cube-face top"></i><i class="cube-face bottom"></i>
+    </div>
+  </div>
+  <i class="cube-ground-ring r1"></i><i class="cube-ground-ring r2"></i>
+  <i class="spark-star s1"></i><i class="spark-star s2"></i><i class="spark-star s3"></i>
+  <span id="sparkIcon" class="cube-symbol"></span>
+</div><div class="target-label" id="targetLabel">중소기업제품</div></div>
 <div class="dwell-ring-wrap" id="dwellRing"><svg viewBox="0 0 64 64"><circle class="dwell-ring-bg" cx="32" cy="32" r="27"></circle><circle class="dwell-ring-fg" id="dwellFg" cx="32" cy="32" r="27"></circle></svg><span>HOLD 2.2s</span></div>
 <div class="accuracy-chip" id="accuracyChip">GPS 정확도 확인 중</div>
 <div id="permGate" class="perm-gate"><div class="perm-card commercial"><div class="perm-scanner-hero"><div class="perm-scanner-glow"></div><img id="scannerHeroImg" alt="KOMSCO 스캐너 툴" decoding="async"></div><span class="section-kicker">READY TO EXPLORE</span><h2>조팸스 GO를 시작할까요?</h2><p>KOMSCO 스캐너 툴로 현실 공간에 숨은 공공구매 아이템을 찾기 위해 아래 기능을 사용합니다.</p><div class="perm-steps"><div class="perm-step" id="stepCam"><span class="perm-symbol" data-ui-icon="camera"></span><span><b>카메라</b><small>AR 캐릭터를 화면에 표시</small></span><i>필수</i></div><div class="perm-step" id="stepLoc"><span class="perm-symbol" data-ui-icon="location"></span><span><b>위치</b><small>가까운 체크포인트 탐색</small></span><i>필수</i></div><div class="perm-step" id="stepOri"><span class="perm-symbol" data-ui-icon="compass"></span><span><b>방향센서</b><small>캐릭터가 있는 방향 안내</small></span><i>권장</i></div></div><div class="privacy-note"><span data-ui-icon="lock"></span> 카메라 영상과 실시간 위치는 서버에 저장하지 않습니다.</div><button id="permStartBtn" class="sheet-primary">탐험 시작하기</button><div class="perm-note" id="permNote"></div></div></div>
@@ -41,7 +57,7 @@ let curLat=null,curLng=null,curHeading=null,curAccuracy=null,geoCourseHeading=nu
 let lastCollectPos=null,lastCollectAt=0;
 const POST_COLLECT_MOVE_M=10;
 let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),characterReaction=document.getElementById('characterReaction'),reactionImg=document.getElementById('reactionImg'),reactionText=document.getElementById('reactionText');
-const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),arNavGuide=document.getElementById('arNavGuide'),arNavArrow=document.getElementById('arNavArrow'),arNavText=document.getElementById('arNavText'),arNavDist=document.getElementById('arNavDist'),arNavHint=document.getElementById('arNavHint'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),scannerVmDistance=document.getElementById('scannerVmDistance'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),arNavGuide=document.getElementById('arNavGuide'),arNavArrow=document.getElementById('arNavArrow'),arNavText=document.getElementById('arNavText'),arNavDist=document.getElementById('arNavDist'),arNavHint=document.getElementById('arNavHint'),arRouteLane=document.getElementById('arRouteLane'),routeLaneDist=document.getElementById('routeLaneDist'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),scannerVmDistance=document.getElementById('scannerVmDistance'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
 // v42 핵심 버그 수정: 아래 두 변수(geoRetryButtonShown/geoRetryCount, lastToolMode)가
 // 원래 스크립트 하단에 let으로 선언되어 있었는데, 그보다 앞쪽 코드(acceptLocation,
 // 최상위 setToolMode() 호출)에서 먼저 참조되고 있었다. let/const는 선언문에
@@ -402,6 +418,7 @@ function resetProximityGate(){
 
 function hideNavigationGuide(){
   if(arNavGuide)arNavGuide.classList.remove('show','aligned','no-heading');
+  if(arRouteLane){arRouteLane.classList.remove('show','aligned','no-heading');arRouteLane.style.setProperty('--route-turn','0deg');}
   navDiffSmoothed=null;
 }
 function navigationDirectionLabel(diff){
@@ -418,10 +435,14 @@ function updateNavigationGuideFromPosition(checkpoint,ep,distance,accuracy,fromL
   const bearing=bearingTo(fromLat,fromLng,checkpoint.lat,checkpoint.lng);
   const heading=curHeading!==null?curHeading:geoCourseHeading;
   arNavGuide.classList.add('show');
-  arNavDist.textContent=fmtNum(Math.max(0,Math.round(distance)))+'m';
+  if(arRouteLane){arRouteLane.classList.add('show');arRouteLane.classList.remove('no-heading');}
+  const routeDistanceText=fmtNum(Math.max(0,Math.round(distance)))+'m';
+  arNavDist.textContent=routeDistanceText;
+  if(routeLaneDist)routeLaneDist.textContent=routeDistanceText;
   arNavText.textContent=ep.item+' 방향';
   if(heading===null){
     arNavGuide.classList.add('no-heading');arNavGuide.classList.remove('aligned');
+    if(arRouteLane){arRouteLane.classList.add('no-heading');arRouteLane.classList.remove('aligned');arRouteLane.style.setProperty('--route-turn','0deg');}
     arNavArrow.style.transform='rotate(0deg)';
     arNavHint.textContent='기기를 돌리거나 몇 걸음 이동해 방향을 확인하세요';
     return;
@@ -432,8 +453,13 @@ function updateNavigationGuideFromPosition(checkpoint,ep,distance,accuracy,fromL
   else navDiffSmoothed=navDiffSmoothed+angleDiff(rawDiff,navDiffSmoothed)*.28;
   const diff=Math.max(-180,Math.min(180,navDiffSmoothed));
   arNavArrow.style.transform='rotate('+diff.toFixed(1)+'deg)';
+  if(arRouteLane){
+    const laneTurn=Math.max(-34,Math.min(34,diff*.36));
+    arRouteLane.style.setProperty('--route-turn',laneTurn.toFixed(1)+'deg');
+  }
   const aligned=Math.abs(diff)<=12;
   arNavGuide.classList.toggle('aligned',aligned);
+  if(arRouteLane)arRouteLane.classList.toggle('aligned',aligned);
   arNavHint.textContent=navigationDirectionLabel(diff)+(accuracy>25?' · GPS ±'+Math.round(accuracy)+'m':'');
 }
 
