@@ -1,0 +1,30 @@
+조팸스 GO v84 - 본인 탐험사진 삭제 기능
+
+동작
+- 본인이 등록한 탐험사진에만 '삭제' 버튼 표시
+- 타인이 등록한 사진에는 삭제 버튼이 나타나지 않음
+- 삭제 클릭 시 확인창 표시
+- 확인 후 사진 삭제
+- 해당 사진에 달린 좋아요 기록도 함께 삭제
+- 삭제 즉시 지도 마커/좋아요 합계/사진 목록 갱신
+- 사진이 1장뿐이었던 위치는 삭제 후 해당 지도 마커도 사라짐
+
+보안
+- 프런트에서 버튼을 숨기는 것만으로 제한하지 않음
+- Worker가 로그인 사용자 ID와 사진 user_id를 다시 비교
+- 소유자가 아니면 HTTP 403 / not_photo_owner 반환
+- DELETE SQL에도 user_id 조건을 추가하여 이중 검증
+
+API
+POST /api/social/photos/:photoId/delete
+
+수정 파일
+- assets/social-map.js
+- server/worker.js
+- assets/style.css
+- checkpoints.html
+- sw.js
+
+필수 배포
+Pages: assets/social-map.js / assets/style.css / checkpoints.html / sw.js
+Worker: server/worker.js
