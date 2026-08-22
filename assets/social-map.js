@@ -57,20 +57,24 @@ function openGallery(items){
 async function toggleSocialLike(btn){
  if(!btn||btn.disabled)return;
  btn.disabled=true;
+
  const id=String(btn.dataset.photoId||'');
  const wasLiked=btn.dataset.liked==='1'||btn.classList.contains('liked');
- const method=wasLiked?'DELETE':'POST';
+ const nextLiked=!wasLiked;
+
  try{
+  const reqHeaders={...headers(),'content-type':'application/json'};
   const r=await fetch(api()+'/api/social/photos/'+encodeURIComponent(id)+'/like',{
-    method,
-    headers:headers(),
+    method:'POST',
+    headers:reqHeaders,
+    body:JSON.stringify({liked:nextLiked}),
     cache:'no-store'
   });
   const j=await r.json().catch(()=>({}));
   if(!r.ok||!j.ok)throw Error(j.error||'like_toggle_failed');
 
-  // 서버 응답을 최종 상태의 기준으로 사용
-  const nowLiked=typeof j.liked==='boolean'?j.liked:!wasLiked;
+  // 서버 DB를 다시 조회해 반환한 값만 UI에 반영.
+  const nowLiked=!!j.liked;
   const likes=Math.max(0,Number(j.likes||0));
 
   btn.dataset.liked=nowLiked?'1':'0';
@@ -80,20 +84,27 @@ async function toggleSocialLike(btn){
   const heart=btn.querySelector('.social-like-heart');
   const count=btn.querySelector('.social-like-count');
   const label=btn.querySelector('.social-like-label');
+
   if(heart)heart.textContent=nowLiked?'♥':'♡';
   if(count)count.textContent=String(likes);
   if(label)label.textContent=nowLiked?'좋아요 취소':'좋아요';
 
-  // 모달을 닫았다 다시 열어도 즉시 같은 상태로 보이도록 메모리 동기화
   const item=socialItems.find(x=>String(x.id)===id);
-  if(item){item.likes=likes;item.likedByMe=nowLiked}
+  if(item){
+    item.likes=likes;
+    item.likedByMe=nowLiked;
+  }
 
-  if(window.showToast){
-    showToast(nowLiked?'♥ 좋아요를 표시했습니다':'♡ 좋아요를 취소했습니다',{duration:1500});
+  // 요청한 상태와 서버 최종 상태가 다르면 자동으로 목록을 다시 읽어 동기화.
+  if(nowLiked!==nextLiked){
+    console.warn('[social like] server state mismatch',{wanted:nextLiked,actual:nowLiked});
+    await loadSocial();
+  }else if(window.showToast){
+    showToast(nowLiked?'♥ 좋아요 +1':'♡ 좋아요 취소 -1',{duration:1400});
   }
  }catch(e){
   console.error('[social like toggle]',e);
-  if(window.showToast)showToast(wasLiked?'좋아요 취소에 실패했습니다':'좋아요 저장에 실패했습니다',{variant:'error'});
+  if(window.showToast)showToast(nextLiked?'좋아요 저장에 실패했습니다':'좋아요 취소에 실패했습니다',{variant:'error'});
  }finally{
   btn.disabled=false;
  }
