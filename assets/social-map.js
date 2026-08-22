@@ -20,10 +20,10 @@ function renderSocialMarkers(){
  group(socialItems).forEach(g=>{
    const a=g[0],cp=a.checkpoint_id!==null&&a.checkpoint_id!==undefined&&Number.isInteger(Number(a.checkpoint_id))?CHECKPOINTS[Number(a.checkpoint_id)]:null;
    const lat=cp?cp.lat:Number(a.latitude),lng=cp?cp.lng:Number(a.longitude);
-   const likes=groupLikeCount(g);
+   const photoCount=g.length;
    const el=document.createElement('button');el.type='button';el.className='social-photo-marker';
-   // 지도 밖 배지는 사진 개수가 아니라 해당 위치의 실제 좋아요 총합을 표시.
-   el.innerHTML='<img alt="탐험 사진"><b class="social-marker-like" aria-label="좋아요 '+likes+'개"><span>♥</span>'+likes+'</b>';
+   // 지도 마커 배지는 해당 위치에 등록된 사진 개수를 표시.
+   el.innerHTML='<img alt="탐험 사진"><b class="social-marker-like" aria-label="사진 '+photoCount+'개">'+photoCount+'</b>';
    el.querySelector('img').src=a.thumbnailUrl||a.imageUrl;
    el.onclick=()=>openGallery(g);
    const ov=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(lat,lng),content:el,yAnchor:.5,xAnchor:.5});
