@@ -1685,3 +1685,72 @@ body.app-body .ranking-list .rank-row.top3 .rank-medal svg{
 /* v73 social reaction */
 .social-like{margin-top:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#a9bfd2;border-radius:999px;padding:5px 10px;font-weight:800}
 .social-like.liked{color:#ff6f91;border-color:rgba(255,111,145,.35);background:rgba(255,111,145,.10)}
+
+
+/* v76: AR 가상 유도선 + 입체 아이템 큐브 */
+body.ar-body .ar-route-lane{
+  --route-turn:0deg;
+  position:fixed;z-index:9;left:50%;bottom:calc(118px + var(--safe-b));
+  width:min(72vw,330px);height:48vh;max-height:430px;min-height:250px;
+  transform:translateX(-50%) perspective(560px) rotateX(61deg) rotateZ(var(--route-turn)) scale(.94);
+  transform-origin:50% 100%;opacity:0;pointer-events:none;
+  transition:opacity .22s ease,transform .28s ease-out;
+  filter:drop-shadow(0 0 14px rgba(41,202,255,.28));
+}
+body.ar-body .ar-route-lane.show{opacity:.94;transform:translateX(-50%) perspective(560px) rotateX(61deg) rotateZ(var(--route-turn)) scale(1)}
+body.ar-body .ar-route-lane.no-heading{opacity:.28}
+body.ar-body .ar-route-lane::before,body.ar-body .ar-route-lane::after{
+  content:"";position:absolute;bottom:0;width:2px;height:92%;border-radius:99px;
+  background:linear-gradient(to top,rgba(255,214,69,.92),rgba(55,218,255,.58) 45%,rgba(55,218,255,0));
+  box-shadow:0 0 10px rgba(49,207,255,.55)
+}
+body.ar-body .ar-route-lane::before{left:25%;transform:skewX(9deg)}
+body.ar-body .ar-route-lane::after{right:25%;transform:skewX(-9deg)}
+body.ar-body .route-glow{position:absolute;left:50%;bottom:0;width:54%;height:88%;transform:translateX(-50%);
+  background:linear-gradient(to top,rgba(255,211,54,.16),rgba(42,213,255,.11) 48%,transparent 90%);
+  clip-path:polygon(18% 100%,82% 100%,60% 0,40% 0);filter:blur(4px)}
+body.ar-body .route-chevron{position:absolute;left:50%;width:64px;height:30px;margin-left:-32px;
+  border-top:7px solid #ffe34f;border-left:7px solid #ffe34f;transform:rotate(45deg);
+  border-radius:5px 0 0 0;filter:drop-shadow(0 0 8px rgba(255,214,42,.92));animation:routeFlow 1.55s ease-in-out infinite}
+body.ar-body .route-chevron.c1{bottom:4%;transform:translateX(-15px) rotate(45deg) scale(1.12);animation-delay:0s}
+body.ar-body .route-chevron.c2{bottom:19%;transform:translateX(-12px) rotate(45deg) scale(.96);animation-delay:.18s}
+body.ar-body .route-chevron.c3{bottom:34%;transform:translateX(-9px) rotate(45deg) scale(.80);animation-delay:.36s}
+body.ar-body .route-chevron.c4{bottom:49%;transform:translateX(-6px) rotate(45deg) scale(.66);border-color:#54e5ff;animation-delay:.54s}
+body.ar-body .route-chevron.c5{bottom:64%;transform:translateX(-3px) rotate(45deg) scale(.54);border-color:#54e5ff;animation-delay:.72s}
+body.ar-body .route-chevron.c6{bottom:78%;transform:rotate(45deg) scale(.44);border-color:#54e5ff;animation-delay:.90s}
+body.ar-body .route-destination{position:absolute;z-index:3;left:50%;top:-8px;transform:translateX(-50%) rotateX(-61deg);
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+body.ar-body .route-pin-core{width:48px;height:48px;border-radius:50% 50% 50% 8px;transform:rotate(-45deg);
+  display:grid;place-items:center;background:linear-gradient(145deg,#1be4ff,#176cff);border:2px solid rgba(255,255,255,.75);
+  box-shadow:0 0 22px rgba(37,203,255,.88),inset 0 0 16px rgba(255,255,255,.22);font-size:26px;color:white}
+body.ar-body .route-pin-core::first-letter{transform:rotate(45deg)}
+body.ar-body .route-destination b{padding:5px 10px;border-radius:11px;background:rgba(3,20,47,.86);
+  border:1px solid rgba(88,220,255,.5);font-size:15px;color:#e8fbff;box-shadow:0 0 13px rgba(45,199,255,.25)}
+body.ar-body .ar-route-lane.aligned .route-chevron{border-color:#ffe654}
+@keyframes routeFlow{0%,100%{opacity:.42;filter:drop-shadow(0 0 5px rgba(255,214,42,.55))}50%{opacity:1;filter:drop-shadow(0 0 12px rgba(255,226,65,1))}}
+
+/* 발견 아이템: 첨부 시안처럼 바닥에 떠 있는 반투명 입체 스퀘어 */
+body.ar-body .spark-item.cube-item{position:relative;width:132px;height:132px;display:grid;place-items:center;overflow:visible}
+body.ar-body .cube-item .item-cube-scene{position:absolute;left:50%;top:46%;width:72px;height:72px;perspective:440px;transform:translate(-50%,-50%)}
+body.ar-body .cube-item .item-cube{position:absolute;inset:0;transform-style:preserve-3d;animation:itemCubeSpin 7s linear infinite}
+body.ar-body .cube-item .cube-face{position:absolute;width:72px;height:72px;box-sizing:border-box;
+  background:linear-gradient(145deg,rgba(83,235,255,.34),rgba(23,116,255,.12));
+  border:2px solid rgba(104,240,255,.96);box-shadow:inset 0 0 20px rgba(47,216,255,.22),0 0 12px rgba(31,206,255,.42)}
+body.ar-body .cube-item .cube-face.front{transform:translateZ(36px)}
+body.ar-body .cube-item .cube-face.back{transform:rotateY(180deg) translateZ(36px)}
+body.ar-body .cube-item .cube-face.right{transform:rotateY(90deg) translateZ(36px)}
+body.ar-body .cube-item .cube-face.left{transform:rotateY(-90deg) translateZ(36px)}
+body.ar-body .cube-item .cube-face.top{transform:rotateX(90deg) translateZ(36px)}
+body.ar-body .cube-item .cube-face.bottom{transform:rotateX(-90deg) translateZ(36px)}
+body.ar-body .cube-item .cube-symbol{position:absolute;z-index:5;left:50%;top:46%;transform:translate(-50%,-50%);
+  width:42px;height:42px;display:grid;place-items:center;filter:drop-shadow(0 0 8px #60edff);pointer-events:none}
+body.ar-body .cube-item .cube-symbol svg{width:34px!important;height:34px!important}
+body.ar-body .cube-ground-ring{position:absolute;left:50%;bottom:4px;border:2px solid rgba(74,225,255,.68);border-radius:50%;
+  transform:translateX(-50%) rotateX(68deg);box-shadow:0 0 18px rgba(37,205,255,.52)}
+body.ar-body .cube-ground-ring.r1{width:118px;height:48px;animation:cubeRing 1.55s ease-out infinite}
+body.ar-body .cube-ground-ring.r2{width:84px;height:34px;bottom:11px;animation:cubeRing 1.55s .42s ease-out infinite}
+body.ar-body .target-wrap.item-mode .target-glow{width:190px;height:190px;background:radial-gradient(circle,rgba(39,221,255,.30),rgba(29,106,255,.08) 48%,transparent 70%)}
+body.ar-body .target-wrap.item-mode .target-label{margin-top:4px;border-color:rgba(86,225,255,.45);color:#e8fbff}
+@keyframes itemCubeSpin{0%{transform:rotateX(-14deg) rotateY(0deg)}100%{transform:rotateX(-14deg) rotateY(360deg)}}
+@keyframes cubeRing{0%{opacity:.9;transform:translateX(-50%) rotateX(68deg) scale(.72)}100%{opacity:0;transform:translateX(-50%) rotateX(68deg) scale(1.22)}}
+@media(max-width:420px){body.ar-body .ar-route-lane{width:76vw;height:44vh;bottom:calc(110px + var(--safe-b))}}
