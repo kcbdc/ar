@@ -18,10 +18,6 @@
   <div class="route-center-line"></div>
   <div class="route-chevron c1"></div><div class="route-chevron c2"></div><div class="route-chevron c3"></div>
   <div class="route-chevron c4"></div><div class="route-chevron c5"></div><div class="route-chevron c6"></div>
-  <div class="route-horizon">
-    <i class="route-horizon-ring r1"></i><i class="route-horizon-ring r2"></i><i class="route-horizon-ring r3"></i>
-    <b id="routeLaneDist">--m</b>
-  </div>
   <div class="route-glow"></div>
 </div>
 <div class="ar-step-guide" id="arStepGuide"><span>1 거리</span><span>2 방향</span><span>3 포착</span><span>4 유지</span></div>
@@ -62,7 +58,7 @@ let curLat=null,curLng=null,curHeading=null,curAccuracy=null,geoCourseHeading=nu
 let lastCollectPos=null,lastCollectAt=0;
 const POST_COLLECT_MOVE_M=10;
 let lastRangeBand='';const rangeChip=document.getElementById('rangeChip'),characterReaction=document.getElementById('characterReaction'),reactionImg=document.getElementById('reactionImg'),reactionText=document.getElementById('reactionText');
-const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),arNavGuide=document.getElementById('arNavGuide'),arNavArrow=document.getElementById('arNavArrow'),arNavText=document.getElementById('arNavText'),arNavDist=document.getElementById('arNavDist'),arNavHint=document.getElementById('arNavHint'),arRouteLane=document.getElementById('arRouteLane'),routeLaneDist=document.getElementById('routeLaneDist'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),scannerVmDistance=document.getElementById('scannerVmDistance'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
+const video=document.getElementById('cameraVideo'),privacyBadge=document.getElementById('arPrivacyBadge'),epTag=document.getElementById('epTag'),statusBanner=document.getElementById('statusBanner'),arNavGuide=document.getElementById('arNavGuide'),arNavArrow=document.getElementById('arNavArrow'),arNavText=document.getElementById('arNavText'),arNavDist=document.getElementById('arNavDist'),arNavHint=document.getElementById('arNavHint'),arRouteLane=document.getElementById('arRouteLane'),targetWrap=document.getElementById('targetWrap'),targetImg=document.getElementById('targetImg'),targetLabel=document.getElementById('targetLabel'),arrowLeft=document.getElementById('arrowLeft'),arrowRight=document.getElementById('arrowRight'),radarDist=document.getElementById('radarDist'),scannerVmDistance=document.getElementById('scannerVmDistance'),dwellRing=document.getElementById('dwellRing'),dwellFg=document.getElementById('dwellFg'),accuracyChip=document.getElementById('accuracyChip');
 // v42 핵심 버그 수정: 아래 두 변수(geoRetryButtonShown/geoRetryCount, lastToolMode)가
 // 원래 스크립트 하단에 let으로 선언되어 있었는데, 그보다 앞쪽 코드(acceptLocation,
 // 최상위 setToolMode() 호출)에서 먼저 참조되고 있었다. let/const는 선언문에
@@ -443,7 +439,6 @@ function updateNavigationGuideFromPosition(checkpoint,ep,distance,accuracy,fromL
   if(arRouteLane){arRouteLane.classList.add('show');arRouteLane.classList.remove('no-heading');}
   const routeDistanceText=fmtNum(Math.max(0,Math.round(distance)))+'m';
   arNavDist.textContent=routeDistanceText;
-  if(routeLaneDist)routeLaneDist.textContent=routeDistanceText;
   arNavText.textContent=ep.item+' 방향';
   if(heading===null){
     arNavGuide.classList.add('no-heading');arNavGuide.classList.remove('aligned');
