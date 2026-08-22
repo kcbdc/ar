@@ -1687,47 +1687,256 @@ body.app-body .ranking-list .rank-row.top3 .rank-medal svg{
 .social-like.liked{color:#ff6f91;border-color:rgba(255,111,145,.35);background:rgba(255,111,145,.10)}
 
 
-/* v76: AR 가상 유도선 + 입체 아이템 큐브 */
+
+/* v77: 프리미엄 AR 가상 유도선
+   첨부 시안처럼 '도로 위에 깔린' 느낌을 우선하고, 평면 목적지 핀은 제거했다. */
 body.ar-body .ar-route-lane{
   --route-turn:0deg;
-  position:fixed;z-index:9;left:50%;bottom:calc(118px + var(--safe-b));
-  width:min(72vw,330px);height:48vh;max-height:430px;min-height:250px;
-  transform:translateX(-50%) perspective(560px) rotateX(61deg) rotateZ(var(--route-turn)) scale(.94);
-  transform-origin:50% 100%;opacity:0;pointer-events:none;
+  position:fixed;
+  z-index:9;
+  left:50%;
+  bottom:calc(92px + var(--safe-b));
+  width:min(82vw,390px);
+  height:56vh;
+  max-height:520px;
+  min-height:320px;
+  transform:
+    translateX(-50%)
+    perspective(760px)
+    rotateX(66deg)
+    rotateZ(var(--route-turn))
+    scale(.96);
+  transform-origin:50% 100%;
+  opacity:0;
+  pointer-events:none;
   transition:opacity .22s ease,transform .28s ease-out;
-  filter:drop-shadow(0 0 14px rgba(41,202,255,.28));
+  filter:drop-shadow(0 0 18px rgba(50,207,255,.30));
 }
-body.ar-body .ar-route-lane.show{opacity:.94;transform:translateX(-50%) perspective(560px) rotateX(61deg) rotateZ(var(--route-turn)) scale(1)}
-body.ar-body .ar-route-lane.no-heading{opacity:.28}
-body.ar-body .ar-route-lane::before,body.ar-body .ar-route-lane::after{
-  content:"";position:absolute;bottom:0;width:2px;height:92%;border-radius:99px;
-  background:linear-gradient(to top,rgba(255,214,69,.92),rgba(55,218,255,.58) 45%,rgba(55,218,255,0));
-  box-shadow:0 0 10px rgba(49,207,255,.55)
+body.ar-body .ar-route-lane.show{
+  opacity:.96;
+  transform:
+    translateX(-50%)
+    perspective(760px)
+    rotateX(66deg)
+    rotateZ(var(--route-turn))
+    scale(1);
 }
-body.ar-body .ar-route-lane::before{left:25%;transform:skewX(9deg)}
-body.ar-body .ar-route-lane::after{right:25%;transform:skewX(-9deg)}
-body.ar-body .route-glow{position:absolute;left:50%;bottom:0;width:54%;height:88%;transform:translateX(-50%);
-  background:linear-gradient(to top,rgba(255,211,54,.16),rgba(42,213,255,.11) 48%,transparent 90%);
-  clip-path:polygon(18% 100%,82% 100%,60% 0,40% 0);filter:blur(4px)}
-body.ar-body .route-chevron{position:absolute;left:50%;width:64px;height:30px;margin-left:-32px;
-  border-top:7px solid #ffe34f;border-left:7px solid #ffe34f;transform:rotate(45deg);
-  border-radius:5px 0 0 0;filter:drop-shadow(0 0 8px rgba(255,214,42,.92));animation:routeFlow 1.55s ease-in-out infinite}
-body.ar-body .route-chevron.c1{bottom:4%;transform:translateX(-15px) rotate(45deg) scale(1.12);animation-delay:0s}
-body.ar-body .route-chevron.c2{bottom:19%;transform:translateX(-12px) rotate(45deg) scale(.96);animation-delay:.18s}
-body.ar-body .route-chevron.c3{bottom:34%;transform:translateX(-9px) rotate(45deg) scale(.80);animation-delay:.36s}
-body.ar-body .route-chevron.c4{bottom:49%;transform:translateX(-6px) rotate(45deg) scale(.66);border-color:#54e5ff;animation-delay:.54s}
-body.ar-body .route-chevron.c5{bottom:64%;transform:translateX(-3px) rotate(45deg) scale(.54);border-color:#54e5ff;animation-delay:.72s}
-body.ar-body .route-chevron.c6{bottom:78%;transform:rotate(45deg) scale(.44);border-color:#54e5ff;animation-delay:.90s}
-body.ar-body .route-destination{position:absolute;z-index:3;left:50%;top:-8px;transform:translateX(-50%) rotateX(-61deg);
-  display:flex;flex-direction:column;align-items:center;gap:3px}
-body.ar-body .route-pin-core{width:48px;height:48px;border-radius:50% 50% 50% 8px;transform:rotate(-45deg);
-  display:grid;place-items:center;background:linear-gradient(145deg,#1be4ff,#176cff);border:2px solid rgba(255,255,255,.75);
-  box-shadow:0 0 22px rgba(37,203,255,.88),inset 0 0 16px rgba(255,255,255,.22);font-size:26px;color:white}
-body.ar-body .route-pin-core::first-letter{transform:rotate(45deg)}
-body.ar-body .route-destination b{padding:5px 10px;border-radius:11px;background:rgba(3,20,47,.86);
-  border:1px solid rgba(88,220,255,.5);font-size:15px;color:#e8fbff;box-shadow:0 0 13px rgba(45,199,255,.25)}
-body.ar-body .ar-route-lane.aligned .route-chevron{border-color:#ffe654}
-@keyframes routeFlow{0%,100%{opacity:.42;filter:drop-shadow(0 0 5px rgba(255,214,42,.55))}50%{opacity:1;filter:drop-shadow(0 0 12px rgba(255,226,65,1))}}
+body.ar-body .ar-route-lane.no-heading{opacity:.22}
+
+/* 실제 도로처럼 보이는 중앙 가상 차선 */
+body.ar-body .route-road-bed{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:76%;
+  height:100%;
+  transform:translateX(-50%);
+  clip-path:polygon(37% 0,63% 0,94% 100%,6% 100%);
+  background:
+    linear-gradient(to top,
+      rgba(255,204,36,.24) 0%,
+      rgba(255,225,80,.14) 17%,
+      rgba(31,218,255,.13) 54%,
+      rgba(22,146,255,.05) 82%,
+      transparent 100%);
+  border-radius:28px;
+  box-shadow:
+    inset 0 -26px 50px rgba(255,211,48,.13),
+    inset 0 0 34px rgba(42,214,255,.11);
+}
+
+/* 양쪽 레일 */
+body.ar-body .route-edge{
+  position:absolute;
+  bottom:0;
+  width:3px;
+  height:96%;
+  border-radius:99px;
+  background:linear-gradient(to top,
+    #ffd83e 0%,
+    rgba(255,219,67,.94) 19%,
+    rgba(64,229,255,.82) 56%,
+    rgba(44,162,255,.24) 84%,
+    transparent 100%);
+  box-shadow:
+    0 0 8px rgba(255,219,67,.95),
+    0 0 20px rgba(44,213,255,.42);
+}
+body.ar-body .route-edge.left{
+  left:16%;
+  transform:skewX(13deg);
+  transform-origin:bottom;
+}
+body.ar-body .route-edge.right{
+  right:16%;
+  transform:skewX(-13deg);
+  transform-origin:bottom;
+}
+
+/* 중앙 가이드 라인 */
+body.ar-body .route-center-line{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:3px;
+  height:92%;
+  transform:translateX(-50%);
+  background:
+    repeating-linear-gradient(
+      to top,
+      rgba(255,239,132,.95) 0 18px,
+      transparent 18px 38px
+    );
+  opacity:.42;
+  filter:drop-shadow(0 0 5px rgba(255,225,84,.62));
+}
+
+/* 첨부 시안과 유사한 바닥 화살표 */
+body.ar-body .route-chevron{
+  position:absolute;
+  left:50%;
+  width:78px;
+  height:78px;
+  margin-left:-39px;
+  border:0;
+  transform-origin:center;
+  filter:
+    drop-shadow(0 0 7px rgba(255,214,58,.95))
+    drop-shadow(0 0 17px rgba(255,200,27,.56));
+  animation:routePulse 1.35s ease-in-out infinite;
+}
+body.ar-body .route-chevron::before,
+body.ar-body .route-chevron::after{
+  content:"";
+  position:absolute;
+  top:27px;
+  width:48px;
+  height:14px;
+  border-radius:9px;
+  background:linear-gradient(90deg,#ffe85a,#ffcc26);
+  box-shadow:0 0 9px rgba(255,220,47,.92);
+}
+body.ar-body .route-chevron::before{
+  left:4px;
+  transform:rotate(32deg);
+  transform-origin:right center;
+}
+body.ar-body .route-chevron::after{
+  right:4px;
+  transform:rotate(-32deg);
+  transform-origin:left center;
+}
+
+body.ar-body .route-chevron.c1{bottom:2%;transform:scale(1.16);animation-delay:0s}
+body.ar-body .route-chevron.c2{bottom:17%;transform:scale(.98);animation-delay:.14s}
+body.ar-body .route-chevron.c3{bottom:32%;transform:scale(.82);animation-delay:.28s}
+body.ar-body .route-chevron.c4{bottom:47%;transform:scale(.68);animation-delay:.42s}
+body.ar-body .route-chevron.c5{bottom:62%;transform:scale(.55);animation-delay:.56s}
+body.ar-body .route-chevron.c6{bottom:76%;transform:scale(.44);animation-delay:.70s}
+
+/* 멀어질수록 노랑 → 청록으로 자연스럽게 전환 */
+body.ar-body .route-chevron.c4::before,
+body.ar-body .route-chevron.c4::after,
+body.ar-body .route-chevron.c5::before,
+body.ar-body .route-chevron.c5::after,
+body.ar-body .route-chevron.c6::before,
+body.ar-body .route-chevron.c6::after{
+  background:linear-gradient(90deg,#59e8ff,#2dbaff);
+  box-shadow:0 0 9px rgba(66,221,255,.82);
+}
+
+/* 끝점은 2D 핀 대신 '홀로그램 링 + 거리'만 사용 */
+body.ar-body .route-horizon{
+  position:absolute;
+  z-index:4;
+  left:50%;
+  top:1%;
+  width:88px;
+  height:58px;
+  transform:translateX(-50%) rotateX(-66deg);
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+body.ar-body .route-horizon b{
+  position:relative;
+  z-index:4;
+  margin-top:-2px;
+  min-width:56px;
+  padding:6px 12px;
+  border-radius:14px;
+  text-align:center;
+  color:#eafcff;
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.02em;
+  background:linear-gradient(180deg,rgba(5,36,77,.92),rgba(5,19,44,.86));
+  border:1px solid rgba(85,222,255,.52);
+  box-shadow:
+    0 0 12px rgba(34,205,255,.34),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+body.ar-body .route-horizon-ring{
+  position:absolute;
+  left:50%;
+  bottom:1px;
+  border:2px solid rgba(59,226,255,.64);
+  border-radius:50%;
+  transform:translateX(-50%) rotateX(72deg);
+  box-shadow:0 0 13px rgba(37,204,255,.46);
+  animation:routeHorizonRing 1.8s ease-out infinite;
+}
+body.ar-body .route-horizon-ring.r1{width:80px;height:26px}
+body.ar-body .route-horizon-ring.r2{width:58px;height:19px;animation-delay:.35s}
+body.ar-body .route-horizon-ring.r3{width:38px;height:13px;animation-delay:.7s}
+
+body.ar-body .route-glow{
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:70%;
+  height:92%;
+  transform:translateX(-50%);
+  clip-path:polygon(34% 0,66% 0,96% 100%,4% 100%);
+  background:
+    radial-gradient(ellipse at 50% 82%,rgba(255,214,55,.23),transparent 48%),
+    linear-gradient(to top,rgba(255,214,55,.12),rgba(40,219,255,.08) 48%,transparent 90%);
+  filter:blur(7px);
+}
+
+/* 방향이 정확할수록 화살표가 더 선명해지는 피드백 */
+body.ar-body .ar-route-lane.aligned{
+  filter:
+    drop-shadow(0 0 17px rgba(255,218,55,.28))
+    drop-shadow(0 0 24px rgba(49,214,255,.22));
+}
+body.ar-body .ar-route-lane.aligned .route-road-bed{
+  background:
+    linear-gradient(to top,
+      rgba(255,210,44,.30),
+      rgba(255,225,80,.17) 19%,
+      rgba(36,221,255,.15) 56%,
+      transparent 100%);
+}
+
+@keyframes routePulse{
+  0%,100%{opacity:.48;filter:drop-shadow(0 0 5px rgba(255,213,49,.62))}
+  50%{opacity:1;filter:drop-shadow(0 0 13px rgba(255,223,64,1))}
+}
+@keyframes routeHorizonRing{
+  0%{opacity:.85;transform:translateX(-50%) rotateX(72deg) scale(.66)}
+  100%{opacity:0;transform:translateX(-50%) rotateX(72deg) scale(1.22)}
+}
+@media(max-width:420px){
+  body.ar-body .ar-route-lane{
+    width:86vw;
+    height:52vh;
+    bottom:calc(86px + var(--safe-b));
+  }
+  body.ar-body .route-chevron{width:68px;height:68px;margin-left:-34px}
+  body.ar-body .route-chevron::before,
+  body.ar-body .route-chevron::after{width:42px;height:13px}
+}
 
 /* 발견 아이템: 첨부 시안처럼 바닥에 떠 있는 반투명 입체 스퀘어 */
 body.ar-body .spark-item.cube-item{position:relative;width:132px;height:132px;display:grid;place-items:center;overflow:visible}
