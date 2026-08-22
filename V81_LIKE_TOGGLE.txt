@@ -1,0 +1,23 @@
+조팸스 GO v81 - 소셜 좋아요 / 좋아요 취소
+
+개선사항
+- 빈 하트(♡) 클릭: 좋아요 추가
+- 채운 하트(♥) 클릭: 좋아요 취소
+- 좋아요 상태에서는 버튼에 '좋아요 취소' 문구 표시
+- 취소 후 하트 수 즉시 1 감소
+- 다시 좋아요하면 즉시 1 증가
+- 서버가 liked=true/false와 실제 likes 수를 반환하여 UI와 D1 상태 일치
+- 사진 모달을 닫았다 다시 열어도 서버 저장 상태 유지
+- photo_id가 존재하지 않으면 404 처리
+- 중복 좋아요는 DB PRIMARY KEY로 차단
+
+수정 파일
+- assets/social-map.js
+- server/worker.js
+- assets/style.css
+- checkpoints.html
+- sw.js
+
+배포
+Pages: assets/social-map.js / assets/style.css / checkpoints.html / sw.js
+Worker: server/worker.js
