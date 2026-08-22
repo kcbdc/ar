@@ -1891,3 +1891,60 @@ body.ar-body .target-wrap.item-mode .target-label{margin-top:4px;border-color:rg
   background:rgba(255,111,145,.11)!important;
 }
 .social-like.liked .social-like-label{color:#ffc1cf;opacity:.92}
+
+/* v83: 소셜 지도 외부 마커 = 좋아요 총합 배지 */
+.social-photo-marker .social-marker-like{
+  position:absolute;
+  right:-10px;
+  top:-11px;
+  min-width:28px;
+  height:28px;
+  padding:0 7px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  box-sizing:border-box;
+  background:linear-gradient(145deg,#ff4f8b,#ff3f73);
+  border:2px solid rgba(255,255,255,.94);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+  box-shadow:0 4px 12px rgba(255,55,113,.38);
+}
+.social-photo-marker .social-marker-like span{
+  font-size:11px;
+  line-height:1;
+}
+
+/* v84: 본인 탐험사진 삭제 */
+.social-card-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:2px;
+}
+.social-card-actions .social-like{margin-top:7px}
+.social-photo-delete{
+  margin-top:7px;
+  min-height:34px;
+  padding:6px 11px;
+  border:1px solid rgba(255,115,126,.28);
+  border-radius:999px;
+  background:rgba(255,79,91,.07);
+  color:#ff9aa4;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,transform .12s ease;
+}
+.social-photo-delete:active{transform:scale(.97)}
+.social-photo-delete:hover{
+  background:rgba(255,79,91,.12);
+  border-color:rgba(255,115,126,.44);
+}
+.social-photo-delete:disabled{opacity:.55;cursor:wait}

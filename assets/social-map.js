@@ -11,6 +11,26 @@ function clearSocial(){socialOverlays.forEach(x=>x.setMap(null));socialOverlays=
 function setGameMarkers(on){markers.forEach(m=>m.setMap(on?map:null))}
 function group(items){const m=new Map();items.forEach(x=>{const key=x.checkpoint_id!==null&&x.checkpoint_id!==undefined?'cp:'+x.checkpoint_id:'geo:'+Number(x.latitude).toFixed(4)+','+Number(x.longitude).toFixed(4);if(!m.has(key))m.set(key,[]);m.get(key).push(x)});return [...m.values()]}
 
+function groupLikeCount(items){
+ return items.reduce((sum,x)=>sum+Math.max(0,Number(x.likes||0)),0);
+}
+function renderSocialMarkers(){
+ if(!map||!window.kakao)return;
+ clearSocial();
+ group(socialItems).forEach(g=>{
+   const a=g[0],cp=a.checkpoint_id!==null&&a.checkpoint_id!==undefined&&Number.isInteger(Number(a.checkpoint_id))?CHECKPOINTS[Number(a.checkpoint_id)]:null;
+   const lat=cp?cp.lat:Number(a.latitude),lng=cp?cp.lng:Number(a.longitude);
+   const likes=groupLikeCount(g);
+   const el=document.createElement('button');el.type='button';el.className='social-photo-marker';
+   // 지도 밖 배지는 사진 개수가 아니라 해당 위치의 실제 좋아요 총합을 표시.
+   el.innerHTML='<img alt="탐험 사진"><b class="social-marker-like" aria-label="좋아요 '+likes+'개"><span>♥</span>'+likes+'</b>';
+   el.querySelector('img').src=a.thumbnailUrl||a.imageUrl;
+   el.onclick=()=>openGallery(g);
+   const ov=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(lat,lng),content:el,yAnchor:.5,xAnchor:.5});
+   ov.setMap(map);socialOverlays.push(ov);
+ });
+}
+
 function setProgress(pct,text,detail){
  const box=$('socialUploadProgress'),bar=$('socialProgressBar'),num=$('socialProgressPct'),title=$('socialProgressText'),sub=$('socialProgressDetail');
  box.hidden=false;
@@ -29,16 +49,7 @@ async function loadSocial(){
   const j=await r.json();
   if(!r.ok)throw Error(j.error||'load_failed');
   socialItems=j.items||[];
-  group(socialItems).forEach(g=>{
-   const a=g[0],cp=a.checkpoint_id!==null&&a.checkpoint_id!==undefined&&Number.isInteger(Number(a.checkpoint_id))?CHECKPOINTS[Number(a.checkpoint_id)]:null;
-   const lat=cp?cp.lat:Number(a.latitude),lng=cp?cp.lng:Number(a.longitude);
-   const el=document.createElement('button');el.type='button';el.className='social-photo-marker';
-   el.innerHTML='<img alt="탐험 사진"><b>'+g.length+'</b>';
-   el.querySelector('img').src=a.thumbnailUrl||a.imageUrl;
-   el.onclick=()=>openGallery(g);
-   const ov=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(lat,lng),content:el,yAnchor:.5,xAnchor:.5});
-   ov.setMap(map);socialOverlays.push(ov);
-  });
+  renderSocialMarkers();
   if(!socialItems.length&&window.showToast)showToast('아직 등록된 탐험 사진이 없습니다. 첫 기록을 남겨보세요!');
  }catch(e){console.error('[social load]',e);if(window.showToast)showToast('소셜 사진을 불러오지 못했습니다',{variant:'error'})}
 }
@@ -50,8 +61,61 @@ function switchMode(social){
 function openGallery(items){
  const cp=items[0]&&items[0].checkpoint_id!==null&&items[0].checkpoint_id!==undefined&&Number.isInteger(Number(items[0].checkpoint_id))?CHECKPOINTS[Number(items[0].checkpoint_id)]:null;
  $('socialGalleryTitle').textContent=cp?'이 탐험 포인트의 기록 '+items.length+'개':'이 위치의 탐험 기록 '+items.length+'개';
- $('socialGallery').innerHTML=items.map(x=>'<article class="social-card"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small><button type="button" class="social-like '+(x.likedByMe?'liked':'')+'" data-photo-id="'+esc(x.id)+'" data-liked="'+(x.likedByMe?'1':'0')+'" aria-pressed="'+(x.likedByMe?'true':'false')+'"><span class="social-like-heart">'+(x.likedByMe?'♥':'♡')+'</span><span class="social-like-count">'+Number(x.likes||0)+'</span><span class="social-like-label">'+(x.likedByMe?'좋아요 취소':'좋아요')+'</span></button></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
+ $('socialGallery').innerHTML=items.map(x=>'<article class="social-card" data-photo-card="'+esc(x.id)+'"><img src="'+esc(x.imageUrl)+'" alt="탐험 기록 사진" loading="lazy"><div><b>'+esc(x.nickname||'원정대원')+'</b><small>'+esc(x.caption||'탐험 기록')+'</small><div class="social-card-actions"><button type="button" class="social-like '+(x.likedByMe?'liked':'')+'" data-photo-id="'+esc(x.id)+'" data-liked="'+(x.likedByMe?'1':'0')+'" aria-pressed="'+(x.likedByMe?'true':'false')+'"><span class="social-like-heart">'+(x.likedByMe?'♥':'♡')+'</span><span class="social-like-count">'+Number(x.likes||0)+'</span><span class="social-like-label">'+(x.likedByMe?'좋아요 취소':'좋아요')+'</span></button>'+(x.isMine?'<button type="button" class="social-photo-delete" data-photo-id="'+esc(x.id)+'" aria-label="내 탐험 사진 삭제">삭제</button>':'')+'</div></div></article>').join('')||'<div class="social-empty">사진이 없습니다.</div>';
  $('socialGalleryModal').classList.add('show');
+}
+
+async function deleteOwnSocialPhoto(btn){
+ if(!btn||btn.disabled)return;
+ const id=String(btn.dataset.photoId||'');
+ if(!id)return;
+
+ const item=socialItems.find(x=>String(x.id)===id);
+ if(!item||!item.isMine){
+   if(window.showToast)showToast('본인이 올린 사진만 삭제할 수 있습니다',{variant:'error'});
+   return;
+ }
+
+ const ok=window.confirm('이 탐험 사진을 삭제할까요?\n삭제하면 사진과 해당 사진의 좋아요 기록도 함께 삭제됩니다.');
+ if(!ok)return;
+
+ btn.disabled=true;
+ btn.textContent='삭제 중…';
+
+ try{
+   const r=await fetch(api()+'/api/social/photos/'+encodeURIComponent(id)+'/delete',{
+     method:'POST',
+     headers:headers(),
+     cache:'no-store'
+   });
+   const j=await r.json().catch(()=>({}));
+   if(!r.ok||!j.ok)throw Error(j.error||'photo_delete_failed');
+
+   // 메모리에서 제거한 뒤 지도 마커를 즉시 다시 그림.
+   socialItems=socialItems.filter(x=>String(x.id)!==id);
+   renderSocialMarkers();
+
+   const card=document.querySelector('[data-photo-card="'+CSS.escape(id)+'"]');
+   if(card)card.remove();
+
+   const remain=$('socialGallery').querySelectorAll('.social-card').length;
+   if(remain===0){
+     $('socialGalleryModal').classList.remove('show');
+   }else{
+     $('socialGalleryTitle').textContent='이 위치의 탐험 기록 '+remain+'개';
+   }
+
+   if(window.showToast)showToast('탐험 사진을 삭제했습니다',{duration:1800});
+ }catch(e){
+   console.error('[social photo delete]',e);
+   const code=String(e&&e.message||'');
+   let msg='사진 삭제에 실패했습니다';
+   if(code==='not_photo_owner')msg='본인이 올린 사진만 삭제할 수 있습니다';
+   else if(code==='photo_not_found')msg='이미 삭제된 사진입니다';
+   if(window.showToast)showToast(msg,{variant:'error'});
+   btn.disabled=false;
+   btn.textContent='삭제';
+ }
 }
 
 async function toggleSocialLike(btn){
@@ -95,6 +159,9 @@ async function toggleSocialLike(btn){
     item.likedByMe=nowLiked;
   }
 
+  // 모달 내부 숫자뿐 아니라 지도 위 외부 배지도 즉시 갱신.
+  renderSocialMarkers();
+
   // 요청한 상태와 서버 최종 상태가 다르면 자동으로 목록을 다시 읽어 동기화.
   if(nowLiked!==nextLiked){
     console.warn('[social like] server state mismatch',{wanted:nextLiked,actual:nowLiked});
@@ -109,7 +176,12 @@ async function toggleSocialLike(btn){
   btn.disabled=false;
  }
 }
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.social-like');if(b)toggleSocialLike(b)});
+document.addEventListener('click',e=>{
+ const like=e.target.closest&&e.target.closest('.social-like');
+ if(like){toggleSocialLike(like);return}
+ const del=e.target.closest&&e.target.closest('.social-photo-delete');
+ if(del){deleteOwnSocialPhoto(del);return}
+});
 function closeAll(){
  if(uploading)return;
  // 작성/갤러리 팝업의 X 버튼은 모든 소셜 모달을 닫아야 한다.
@@ -287,6 +359,8 @@ async function captureFrame(){
 $('mapTabBtn').onclick=()=>switchMode(false);
 $('socialTabBtn').onclick=()=>switchMode(true);
 $('socialRefresh').onclick=loadSocial;
+window.addEventListener('focus',()=>{if(socialMode)loadSocial()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&socialMode)loadSocial()});
 $('socialUploadOpen').onclick=openUpload;
 $('socialPreview').onclick=startCamera;
 $('socialPreview').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();startCamera()}});
