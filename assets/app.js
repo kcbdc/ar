@@ -63,26 +63,43 @@ const CHECKPOINT_COOLDOWN_MS=3*24*60*60*1000;
 const CAPTURE_FAIL_LOCK_MS=30*60*1000;
 // 동일 건물/광장에 체크포인트가 여러 개 촘촘히 배치된 경우에도 연속 획득되지 않도록
 // '체크포인트 번호'뿐 아니라 실제 획득 좌표 주변 12m를 72시간 잠근다.
-const CHECKPOINT_COOLDOWN_RADIUS_M=12;
+const CHECKPOINT_COOLDOWN_RADIUS_MIN_M=5,CHECKPOINT_COOLDOWN_RADIUS_MAX_M=12;
+function adaptiveCooldownRadius(accuracy){
+  const a=Math.max(1,Number(accuracy||5));
+  // GPS가 좋을 때는 5m까지 촘촘하게, 오차가 커질수록 12m까지 보수적으로 확장
+  if(a<=5)return 5;
+  if(a<=8)return 6;
+  if(a<=12)return 7;
+  if(a<=18)return 8;
+  if(a<=25)return 10;
+  return 12;
+}
 
-let _cooldownCache={at:0,cp:{},spatial:[]};
-function invalidateCooldownCache(){_cooldownCache={at:0,cp:{},spatial:[]}}
+let _cooldownCache={at:0,cp:{},spatial:[],failCp:{},failSpatial:[]};
+function invalidateCooldownCache(){_cooldownCache={at:0,cp:{},spatial:[],failCp:{},failSpatial:[]}}
 function getCPCooldowns(){try{return window.JopamsState?JopamsState.get('cpCooldowns',{}):{}}catch(e){return{}}}
 function getSpatialCooldowns(){try{const a=window.JopamsState?JopamsState.get('cpSpatialCooldowns',[]):[];return Array.isArray(a)?a:[]}catch(e){return[]}}
+function getCPFailCooldowns(){try{return window.JopamsState?JopamsState.get('cpFailCooldowns',{}):{}}catch(e){return{}}}
+function getFailSpatialCooldowns(){try{const a=window.JopamsState?JopamsState.get('cpFailSpatialCooldowns',[]):[];return Array.isArray(a)?a:[]}catch(e){return[]}}
+
 function cooldownSnapshot(force=false){
   const now=Date.now();
-  if(!force&&_cooldownCache.at&&now-_cooldownCache.at<900)return _cooldownCache;
-  const cp=getCPCooldowns();
-  const raw=getSpatialCooldowns();
-  const spatial=raw.filter(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);
-  if(spatial.length!==raw.length){
-    try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',spatial)}catch(e){}
-  }
-  _cooldownCache={at:now,cp:cp&&typeof cp==='object'?cp:{},spatial};
+  if(!force&&_cooldownCache.at&&now-_cooldownCache.at<700)return _cooldownCache;
+  const cp=getCPCooldowns(),failCp=getCPFailCooldowns();
+  const raw=getSpatialCooldowns(),rawFail=getFailSpatialCooldowns();
+  const spatial=raw.filter(x=>x&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);
+  const failSpatial=rawFail.filter(x=>x&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Number(x.until||0)>now);
+  if(spatial.length!==raw.length){try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',spatial)}catch(e){}}
+  if(failSpatial.length!==rawFail.length){try{if(window.JopamsState)JopamsState.set('cpFailSpatialCooldowns',failSpatial)}catch(e){}}
+  // 만료된 실패 체크포인트도 정리
+  const cleanFailCp={};for(const [k,v] of Object.entries(failCp||{}))if(Number(v||0)>now)cleanFailCp[k]=Number(v);
+  if(Object.keys(cleanFailCp).length!==Object.keys(failCp||{}).length){try{if(window.JopamsState)JopamsState.set('cpFailCooldowns',cleanFailCp)}catch(e){}}
+  _cooldownCache={at:now,cp:cp&&typeof cp==='object'?cp:{},spatial,failCp:cleanFailCp,failSpatial};
   return _cooldownCache;
 }
 function pruneSpatialCooldowns(){return cooldownSnapshot(true).spatial}
-function setCPCooldown(idx){
+
+function setCPCooldown(idx,accuracy=5){
   try{
     const m=getCPCooldowns(),now=Date.now();
     m[idx]=Math.max(Number(m[idx]||0),now);
@@ -90,58 +107,96 @@ function setCPCooldown(idx){
     const cp=CHECKPOINTS[idx];
     if(cp){
       const a=cooldownSnapshot(true).spatial.slice();
-      a.push({idx,lat:cp.lat,lng:cp.lng,at:now});
-      if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-120));
+      a.push({idx,lat:cp.lat,lng:cp.lng,at:now,radius:adaptiveCooldownRadius(accuracy),accuracy:Number(accuracy||5)});
+      if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-160));
     }
     invalidateCooldownCache();
   }catch(e){}
   scheduleServerGameStatePush('setCPCooldown');
 }
-function setCPTemporaryCooldown(idx,durationMs=CAPTURE_FAIL_LOCK_MS){
+
+// 실패 잠금은 일반 72시간 획득 쿨다운과 분리.
+// 같은 체크포인트뿐 아니라 GPS 오차를 고려한 주변 지점도 30분 동안 제외한다.
+function setCPTemporaryCooldown(idx,durationMs=CAPTURE_FAIL_LOCK_MS,lat=null,lng=null,accuracy=5){
   try{
-    const now=Date.now(),m=getCPCooldowns();
-    // 72시간 TTL 중 durationMs만 남은 것처럼 역산한다.
-    const syntheticAt=now-(CHECKPOINT_COOLDOWN_MS-Math.max(60000,Math.min(CHECKPOINT_COOLDOWN_MS,durationMs)));
-    m[idx]=Math.max(Number(m[idx]||0),syntheticAt);
-    if(window.JopamsState)JopamsState.set('cpCooldowns',m);
+    const now=Date.now(),until=now+Math.max(60000,Math.min(CHECKPOINT_COOLDOWN_MS,durationMs));
+    const m=getCPFailCooldowns();m[idx]=Math.max(Number(m[idx]||0),until);
+    if(window.JopamsState)JopamsState.set('cpFailCooldowns',m);
+    const cp=CHECKPOINTS[idx],lockLat=Number.isFinite(Number(lat))?Number(lat):(cp?cp.lat:null),lockLng=Number.isFinite(Number(lng))?Number(lng):(cp?cp.lng:null);
+    if(Number.isFinite(lockLat)&&Number.isFinite(lockLng)){
+      const a=cooldownSnapshot(true).failSpatial.slice();
+      a.push({idx,lat:lockLat,lng:lockLng,until,radius:adaptiveCooldownRadius(accuracy),accuracy:Number(accuracy||5)});
+      if(window.JopamsState)JopamsState.set('cpFailSpatialCooldowns',a.slice(-100));
+    }
     invalidateCooldownCache();
   }catch(e){}
   scheduleServerGameStatePush('captureFailLock');
 }
-function isCPCoolingDown(idx,snap=null){
+
+function isCPCoolingDown(idx,snap=null,currentAccuracy=5){
   const s=snap||cooldownSnapshot(),now=Date.now(),t=Number(s.cp[idx]||0);
   if(t&&now-t<CHECKPOINT_COOLDOWN_MS)return true;
+  if(Number(s.failCp[idx]||0)>now)return true;
   const cp=CHECKPOINTS[idx];if(!cp)return false;
-  return s.spatial.some(x=>distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M);
-}
-function checkpointCooldownRemaining(idx,snap=null){
-  const s=snap||cooldownSnapshot(),now=Date.now(),cp=CHECKPOINTS[idx];
-  let latest=Number(s.cp[idx]||0);
-  if(cp)for(const x of s.spatial)if(distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)latest=Math.max(latest,Number(x.at||0));
-  return Math.max(0,CHECKPOINT_COOLDOWN_MS-(now-latest));
+  // 정상 획득 공간 쿨다운: 기록 당시 반경과 현재 GPS 기반 반경 중 더 큰 쪽을 적용
+  if(s.spatial.some(x=>{
+    const r=Math.max(Number(x.radius||5),adaptiveCooldownRadius(currentAccuracy));
+    return distMeters(cp.lat,cp.lng,Number(x.lat),Number(x.lng))<=r;
+  }))return true;
+  // 실패 신호 붕괴: 같은 장소의 다른 촘촘한 체크포인트까지 잠가 '바로 다시 등장' 방지
+  return s.failSpatial.some(x=>{
+    if(Number(x.until||0)<=now)return false;
+    const r=Math.max(Number(x.radius||5),adaptiveCooldownRadius(currentAccuracy));
+    return distMeters(cp.lat,cp.lng,Number(x.lat),Number(x.lng))<=r;
+  });
 }
 
-function nearestUncollectedCheckpoint(lat,lng){
+function checkpointCooldownRemaining(idx,snap=null,currentAccuracy=5){
+  const s=snap||cooldownSnapshot(),now=Date.now(),cp=CHECKPOINTS[idx];
+  let remain=0;
+  const t=Number(s.cp[idx]||0);if(t)remain=Math.max(remain,CHECKPOINT_COOLDOWN_MS-(now-t));
+  const failUntil=Number(s.failCp[idx]||0);if(failUntil>now)remain=Math.max(remain,failUntil-now);
+  if(cp){
+    for(const x of s.spatial){
+      const r=Math.max(Number(x.radius||5),adaptiveCooldownRadius(currentAccuracy));
+      if(distMeters(cp.lat,cp.lng,Number(x.lat),Number(x.lng))<=r)remain=Math.max(remain,CHECKPOINT_COOLDOWN_MS-(now-Number(x.at||0)));
+    }
+    for(const x of s.failSpatial){
+      const r=Math.max(Number(x.radius||5),adaptiveCooldownRadius(currentAccuracy));
+      if(Number(x.until||0)>now&&distMeters(cp.lat,cp.lng,Number(x.lat),Number(x.lng))<=r)remain=Math.max(remain,Number(x.until)-now);
+    }
+  }
+  return Math.max(0,remain);
+}
+
+function isCheckpointFailLocked(idx,snap=null,currentAccuracy=5){
+  const s=snap||cooldownSnapshot(),now=Date.now(),cp=CHECKPOINTS[idx];
+  if(Number(s.failCp[idx]||0)>now)return true;
+  if(!cp)return false;
+  return s.failSpatial.some(x=>Number(x.until||0)>now&&distMeters(cp.lat,cp.lng,Number(x.lat),Number(x.lng))<=Math.max(Number(x.radius||5),adaptiveCooldownRadius(currentAccuracy)));
+}
+
+function nearestUncollectedCheckpoint(lat,lng,accuracy=5){
   const done=new Set(getProgress()),snap=cooldownSnapshot();let best=null,bd=Infinity;
   for(const cp of CHECKPOINTS){
-    if(done.has(cp.episodeId)||isCPCoolingDown(cp.idx,snap))continue;
+    if(done.has(cp.episodeId)||isCPCoolingDown(cp.idx,snap,accuracy))continue;
     const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}
   }
   return best?{checkpoint:best,distance:bd,cooling:false}:null
 }
 // 실제 물리적으로 가장 가까운 체크포인트. 수집/쿨다운 상태와 무관하게 '거리 검증'에 사용한다.
-function nearestPhysicalCheckpoint(lat,lng){
+function nearestPhysicalCheckpoint(lat,lng,accuracy=5){
   let best=null,bd=Infinity;
   for(const cp of CHECKPOINTS){const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}}
   if(!best)return null;
   const snap=cooldownSnapshot();
-  return {checkpoint:best,distance:bd,cooling:isCPCoolingDown(best.idx,snap),cooldownRemaining:checkpointCooldownRemaining(best.idx,snap)}
+  return {checkpoint:best,distance:bd,cooling:isCPCoolingDown(best.idx,snap,accuracy),failLocked:isCheckpointFailLocked(best.idx,snap,accuracy),cooldownRemaining:checkpointCooldownRemaining(best.idx,snap,accuracy)}
 }
 // 재방문 보상을 받을 수 있는 가장 가까운 체크포인트.
-function nearestAnyCheckpoint(lat,lng){
+function nearestAnyCheckpoint(lat,lng,accuracy=5){
   const snap=cooldownSnapshot();let best=null,bd=Infinity;
   for(const cp of CHECKPOINTS){
-    if(isCPCoolingDown(cp.idx,snap))continue;
+    if(isCPCoolingDown(cp.idx,snap,accuracy))continue;
     const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}
   }
   return best?{checkpoint:best,distance:bd,cooling:false}:null
@@ -150,8 +205,8 @@ function nearestAnyCheckpoint(lat,lng){
 // 10km 이상 떨어진 '획득 가능 지점'이 가장 가까운 타깃처럼 보이는 문제를 방지한다.
 // 실제 근처 체크포인트가 500m 이내인데 획득 가능 타깃이 1km 밖이면,
 // 근처 체크포인트의 실제 거리를 보여주되 쿨다운 상태로 명확히 안내한다.
-function resolveRevisitTarget(lat,lng){
-  const physical=nearestPhysicalCheckpoint(lat,lng),eligible=nearestAnyCheckpoint(lat,lng);
+function resolveRevisitTarget(lat,lng,accuracy=5){
+  const physical=nearestPhysicalCheckpoint(lat,lng,accuracy),eligible=nearestAnyCheckpoint(lat,lng,accuracy);
   if(!physical)return eligible;
   if(!eligible)return physical;
   if(physical.cooling&&physical.distance<=500&&eligible.distance>1000)return physical;
@@ -159,6 +214,7 @@ function resolveRevisitTarget(lat,lng){
 }
 function formatCooldownRemaining(ms){
   ms=Math.max(0,Number(ms||0));
+  if(ms<3600000)return Math.max(1,Math.ceil(ms/60000))+'분';
   const h=Math.ceil(ms/3600000),d=Math.floor(h/24),rh=h%24;
   if(d>0)return d+'일 '+rh+'시간';
   return Math.max(1,h)+'시간';
