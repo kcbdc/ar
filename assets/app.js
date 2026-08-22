@@ -1,9 +1,10 @@
 // 조팸스 GO - 공통 데이터/로직
 const EPISODES=[
 {id:1,icon:'🏭',item:'중소기업제품',kicker:'중소기업제품 편',quote:'중소기업의 활력을 키우는 조달 판로'},{id:2,icon:'💡',item:'창업기업제품',kicker:'창업기업제품 편',quote:'혁신 기술로 도약하는 초기 창업기업'},{id:3,icon:'🔬',item:'기술개발제품',kicker:'기술개발제품 편',quote:'신기술(NET·NEP)이 시장에 안착하는 길'},{id:4,icon:'💪',item:'장애인기업제품',kicker:'장애인기업제품 편',quote:'장애인이 소유·경영하는 기업의 힘'},{id:5,icon:'✨',item:'중증장애인생산품',kicker:'중증장애인생산품 편',quote:'가장 취약한 일터를 지키는 구매'},{id:6,icon:'🏢',item:'장애인표준사업장',kicker:'장애인표준사업장 편',quote:'정당한 임금, 모범적인 일터'},{id:7,icon:'👩‍💼',item:'여성기업제품',kicker:'여성기업제품 편',quote:'사장님이 누구실까요 게임'},{id:8,icon:'🤝',item:'사회적기업제품',kicker:'사회적기업제품 편',quote:'이익보다 중요한 게 있다고?'},{id:9,icon:'🧩',item:'사회적협동조합',kicker:'사회적협동조합 편',quote:'영리보다 지역 상생을 택한 조직'},{id:10,icon:'🌱',item:'녹색제품(친환경)',kicker:'녹색제품 편',quote:'지구가 보내는 신호'},{id:11,icon:'🎖️',item:'보훈기업제품',kicker:'보훈기업제품 편',quote:'숭고한 헌신에 보답하는 구매'},{id:12,icon:'🧪',item:'시범구매제품',kicker:'시범구매제품 편',quote:'실적이 없어 사장되기 쉬운 국산 혁신'}];
-const RAW_COORDS=[[36.3773307,127.3705299],[36.3777765,127.3698604],[36.3775195,127.3696512],[36.3776728,127.3690397],[36.3780464,127.3693870],[36.3776755,127.3696418],[36.3778040,127.3700254],[36.3782651,127.3700388],[36.3782748,127.3706316],[36.3782737,127.3690880],[36.3782726,127.3683075],[36.3778223,127.3683155],[36.3774627,127.3685676],[36.3770211,127.3693428],[36.3764607,127.3698162],[36.3767663,127.3681733],[36.3761724,127.3692515],[36.3758139,127.3695077],[36.3757642,127.3690839],[36.3767436,127.3695023],[36.3768235,127.3705457],[36.377169,127.3708595],[36.3776322,127.3709561],[36.3782207,127.3709682],[36.3779832,127.3705538],[36.3778223,127.3701877],[36.3784961,127.3700522],[36.3785058,127.3690343],[36.3784021,127.3684335],[36.3786353,127.3684187],[36.3781527,127.3694902],[36.3780717,127.3697075],[36.3779443,127.3696472],[36.3779027,127.3696519],[36.3778903,127.3695808],[36.3779211,127.369607],[36.3779638,127.3695084],[36.3780162,127.3691128],[36.3771632,127.3695527],[36.3771178,127.3695473],[36.3771464,127.3695748],[36.41518,127.413683],[36.415303,127.413151],[36.415262,127.414032],[36.415901,127.413589],[36.415203,127.413366],[36.415063,127.41409],[36.415331,127.413711],[36.415415,127.413174],[36.41567,127.413851],[36.415543,127.413223],[36.415585,127.413428],[36.415782,127.41347],[36.415765,127.41383],[36.415445,127.41366],[36.415438,127.413809],[36.415438,127.413432],[36.415623,127.413849],[36.415886,127.413365],[36.415988,127.413301],[36.415926,127.413656],[36.415831,127.413502],[36.415814,127.413336],[36.415739,127.413154],[36.26553,126.961667],[36.265605,126.961662],[36.265474,126.961694],[36.265541,126.9618],[36.265644,126.961738],[36.265651,126.96166],[36.265603,126.961929],[36.265487,126.961878],[36.26542,126.961921],[36.265393,126.961776],[36.265398,126.961693],[36.265387,126.961646],[36.26561,126.961909],[36.265503,126.961803],[36.265491,126.961972],[36.265424,126.96198],[36.26538,126.961972],[36.265725,126.961794],[36.265707,126.961661],[36.265766,126.961572],[36.265747,126.961529],[36.265799,126.961569],[36.265741,126.961572],[36.265559,126.96161],[35.830516,128.767321],[35.830722,128.76694],[35.831005,128.766914],[35.830458,128.766665],[35.830732,128.766254],[35.831006,128.766597],[35.831312,128.766891],[35.830846,128.766826],[35.830571,128.766919],[35.830692,128.767615],[35.830548,128.767396],[35.830509,128.767548],[35.830401,128.76724],[35.830325,128.766997],[35.830251,128.766801],[35.830835,128.76746],[35.830359,128.767961],[35.83051,128.768108],[35.830628,128.768043],[35.830471,128.767765],[35.830085,128.767442],[35.830203,128.766983],[35.831066,128.767786],[35.830561,128.76712],[35.830555,128.766824],[37.547124,126.931878],[37.547115,126.931926],[37.547104,126.931977],[37.547086,126.93202],[37.547134,126.93204],[37.547177,126.932069],[37.547217,126.932086],[37.547241,126.932052],[37.54726,126.932004],[37.547273,126.93196],[37.547253,126.931935],[37.547198,126.931912],[37.547187,126.931966],[37.547149,126.931956],[37.547205,126.932005],[36.481405,127.299337],[36.481396,127.299409],[36.481484,127.299388],[36.481485,127.299325],[36.481413,127.299223],[36.48132,127.299266],[36.481281,127.299348],[35.82992,128.767456],[35.82992,128.767205],[35.830034,128.767844],[35.830232,128.767805],[35.830258,128.767545],[35.830166,128.767374],[35.830094,128.767217],[35.830208,128.767022],[35.829997,128.767153],[35.829869,128.767229],[35.830031,128.767409],[35.829925,128.767508],[35.829856,128.767411],[36.264696,126.963778],[36.264784,126.963783],[36.264856,126.963798],[36.264951,126.96381],[36.265094,126.964059],[36.265293,126.963627],[36.265283,126.964384],[36.26496,126.964614],[36.265332,126.963315],[36.265458,126.96318],[36.265447,126.963687],[36.265463,126.964005],[36.265113,126.96372],[36.265198,126.964187],[36.264856,126.964165],[36.265438,126.964759],[36.265211,126.964731],[36.265134,126.964568],[36.265076,126.964258],[36.264915,126.964622],[35.829741,128.767821],[35.829621,128.767624],[35.829549,128.767467],[35.829578,128.767833],[35.82948,128.767937],[35.829274,128.767706],[35.829398,128.767792],[35.829413,128.767409],[35.829633,128.768106],[35.829471,128.7681],[35.829196,128.768093],[35.828619,128.767379],[35.828425,128.767104],[35.828462,128.767297],[35.828608,128.767217],[35.828602,128.767535],[35.82893,128.76849],[35.829147,128.768415],[35.828785,128.767642],[35.829864,128.768621],[35.829721,128.768779],[35.82951,128.768374],[35.829369,128.767993],[35.829195,128.768376],[35.828943,128.768424],[35.829243,128.767858],[35.829267,128.767501],[35.829543,128.767547],[35.829053,128.767099],[35.830298,128.768581],[35.829603,128.767723],[36.379065,127.368835]];
+const RAW_COORDS=[[36.3773307,127.3705299],[36.3777765,127.3698604],[36.3775195,127.3696512],[36.3776728,127.3690397],[36.3780464,127.3693870],[36.3776755,127.3696418],[36.3778040,127.3700254],[36.3782651,127.3700388],[36.3782748,127.3706316],[36.3782737,127.3690880],[36.3782726,127.3683075],[36.3778223,127.3683155],[36.3774627,127.3685676],[36.3770211,127.3693428],[36.3764607,127.3698162],[36.3767663,127.3681733],[36.3761724,127.3692515],[36.3758139,127.3695077],[36.3757642,127.3690839],[36.3767436,127.3695023],[36.3768235,127.3705457],[36.377169,127.3708595],[36.3776322,127.3709561],[36.3782207,127.3709682],[36.3779832,127.3705538],[36.3778223,127.3701877],[36.3784961,127.3700522],[36.3785058,127.3690343],[36.3784021,127.3684335],[36.3786353,127.3684187],[36.3781527,127.3694902],[36.3780717,127.3697075],[36.3779443,127.3696472],[36.3779027,127.3696519],[36.3778903,127.3695808],[36.3779211,127.369607],[36.3779638,127.3695084],[36.3780162,127.3691128],[36.3771632,127.3695527],[36.3771178,127.3695473],[36.3771464,127.3695748],[36.41518,127.413683],[36.415303,127.413151],[36.415262,127.414032],[36.415901,127.413589],[36.415203,127.413366],[36.415063,127.41409],[36.415331,127.413711],[36.415415,127.413174],[36.41567,127.413851],[36.415543,127.413223],[36.415585,127.413428],[36.415782,127.41347],[36.415765,127.41383],[36.415445,127.41366],[36.415438,127.413809],[36.415438,127.413432],[36.415623,127.413849],[36.415886,127.413365],[36.415988,127.413301],[36.415926,127.413656],[36.415831,127.413502],[36.415814,127.413336],[36.415739,127.413154],[36.26553,126.961667],[36.265605,126.961662],[36.265474,126.961694],[36.265541,126.9618],[36.265644,126.961738],[36.265651,126.96166],[36.265603,126.961929],[36.265487,126.961878],[36.26542,126.961921],[36.265393,126.961776],[36.265398,126.961693],[36.265387,126.961646],[36.26561,126.961909],[36.265503,126.961803],[36.265491,126.961972],[36.265424,126.96198],[36.26538,126.961972],[36.265725,126.961794],[36.265707,126.961661],[36.265766,126.961572],[36.265747,126.961529],[36.265799,126.961569],[36.265741,126.961572],[36.265559,126.96161],[35.830516,128.767321],[35.830722,128.76694],[35.831005,128.766914],[35.830458,128.766665],[35.830732,128.766254],[35.831006,128.766597],[35.831312,128.766891],[35.830846,128.766826],[35.830571,128.766919],[35.830692,128.767615],[35.830548,128.767396],[35.830509,128.767548],[35.830401,128.76724],[35.830325,128.766997],[35.830251,128.766801],[35.830835,128.76746],[35.830359,128.767961],[35.83051,128.768108],[35.830628,128.768043],[35.830471,128.767765],[35.830085,128.767442],[35.830203,128.766983],[35.831066,128.767786],[35.830561,128.76712],[35.830555,128.766824],[37.547124,126.931878],[37.547115,126.931926],[37.547104,126.931977],[37.547086,126.93202],[37.547134,126.93204],[37.547177,126.932069],[37.547217,126.932086],[37.547241,126.932052],[37.54726,126.932004],[37.547273,126.93196],[37.547253,126.931935],[37.547198,126.931912],[37.547187,126.931966],[37.547149,126.931956],[37.547205,126.932005],[36.481405,127.299337],[36.481396,127.299409],[36.481484,127.299388],[36.481485,127.299325],[36.481413,127.299223],[36.48132,127.299266],[36.481281,127.299348],[35.82992,128.767456],[35.82992,128.767205],[35.830034,128.767844],[35.830232,128.767805],[35.830258,128.767545],[35.830166,128.767374],[35.830094,128.767217],[35.830208,128.767022],[35.829997,128.767153],[35.829869,128.767229],[35.830031,128.767409],[35.829925,128.767508],[35.829856,128.767411],[36.264696,126.963778],[36.264784,126.963783],[36.264856,126.963798],[36.264951,126.96381],[36.265094,126.964059],[36.265293,126.963627],[36.265283,126.964384],[36.26496,126.964614],[36.265332,126.963315],[36.265458,126.96318],[36.265447,126.963687],[36.265463,126.964005],[36.265113,126.96372],[36.265198,126.964187],[36.264856,126.964165],[36.265438,126.964759],[36.265211,126.964731],[36.265134,126.964568],[36.265076,126.964258],[36.264915,126.964622],[35.829741,128.767821],[35.829621,128.767624],[35.829549,128.767467],[35.829578,128.767833],[35.82948,128.767937],[35.829274,128.767706],[35.829398,128.767792],[35.829413,128.767409],[35.829633,128.768106],[35.829471,128.7681],[35.829196,128.768093],[35.828619,128.767379],[35.828425,128.767104],[35.828462,128.767297],[35.828608,128.767217],[35.828602,128.767535],[35.82893,128.76849],[35.829147,128.768415],[35.828785,128.767642],[35.829864,128.768621],[35.829721,128.768779],[35.82951,128.768374],[35.829369,128.767993],[35.829195,128.768376],[35.828943,128.768424],[35.829243,128.767858],[35.829267,128.767501],[35.829543,128.767547],[35.829053,128.767099],[35.830298,128.768581],[35.829603,128.767723],[36.379065,127.368835]
+/* 2026-08 추가 출현지점 */,[36.26450,126.96522],[36.26466,126.96381],[36.26368,126.96521],[36.26373,126.96394],[36.26411,126.96394],[36.26440,126.96396],[36.26442,126.96439],[36.26441,126.96486],[36.26408,126.96517],[36.37799,127.37053],[36.37630,127.36861],[36.37678,127.36809],[36.37637,127.36806],[36.37669,127.36913],[36.37717,127.36966],[36.37735,127.36979],[36.37731,127.36921],[36.37738,127.36885],[36.37722,127.36897],[36.37733,127.36941],[36.37753,127.36913],[36.37720,127.36933],[36.37726,127.36950],[36.37761,127.36872],[36.37754,127.36855],[36.37755,127.36814],[36.26407,126.96455],[36.26451,126.96321],[36.26459,126.96248],[36.26462,126.96173],[36.26465,126.96112],[36.26517,126.96227],[36.26545,126.96230],[36.26502,126.96152],[36.26504,126.96314],[36.26501,126.96498],[36.26549,126.96491],[35.83062,128.76747],[35.83088,128.76783],[35.83110,128.76748],[35.83043,128.76706],[35.83023,128.76667],[35.82897,128.76863],[35.82879,128.76774],[35.82838,128.76783],[35.82945,128.76803],[35.82937,128.76712],[35.83020,128.76815],[35.82803,128.76826],[35.82765,128.76923],[35.82794,128.77024],[35.82708,128.76950],[35.82842,128.76882],[35.82903,128.76656],[35.82751,128.76800],[35.82702,128.76863],[35.82861,128.76946],[35.82979,128.76885],[35.82982,128.76617],[35.83101,128.76857],[36.41516,127.41354],[36.41504,127.41397],[36.41517,127.41293],[36.41549,127.41292],[36.41583,127.41293],[36.41609,127.41299],[36.41607,127.41344],[36.41606,127.41379],[36.41605,127.41420],[36.41585,127.41376],[36.41584,127.41418],[36.41557,127.41420],[36.41530,127.41418],[36.41527,127.41374],[36.41527,127.41322],[36.41488,127.41380],[36.37881,127.36830],[36.37828,127.36824],[36.37677,127.37088],[36.37638,127.37046],[36.37578,127.36933],[36.37579,127.36807],[36.37591,127.36653]];
 const CHECKPOINTS=RAW_COORDS.map((c,i)=>({idx:i,lat:c[0],lng:c[1],episodeId:(i%12)+1}));
-const NOTIFY_RADIUS_M=55,COLLECT_RADIUS_M=22,FOV_HALF_DEG=45,DWELL_MS=2200,STORAGE_KEY='jopams_ar_progress_v3';
+const NOTIFY_RADIUS_M=55,COLLECT_RADIUS_M=22,FOV_HALF_DEG=45,DWELL_MS=2800,STORAGE_KEY='jopams_ar_progress_v3';
 function getProgress(){try{const a=window.JopamsState?JopamsState.get('progress',[]):JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function saveProgress(a){try{if(window.JopamsState)JopamsState.set('progress',a);else localStorage.setItem(STORAGE_KEY,JSON.stringify(a));if(typeof scheduleServerGameStatePush==='function')scheduleServerGameStatePush('progress')}catch(e){}}
 function markCollected(id){const a=getProgress();if(!a.includes(id)){a.push(id);saveProgress(a)}return a}
@@ -37,6 +38,7 @@ function applyServerGameState(s){
     if(s.cpCooldowns&&typeof s.cpCooldowns==='object')JopamsState.set('cpCooldowns',s.cpCooldowns);
     if(Array.isArray(s.spatialCooldowns))JopamsState.set('cpSpatialCooldowns',s.spatialCooldowns);
   }finally{JOPAMS_APPLYING_SERVER=false}
+  if(typeof invalidateCooldownCache==='function')invalidateCooldownCache();
   try{window.dispatchEvent(new CustomEvent('jopams:server-state',{detail:s}))}catch(_){}
 }
 async function pullServerGameState(){
@@ -55,21 +57,95 @@ function scheduleServerGameStatePush(reason='update'){if(JOPAMS_APPLYING_SERVER)
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pullServerGameState()});window.addEventListener('online',()=>pullServerGameState());setTimeout(()=>pullServerGameState(),250);
 
 const CHECKPOINT_COOLDOWN_MS=3*24*60*60*1000;
+// 미니게임 실패 시 같은 지점에서 즉시 재도전하지 못하도록 짧은 '신호 붕괴' 잠금.
+// 기존 72시간 획득 쿨다운과 같은 cpCooldowns 저장소를 쓰되 타임스탬프를 역산해
+// 서버/계정 동기화 형식을 바꾸지 않고 30분만 남도록 처리한다.
+const CAPTURE_FAIL_LOCK_MS=30*60*1000;
 // 동일 건물/광장에 체크포인트가 여러 개 촘촘히 배치된 경우에도 연속 획득되지 않도록
 // '체크포인트 번호'뿐 아니라 실제 획득 좌표 주변 12m를 72시간 잠근다.
 const CHECKPOINT_COOLDOWN_RADIUS_M=12;
+
+let _cooldownCache={at:0,cp:{},spatial:[]};
+function invalidateCooldownCache(){_cooldownCache={at:0,cp:{},spatial:[]}}
 function getCPCooldowns(){try{return window.JopamsState?JopamsState.get('cpCooldowns',{}):{}}catch(e){return{}}}
 function getSpatialCooldowns(){try{const a=window.JopamsState?JopamsState.get('cpSpatialCooldowns',[]):[];return Array.isArray(a)?a:[]}catch(e){return[]}}
-function pruneSpatialCooldowns(){const now=Date.now(),a=getSpatialCooldowns().filter(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a)}catch(e){}return a}
-function setCPCooldown(idx){try{const m=getCPCooldowns();m[idx]=Date.now();if(window.JopamsState)JopamsState.set('cpCooldowns',m);const cp=CHECKPOINTS.find(x=>x.idx===idx);if(cp){const a=pruneSpatialCooldowns();a.push({idx,lat:cp.lat,lng:cp.lng,at:Date.now()});if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-80));}}catch(e){};scheduleServerGameStatePush('setCPCooldown');}
-function isCPCoolingDown(idx){const m=getCPCooldowns(),t=Number(m[idx]||0);if(t&&Date.now()-t<CHECKPOINT_COOLDOWN_MS)return true;const cp=CHECKPOINTS.find(x=>x.idx===idx);if(!cp)return false;return pruneSpatialCooldowns().some(x=>distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)}
-function checkpointCooldownRemaining(idx){const now=Date.now(),m=getCPCooldowns(),cp=CHECKPOINTS.find(x=>x.idx===idx);let latest=Number(m[idx]||0);if(cp)for(const x of pruneSpatialCooldowns())if(distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)latest=Math.max(latest,Number(x.at||0));return Math.max(0,CHECKPOINT_COOLDOWN_MS-(now-latest))}
+function cooldownSnapshot(force=false){
+  const now=Date.now();
+  if(!force&&_cooldownCache.at&&now-_cooldownCache.at<900)return _cooldownCache;
+  const cp=getCPCooldowns();
+  const raw=getSpatialCooldowns();
+  const spatial=raw.filter(x=>x&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&now-Number(x.at||0)<CHECKPOINT_COOLDOWN_MS);
+  if(spatial.length!==raw.length){
+    try{if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',spatial)}catch(e){}
+  }
+  _cooldownCache={at:now,cp:cp&&typeof cp==='object'?cp:{},spatial};
+  return _cooldownCache;
+}
+function pruneSpatialCooldowns(){return cooldownSnapshot(true).spatial}
+function setCPCooldown(idx){
+  try{
+    const m=getCPCooldowns(),now=Date.now();
+    m[idx]=Math.max(Number(m[idx]||0),now);
+    if(window.JopamsState)JopamsState.set('cpCooldowns',m);
+    const cp=CHECKPOINTS[idx];
+    if(cp){
+      const a=cooldownSnapshot(true).spatial.slice();
+      a.push({idx,lat:cp.lat,lng:cp.lng,at:now});
+      if(window.JopamsState)JopamsState.set('cpSpatialCooldowns',a.slice(-120));
+    }
+    invalidateCooldownCache();
+  }catch(e){}
+  scheduleServerGameStatePush('setCPCooldown');
+}
+function setCPTemporaryCooldown(idx,durationMs=CAPTURE_FAIL_LOCK_MS){
+  try{
+    const now=Date.now(),m=getCPCooldowns();
+    // 72시간 TTL 중 durationMs만 남은 것처럼 역산한다.
+    const syntheticAt=now-(CHECKPOINT_COOLDOWN_MS-Math.max(60000,Math.min(CHECKPOINT_COOLDOWN_MS,durationMs)));
+    m[idx]=Math.max(Number(m[idx]||0),syntheticAt);
+    if(window.JopamsState)JopamsState.set('cpCooldowns',m);
+    invalidateCooldownCache();
+  }catch(e){}
+  scheduleServerGameStatePush('captureFailLock');
+}
+function isCPCoolingDown(idx,snap=null){
+  const s=snap||cooldownSnapshot(),now=Date.now(),t=Number(s.cp[idx]||0);
+  if(t&&now-t<CHECKPOINT_COOLDOWN_MS)return true;
+  const cp=CHECKPOINTS[idx];if(!cp)return false;
+  return s.spatial.some(x=>distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M);
+}
+function checkpointCooldownRemaining(idx,snap=null){
+  const s=snap||cooldownSnapshot(),now=Date.now(),cp=CHECKPOINTS[idx];
+  let latest=Number(s.cp[idx]||0);
+  if(cp)for(const x of s.spatial)if(distMeters(cp.lat,cp.lng,x.lat,x.lng)<=CHECKPOINT_COOLDOWN_RADIUS_M)latest=Math.max(latest,Number(x.at||0));
+  return Math.max(0,CHECKPOINT_COOLDOWN_MS-(now-latest));
+}
 
-function nearestUncollectedCheckpoint(lat,lng){const done=getProgress();let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(done.includes(cp.episodeId))return;if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:false}:null}
+function nearestUncollectedCheckpoint(lat,lng){
+  const done=new Set(getProgress()),snap=cooldownSnapshot();let best=null,bd=Infinity;
+  for(const cp of CHECKPOINTS){
+    if(done.has(cp.episodeId)||isCPCoolingDown(cp.idx,snap))continue;
+    const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}
+  }
+  return best?{checkpoint:best,distance:bd,cooling:false}:null
+}
 // 실제 물리적으로 가장 가까운 체크포인트. 수집/쿨다운 상태와 무관하게 '거리 검증'에 사용한다.
-function nearestPhysicalCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:isCPCoolingDown(best.idx),cooldownRemaining:checkpointCooldownRemaining(best.idx)}:null}
+function nearestPhysicalCheckpoint(lat,lng){
+  let best=null,bd=Infinity;
+  for(const cp of CHECKPOINTS){const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}}
+  if(!best)return null;
+  const snap=cooldownSnapshot();
+  return {checkpoint:best,distance:bd,cooling:isCPCoolingDown(best.idx,snap),cooldownRemaining:checkpointCooldownRemaining(best.idx,snap)}
+}
 // 재방문 보상을 받을 수 있는 가장 가까운 체크포인트.
-function nearestAnyCheckpoint(lat,lng){let best=null,bd=Infinity;CHECKPOINTS.forEach(cp=>{if(isCPCoolingDown(cp.idx))return;const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}});return best?{checkpoint:best,distance:bd,cooling:false}:null}
+function nearestAnyCheckpoint(lat,lng){
+  const snap=cooldownSnapshot();let best=null,bd=Infinity;
+  for(const cp of CHECKPOINTS){
+    if(isCPCoolingDown(cp.idx,snap))continue;
+    const d=distMeters(lat,lng,cp.lat,cp.lng);if(d<bd){bd=d;best=cp}
+  }
+  return best?{checkpoint:best,distance:bd,cooling:false}:null
+}
 // v50: 브라우저별 저장상태 차이 때문에 근처 지점들이 쿨다운이면,
 // 10km 이상 떨어진 '획득 가능 지점'이 가장 가까운 타깃처럼 보이는 문제를 방지한다.
 // 실제 근처 체크포인트가 500m 이내인데 획득 가능 타깃이 1km 밖이면,
