@@ -310,14 +310,10 @@ if(u.pathname==='/api/social/photos'&&req.method==='POST'){
   if(bytes.byteLength>900*1024||thumbBytes.byteLength>220*1024)return json({ok:false,error:'photo_too_large_after_compression'},413,h);
   const id='pic_'+randomToken(18),now=Date.now(),validCp=Number.isInteger(cp)&&cp>=0&&cp<12?cp:null;
   try{
+    // v86: 같은 사용자/같은 체크포인트에서도 사진을 누적 저장한다.
+    // 기존 대표사진 교체용 DELETE를 제거하여 업로드마다 독립 레코드로 INSERT.
     const insert=env.DB.prepare('INSERT INTO social_photos_v66(id,user_id,checkpoint_id,latitude,longitude,accuracy,caption,image_blob,thumb_blob,mime_type,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(id,su.id,validCp,lat,lng,Math.max(1,Math.min(999,accuracy||999)),caption,bytes,thumbBytes,type||'image/webp',now);
-    // 체크포인트별 1인 대표사진 교체는 batch로 묶어 INSERT 실패 시 기존 사진 삭제까지 롤백되게 한다.
-    if(validCp!==null){
-      const del=env.DB.prepare('DELETE FROM social_photos_v66 WHERE user_id=? AND checkpoint_id=?').bind(su.id,validCp);
-      await env.DB.batch([del,insert]);
-    }else{
-      await insert.run();
-    }
+    await insert.run();
   }catch(e){
     const detail=describeError(e);
     const missing=/no such table|social_photos_v66/i.test(detail);
