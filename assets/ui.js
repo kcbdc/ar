@@ -36,7 +36,10 @@
   moon:'<path d="M18 15a7 7 0 0 1-9-9 7 7 0 1 0 9 9z"/>',
   cloud:'<path d="M6 17h11a4 4 0 0 0 0-8 6 6 0 0 0-11-1A4.5 4.5 0 0 0 6 17z"/>',
   rain:'<path d="M6 14h11a4 4 0 0 0 0-8 6 6 0 0 0-11-1A4.5 4.5 0 0 0 6 14zM8 17l-1 3M13 17l-1 3M18 17l-1 3"/>',
-  lock:'<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'
+  lock:'<rect x="6" y="10" width="12" height="10" rx="2"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
+  ai:'<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="5"/><path d="m9.5 12 1.6 1.6 3.4-3.4"/>',
+  share:'<circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="m8 11 8-5M8 13l8 5"/>',
+  gift:'<rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 9v11M3 9h18v4H3zM12 9c-4 0-5-5-2-5 2 0 2 3 2 5zM12 9c4 0 5-5 2-5-2 0-2 3-2 5z"/>'
  };
  function icon(name,cls=''){const body=p[name]||p.spark;return `<svg class="ui-svg ${cls}" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`}
  const hrefMap={'index.html':'home','ar.html':'explore','checkpoints.html':'map','collection.html':'collection','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings','expedition.html':'growth'};
@@ -49,7 +52,7 @@
    document.querySelectorAll('.back-btn,.ar-exit').forEach(a=>{a.innerHTML=icon('back');a.setAttribute('aria-label','뒤로가기')});
    document.querySelectorAll('[data-ui-icon]').forEach(el=>el.innerHTML=icon(el.dataset.uiIcon));
    const quick={'collection.html':'collection','checkpoints.html':'map','ranking.html':'ranking','achievements.html':'spark','battle.html':'battle','profile.html':'settings','expedition.html':'growth'};
-   document.querySelectorAll('.quick-card').forEach(a=>{const q=a.querySelector('.qicon'),h=(a.getAttribute('href')||'').split('/').pop();if(q)q.innerHTML=icon(quick[h]||'spark')});
+   document.querySelectorAll('.quick-card').forEach(a=>{const q=a.querySelector('.qicon'),h=(a.getAttribute('href')||'').split('/').pop();if(q)q.innerHTML=icon(q.dataset.uiIcon||quick[h]||'spark')});
    formatNumericText();
  }
  window.uiIcon=icon;window.upgradeJopamsUI=upgrade;window.formatNumericText=formatNumericText;
