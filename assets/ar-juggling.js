@@ -36,9 +36,28 @@
     shell.className=`juggle-character-shell ${charId} fixed-juggle-pose`;
     shell.innerHTML=`
       <div class="fixed-pose-wrap" aria-hidden="true">
+        <span class="ar-platform"><i></i><b></b><em></em></span>
         <img class="fixed-pose-character" src="${char.pose}" alt="" draggable="false">
         <span class="fixed-pose-shadow"></span>
       </div>`;
+  }
+
+  function mountOrbitFX(stage){
+    let fx=stage.querySelector('.juggle-orbit-fx');
+    if(!fx){
+      fx=document.createElement('div');
+      fx.className='juggle-orbit-fx';
+      fx.setAttribute('aria-hidden','true');
+      fx.innerHTML=`
+        <span class="gold-orbit orbit-a"></span>
+        <span class="gold-orbit orbit-b"></span>
+        <span class="gold-orbit orbit-c"></span>
+        <span class="orbit-spark s1"></span><span class="orbit-spark s2"></span>
+        <span class="orbit-spark s3"></span><span class="orbit-spark s4"></span>
+        <span class="orbit-spark s5"></span><span class="orbit-spark s6"></span>`;
+      stage.appendChild(fx);
+    }
+    fx.className=`juggle-orbit-fx ${stage.classList.contains('daim')?'daim':stage.classList.contains('sunsik')?'sunsik':'hoonmin'}`;
   }
 
   function render(ep,charId){
@@ -56,6 +75,7 @@
     if(caption)caption.textContent=char.copy;
 
     mountFixedPose(charId);
+    mountOrbitFX(stage);
 
     const eps=companionEpisodes(ep);
     document.querySelectorAll('.juggle-ball').forEach((ball,index)=>{
