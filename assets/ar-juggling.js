@@ -99,46 +99,131 @@
     const left=rig?.querySelector('.rig-arm-left');
     const right=rig?.querySelector('.rig-arm-right');
     if(!rig||!left||!right)return;
-    shell.classList.add('is-kinetic');
+    shell.classList.add('is-kinetic','is-natural-motion');
     rigStartedAt=performance.now();
 
     const personality={
-      hoonmin:{lean:2.0,bob:1.5,speed:1.06,shoulderPulse:2.0,elbowPulse:4.0},
-      daim:{lean:3.8,bob:2.7,speed:1.18,shoulderPulse:4.0,elbowPulse:7.0},
-      sunsik:{lean:4.4,bob:2.2,speed:1.56,shoulderPulse:5.5,elbowPulse:9.5}
+      hoonmin:{lean:1.6,bob:1.35,speed:1.00,shoulderPulse:1.1,elbowPulse:2.4,travel:5.5,step:1.75,follow:.16},
+      daim:{lean:2.2,bob:1.65,speed:1.10,shoulderPulse:1.8,elbowPulse:3.2,travel:7.5,step:1.62,follow:.14},
+      sunsik:{lean:2.8,bob:1.5,speed:1.34,shoulderPulse:2.3,elbowPulse:4.2,travel:9.0,step:2.15,follow:.18}
     }[charId];
 
-    function chooseBall(side, balls, sr){
+    const state={
+      lastT:rigStartedAt,
+      bodyX:0,bodyY:0,bodyLean:0,bodyScale:1,
+      left:{shoulder:0,elbow:0,wrist:0,target:null,ball:null},
+      right:{shoulder:0,elbow:0,wrist:0,target:null,ball:null},
+      ballPrev:new WeakMap()
+    };
+
+    const smooth=(a,b,k,dt)=>a+(b-a)*(1-Math.pow(1-k,Math.max(1,dt/16.67)));
+    const angleSmooth=(a,b,k,dt)=>smooth(a,b,k,dt);
+
+    function ballPoints(balls){
+      return balls.map((b,i)=>{
+        const r=b.getBoundingClientRect();
+        const p={el:b,index:i,x:r.left+r.width/2,y:r.top+r.height/2,vx:0,vy:0};
+        const old=state.ballPrev.get(b);
+        if(old){const d=Math.max(8,performance.now()-old.t);p.vx=(p.x-old.x)*1000/d;p.vy=(p.y-old.y)*1000/d;}
+        state.ballPrev.set(b,{x:p.x,y:p.y,t:performance.now()});
+        return p;
+      });
+    }
+
+    function chooseBall(side,pts,sr,handState){
       const mid=sr.left+sr.width/2;
-      const pts=balls.map(b=>{const r=b.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};});
-      let same=pts.filter(p=>side==='left'?p.x<=mid:p.x>=mid);
-      if(!same.length)same=pts;
-      // hands should follow the lowest nearby item: catch/throw point.
-      same.sort((a,b)=>b.y-a.y);
-      return same[0]||{x:mid,y:sr.top+sr.height*.48};
+      const handX=sr.left+sr.width*(side==='left'?.28:.72);
+      const handY=sr.top+sr.height*.61;
+      let candidates=pts.filter(p=>side==='left'?p.x<=mid+sr.width*.08:p.x>=mid-sr.width*.08);
+      if(!candidates.length)candidates=pts;
+      candidates.forEach(p=>{
+        const sidePenalty=Math.abs(p.x-handX)*.34;
+        const catchBand=Math.abs(p.y-(sr.top+sr.height*.57))*.72;
+        const downward=p.vy>0?-Math.min(34,p.vy*.035):8;
+        const continuity=handState.ball===p.el?-42:0;
+        p._score=sidePenalty+catchBand+downward+continuity;
+      });
+      candidates.sort((a,b)=>a._score-b._score);
+      const best=candidates[0];
+      if(best)handState.ball=best.el;
+      return best||{x:handX,y:handY,vx:0,vy:0};
+    }
+
+    function solveArmNatural(root, target, side, sr, handState, t,dt){
+      const sx=sr.width*(side==='left'?.28:.72);
+      const sy=sr.height*.55;
+      let tx=target.x-sr.left, ty=target.y-sr.top;
+      // Anticipate descending objects so hands meet rather than chase.
+      tx += clamp(target.vx*.035,-12,12);
+      ty += clamp(target.vy*.018,-8,12);
+      tx=clamp(tx,sr.width*.14,sr.width*.86);
+      ty=clamp(ty,sr.height*.39,sr.height*.73);
+      if(!handState.target)handState.target={x:tx,y:ty};
+      handState.target.x=smooth(handState.target.x,tx,personality.follow,dt);
+      handState.target.y=smooth(handState.target.y,ty,personality.follow,dt);
+      tx=handState.target.x;ty=handState.target.y;
+
+      const dx=tx-sx,dy=ty-sy;
+      const L1=sr.height*.145,L2=sr.height*.135;
+      const d=clamp(Math.hypot(dx,dy),Math.abs(L1-L2)+1,L1+L2-1);
+      const a=Math.acos(clamp((L1*L1+d*d-L2*L2)/(2*L1*d),-1,1));
+      const base=Math.atan2(dy,dx);
+      const elbowBend=Math.acos(clamp((L1*L1+L2*L2-d*d)/(2*L1*L2),-1,1));
+      const mirror=side==='left'?1:-1;
+      const phase=(t-rigStartedAt)/1000;
+      let shoulder=deg(base-mirror*a)+90;
+      let elbow=mirror*(180-deg(elbowBend));
+      // tiny muscle rhythm; intentionally subtle to prevent marionette motion.
+      shoulder+=Math.sin(phase*personality.speed*Math.PI*2+(side==='right'?Math.PI:0))*personality.shoulderPulse;
+      elbow+=Math.sin(phase*personality.speed*Math.PI*2+1.05+(side==='right'?Math.PI:0))*personality.elbowPulse;
+      shoulder=clamp(shoulder,-52,52);elbow=clamp(elbow,-68,70);
+      const wrist=clamp(-elbow*.22+(target.vx*.018),-15,15);
+
+      handState.shoulder=angleSmooth(handState.shoulder,shoulder,.20,dt);
+      handState.elbow=angleSmooth(handState.elbow,elbow,.18,dt);
+      handState.wrist=angleSmooth(handState.wrist,wrist,.16,dt);
+      root.style.setProperty('--shoulder',`${handState.shoulder.toFixed(2)}deg`);
+      root.style.setProperty('--elbow',`${handState.elbow.toFixed(2)}deg`);
+      root.style.setProperty('--wrist',`${handState.wrist.toFixed(2)}deg`);
+      const near=d<(L1+L2)*.76&&ty>sr.height*.48&&target.vy>-80;
+      root.classList.toggle('near-catch',near);
+      return {x:tx,y:ty,near};
     }
 
     function tick(t){
       if(!running||!shell.isConnected){stopKineticRig();return;}
+      const dt=clamp(t-state.lastT,8,40);state.lastT=t;
       const balls=[...stage.querySelectorAll('.juggle-ball')];
       if(!balls.length){rigRaf=requestAnimationFrame(tick);return;}
       const sr=shell.getBoundingClientRect();
-      const lt=chooseBall('left',balls,sr), rt=chooseBall('right',balls,sr);
-      solveArm(left,lt.x,lt.y,'left',sr,personality,t);
-      solveArm(right,rt.x,rt.y,'right',sr,personality,t);
+      const pts=ballPoints(balls);
+      const lt=chooseBall('left',pts,sr,state.left),rt=chooseBall('right',pts,sr,state.right);
+      const lhand=solveArmNatural(left,lt,'left',sr,state.left,t,dt);
+      const rhand=solveArmNatural(right,rt,'right',sr,state.right,t,dt);
 
-      const br=balls.map(b=>b.getBoundingClientRect());
-      const avg=br.reduce((s,r)=>s+r.left+r.width/2,0)/br.length;
-      const offset=clamp((avg-(sr.left+sr.width/2))/(sr.width*.5),-1,1);
       const phase=(t-rigStartedAt)/1000;
-      shell.style.setProperty('--body-lean',`${(offset*personality.lean).toFixed(2)}deg`);
-      shell.style.setProperty('--body-bob',`${(Math.sin(phase*Math.PI*2*1.35)*personality.bob).toFixed(2)}px`);
-      shell.style.setProperty('--body-breathe',`${(1+Math.sin(phase*Math.PI*2*.70)*.006).toFixed(4)}`);
+      const handBias=((lhand.x+rhand.x)/2-sr.width*.5)/(sr.width*.5);
+      const ballBias=(pts.reduce((s,p)=>s+p.x,0)/pts.length-(sr.left+sr.width*.5))/(sr.width*.5);
+      const targetLean=clamp((handBias*.58+ballBias*.42)*personality.lean,-personality.lean,personality.lean);
+      const targetX=clamp(ballBias*personality.travel,-personality.travel,personality.travel);
+      const stepWave=Math.sin(phase*Math.PI*2*personality.step);
+      const stepLift=(1-Math.abs(stepWave))*personality.bob;
+      const targetY=-stepLift;
+      const targetScale=1+Math.sin(phase*Math.PI*2*.58)*.0035+(Math.abs(stepWave)>.78?-.002:0);
+
+      state.bodyLean=smooth(state.bodyLean,targetLean,.10,dt);
+      state.bodyX=smooth(state.bodyX,targetX,.075,dt);
+      state.bodyY=smooth(state.bodyY,targetY,.14,dt);
+      state.bodyScale=smooth(state.bodyScale,targetScale,.08,dt);
+      shell.style.setProperty('--body-lean',`${state.bodyLean.toFixed(2)}deg`);
+      shell.style.setProperty('--body-x',`${state.bodyX.toFixed(2)}px`);
+      shell.style.setProperty('--body-bob',`${state.bodyY.toFixed(2)}px`);
+      shell.style.setProperty('--body-breathe',state.bodyScale.toFixed(4));
+      shell.style.setProperty('--step-phase',`${((stepWave+1)/2).toFixed(3)}`);
       rigRaf=requestAnimationFrame(tick);
     }
     rigRaf=requestAnimationFrame(tick);
   }
-
   function chooseCharacter(){
     const ids=Object.keys(CHARACTERS).filter(id=>id!==lastCharacter);
     const id=ids[Math.floor(Math.random()*ids.length)]||'daim';

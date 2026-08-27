@@ -232,3 +232,46 @@
 @media (max-height:620px){.juggle-character-shell.true-sprite-rig{width:min(35vw,155px);height:48%}}
 @media (orientation:landscape) and (max-height:560px){.juggle-character-shell.true-sprite-rig{width:min(22vw,145px);height:55%}}
 @media (prefers-reduced-motion:reduce){.sprite-rig{transition:none!important}.rig-arm,.rig-fore-joint,.rig-hand{transition:none!important}}
+
+/* v5 · NATURAL AR PERFORMANCE -------------------------------------------
+   Softer joint tracking + whole-body weight transfer.  The character now
+   reacts to catches instead of snapping from ball to ball. */
+.juggle-character-shell.is-natural-motion{
+  transform:translate3d(var(--body-x,0px),0,0);
+  transition:none!important;
+  will-change:transform;
+}
+.juggle-character-shell.is-natural-motion .sprite-rig{
+  transform:translate3d(0,var(--body-bob,0px),0) rotate(var(--body-lean,0deg)) scale(var(--body-breathe,1));
+  transform-origin:50% 79%;
+  transition:none!important;
+}
+.juggle-character-shell.is-natural-motion::after{
+  content:"";position:absolute;left:50%;bottom:2.4%;width:58%;height:7.5%;
+  transform:translateX(-50%) scaleX(calc(.93 + var(--step-phase, .5) * .08));
+  border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.34),rgba(0,0,0,.10) 48%,transparent 74%);
+  filter:blur(4px);opacity:.72;z-index:0;pointer-events:none;
+}
+.juggle-character-shell.is-natural-motion .rig-body{z-index:2}
+.juggle-character-shell.is-natural-motion .rig-arm{z-index:3;transition:none!important}
+.juggle-character-shell.is-natural-motion .rig-fore-joint,
+.juggle-character-shell.is-natural-motion .rig-hand{transition:none!important}
+.juggle-character-shell.is-natural-motion .rig-arm.near-catch .rig-catch-glow{
+  animation:naturalCatchPulse .22s ease-out both;
+}
+@keyframes naturalCatchPulse{
+  0%{opacity:.12;transform:translate(-50%,-50%) scale(.62)}
+  48%{opacity:.88;transform:translate(-50%,-50%) scale(1.05)}
+  100%{opacity:.18;transform:translate(-50%,-50%) scale(.74)}
+}
+/* Micro parallax keeps a pasted-on sprite from feeling locked to the glass. */
+.juggle-stage.hoonmin .is-natural-motion{animation:arDriftH 5s cubic-bezier(.45,.05,.55,.95) both}
+.juggle-stage.daim .is-natural-motion{animation:arDriftD 5s cubic-bezier(.45,.05,.55,.95) both}
+.juggle-stage.sunsik .is-natural-motion{animation:arDriftS 5s cubic-bezier(.45,.05,.55,.95) both}
+@keyframes arDriftH{0%,100%{margin-left:0}28%{margin-left:-3px}68%{margin-left:4px}}
+@keyframes arDriftD{0%,100%{margin-left:0}32%{margin-left:5px}72%{margin-left:-4px}}
+@keyframes arDriftS{0%,100%{margin-left:0}24%{margin-left:-6px}52%{margin-left:5px}78%{margin-left:-3px}}
+@media (prefers-reduced-motion:reduce){
+  .juggle-character-shell.is-natural-motion{animation:none!important;transform:none!important}
+  .juggle-character-shell.is-natural-motion .sprite-rig{transform:none!important}
+}
