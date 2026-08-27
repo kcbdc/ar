@@ -418,3 +418,64 @@
 @media (prefers-reduced-motion:reduce){
   .juggle-stage.item-only-juggling .ar-platform,.juggle-stage.item-only-juggling .gold-orbit,.juggle-stage.item-only-juggling .orbit-spark,.juggle-stage.item-only-juggling .juggle-ball::before{animation:none!important}
 }
+
+/* v8 · CENTERED WIDER PLATFORM + SUBTLE CHARACTER SWAY -----------------
+   Keep the holographic ring locked to the AR floor while the fixed-pose
+   mascot shifts its weight a few pixels left/right.  The average position
+   remains exactly centered over the platform. */
+.juggle-stage.item-only-juggling .ar-platform{
+  width:132%!important;
+  aspect-ratio:2.48/1!important;
+  bottom:-2.2%!important;
+}
+
+/* Keep the visual footprint centered inside the wider ellipse. */
+.juggle-stage.item-only-juggling .fixed-pose-character{
+  transform-origin:50% 94%;
+  animation:fixedPoseCenterSway 3.25s ease-in-out infinite!important;
+  will-change:transform;
+}
+.juggle-stage.item-only-juggling.hoonmin .fixed-pose-character{
+  animation-duration:3.5s!important;
+}
+.juggle-stage.item-only-juggling.daim .fixed-pose-character{
+  animation-duration:3.15s!important;
+}
+.juggle-stage.item-only-juggling.sunsik .fixed-pose-character{
+  animation-duration:2.9s!important;
+}
+
+/* Shadow follows only part of the weight shift so the feet still feel
+   anchored to one point in the real-world scene. */
+.juggle-stage.item-only-juggling .fixed-pose-shadow{
+  width:64%!important;
+  animation:fixedPoseShadowSway 3.25s ease-in-out infinite;
+  will-change:transform,opacity;
+}
+.juggle-stage.item-only-juggling.hoonmin .fixed-pose-shadow{animation-duration:3.5s}
+.juggle-stage.item-only-juggling.daim .fixed-pose-shadow{animation-duration:3.15s}
+.juggle-stage.item-only-juggling.sunsik .fixed-pose-shadow{animation-duration:2.9s}
+
+@keyframes fixedPoseCenterSway{
+  0%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+  20%{transform:translate3d(-4px,-1px,0) rotate(-.45deg) scale(1.002)}
+  50%{transform:translate3d(0,-2px,0) rotate(0deg) scale(1.006)}
+  80%{transform:translate3d(4px,-1px,0) rotate(.45deg) scale(1.002)}
+}
+@keyframes fixedPoseShadowSway{
+  0%,100%{transform:translate(-50%,52%) scaleX(1);opacity:.72}
+  20%{transform:translate(calc(-50% - 1.5px),52%) scaleX(.985);opacity:.68}
+  50%{transform:translate(-50%,52%) scaleX(.97);opacity:.64}
+  80%{transform:translate(calc(-50% + 1.5px),52%) scaleX(.985);opacity:.68}
+}
+
+@media (max-height:680px){
+  .juggle-stage.item-only-juggling .ar-platform{width:124%!important}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .juggle-stage.item-only-juggling .ar-platform{width:116%!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .juggle-stage.item-only-juggling .fixed-pose-character,
+  .juggle-stage.item-only-juggling .fixed-pose-shadow{animation:none!important}
+}
