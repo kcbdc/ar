@@ -275,3 +275,68 @@
   .juggle-character-shell.is-natural-motion{animation:none!important;transform:none!important}
   .juggle-character-shell.is-natural-motion .sprite-rig{transform:none!important}
 }
+
+/* v6 · FIXED CHARACTER POSE / ITEM-ONLY JUGGLING -----------------------
+   Character is now a single, fixed pose sprite: both hands raised and eyes
+   looking upward. Only the procurement items move. This removes the puppet-
+   like arm/body motion and keeps the AR composition visually stable. */
+.juggle-stage.item-only-juggling .juggle-character-shell.fixed-juggle-pose{
+  width:min(39vw,168px)!important;
+  height:47%!important;
+  left:50%!important;
+  bottom:7%!important;
+  overflow:visible!important;
+  transform:translateX(-50%) translateY(12px) scale(.96)!important;
+  transform-origin:50% 100%;
+  opacity:0;
+  animation:fixedPoseIn .62s .06s cubic-bezier(.18,.88,.3,1.12) forwards!important;
+  z-index:5;
+}
+.fixed-pose-wrap{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;pointer-events:none}
+.fixed-pose-character{
+  display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;
+  user-select:none;-webkit-user-drag:none;pointer-events:none;
+  filter:drop-shadow(0 10px 12px rgba(0,0,0,.34));
+}
+.fixed-pose-shadow{position:absolute;left:50%;bottom:0;width:58%;height:6.5%;transform:translate(-50%,52%);border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.42),rgba(0,0,0,.12) 52%,transparent 75%);filter:blur(4px);z-index:-1}
+
+/* Pull the item orbit slightly upward so it sits naturally above the raised hands. */
+.juggle-stage.item-only-juggling .juggle-items{inset:18% 13% 29%!important;z-index:8}
+.juggle-stage.item-only-juggling .juggle-ball{width:54px;height:54px;margin:-27px;border-radius:17px}
+.juggle-stage.item-only-juggling .juggle-ball .juggle-icon{width:36px;height:36px}
+.juggle-stage.item-only-juggling .juggle-ball svg{width:33px!important;height:33px!important}
+.juggle-stage.item-only-juggling .juggle-ball .emoji-fallback{font-size:27px}
+
+/* Character remains still. A very small breathing scale is applied to the
+   whole sprite only; arms, hands, head and eyes do not move independently. */
+.juggle-stage.item-only-juggling .fixed-pose-character{animation:fixedPoseBreath 2.8s ease-in-out infinite}
+.juggle-stage.item-only-juggling.hoonmin .fixed-pose-character{animation-duration:3.1s}
+.juggle-stage.item-only-juggling.sunsik .fixed-pose-character{animation-duration:2.5s}
+
+.juggle-overlay.exit .fixed-juggle-pose{animation:fixedPoseOut .42s ease-in forwards!important}
+.juggle-overlay.exit .fixed-pose-character{animation-play-state:paused!important}
+
+@keyframes fixedPoseIn{
+  0%{opacity:0;transform:translateX(-50%) translateY(34px) scale(.88)}
+  68%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.01)}
+  100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+}
+@keyframes fixedPoseOut{
+  to{opacity:0;filter:blur(6px);transform:translateX(-50%) translateY(15px) scale(.94)}
+}
+@keyframes fixedPoseBreath{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.006)}
+}
+
+@media (max-height:680px){
+  .juggle-stage.item-only-juggling .juggle-character-shell.fixed-juggle-pose{width:min(34vw,145px)!important;height:45%!important;bottom:6%!important}
+  .juggle-stage.item-only-juggling .juggle-items{inset:19% 15% 28%!important}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .juggle-stage.item-only-juggling .juggle-character-shell.fixed-juggle-pose{width:min(20vw,130px)!important;height:51%!important;bottom:3%!important}
+  .juggle-stage.item-only-juggling .juggle-items{inset:15% 20% 24%!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .juggle-stage.item-only-juggling .fixed-pose-character{animation:none!important}
+}
