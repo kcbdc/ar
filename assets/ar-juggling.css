@@ -47,3 +47,130 @@
 @keyframes itemIconSpin{to{transform:rotate(1turn)}}@keyframes itemLeaf{to{transform:translateY(-4px) rotate(8deg)}}@keyframes itemMedal{to{transform:scale(1.12) rotate(-4deg)}}@keyframes juggleTrailPulse{50%{opacity:.35;transform:translate(-50%,-50%) scale(.95)}}@keyframes juggleBlink{to{opacity:.35;transform:scale(.75)}}
 @media (max-height:680px){.juggle-stage{height:94vh;min-height:500px;transform:none}.juggle-hud{top:1%}.juggle-progress{top:13%}.juggle-character-shell{height:70%;bottom:5%}.juggle-items{inset:18% 5% 20%}.juggle-ball{width:62px;height:62px;margin:-31px}.juggle-ball .juggle-icon{transform:scale(.88)}}
 @media (prefers-reduced-motion:reduce){.juggle-overlay::before,.juggle-trail,.juggle-caption i{animation:none}.juggle-character-shell{animation:juggleCharacterIn .2s forwards}.juggle-stage .juggle-ball{animation-duration:2.4s!important}}
+
+/* v2 · compact articulated-character pass
+   The source character art is a single raster, so an articulated foreground rig is
+   layered over it. This gives the AR discovery a real throw/catch gesture while keeping
+   the original Jofams illustration intact. */
+.juggle-stage{
+  width:min(90vw,460px);
+  height:min(72vh,660px);
+  min-height:500px;
+  transform:translateY(2vh);
+}
+.juggle-stage::after{bottom:8%;width:37%;height:5.5%;filter:blur(6px);opacity:.64}
+
+/* Character was previously ~350px wide. Cap at 180px: visually about one-half. */
+.juggle-character-shell{
+  bottom:9%;
+  width:min(43vw,180px);
+  height:51%;
+  transform:translateX(-50%) translateY(12px) scale(.96);
+}
+.juggle-character{
+  filter:drop-shadow(0 12px 18px rgba(0,0,0,.40));
+  -webkit-mask-image:radial-gradient(ellipse 52% 61% at 50% 53%,#000 65%,rgba(0,0,0,.96) 78%,rgba(0,0,0,.34) 91%,transparent 100%);
+  mask-image:radial-gradient(ellipse 52% 61% at 50% 53%,#000 65%,rgba(0,0,0,.96) 78%,rgba(0,0,0,.34) 91%,transparent 100%);
+}
+.juggle-items{z-index:8;inset:22% 13% 26%}
+.juggle-ball{
+  width:52px;height:52px;margin:-26px;border-radius:17px;
+  box-shadow:0 9px 22px rgba(2,8,23,.27),0 0 0 4px rgba(125,211,252,.07),inset 0 2px 3px rgba(255,255,255,.9)
+}
+.juggle-ball::after{inset:3px;border-radius:14px}
+.juggle-ball .juggle-icon{width:34px;height:34px}
+.juggle-ball svg{width:31px!important;height:31px!important}.juggle-ball .emoji-fallback{font-size:25px}
+.juggle-trail{z-index:6;top:49%;width:52%;height:35%;opacity:.46}
+
+/* Articulated arm rig ----------------------------------------------------- */
+.juggle-arm-rig{
+  --sleeve:#25282d;--hand:#f6f6f4;--outline:rgba(0,0,0,.32);
+  position:absolute;left:50%;bottom:12%;z-index:7;width:118%;height:58%;
+  transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 5px 5px rgba(0,0,0,.22));
+}
+.juggle-stage.hoonmin .juggle-arm-rig{--sleeve:#25272b;--hand:#f4f4f1}
+.juggle-stage.daim .juggle-arm-rig{--sleeve:#b96822;--hand:#ffd9aa}
+.juggle-stage.sunsik .juggle-arm-rig{--sleeve:#247b27;--hand:#dff1bd}
+.juggle-arm{position:absolute;top:29%;width:38px;height:92px;transform-origin:50% 10px;will-change:transform}
+.juggle-arm.arm-left{left:4%}.juggle-arm.arm-right{right:4%;transform:scaleX(-1)}
+.juggle-upper-arm{
+  position:absolute;left:5px;top:0;width:29px;height:55px;border:1px solid var(--outline);
+  border-radius:18px 18px 16px 16px;background:linear-gradient(110deg,rgba(255,255,255,.16),transparent 35%),var(--sleeve);
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.13)
+}
+.juggle-forearm{
+  position:absolute;left:8px;top:39px;width:25px;height:55px;transform-origin:50% 8px;
+  border:1px solid var(--outline);border-radius:15px;background:linear-gradient(105deg,rgba(255,255,255,.14),transparent 36%),var(--sleeve);
+  will-change:transform
+}
+.juggle-hand{
+  position:absolute;left:50%;bottom:-15px;width:31px;height:32px;transform:translateX(-50%);
+  border:1px solid var(--outline);border-radius:48% 48% 44% 44%;background:radial-gradient(circle at 38% 28%,rgba(255,255,255,.56),transparent 28%),var(--hand);
+  box-shadow:inset -2px -3px 4px rgba(0,0,0,.08),inset 2px 2px 3px rgba(255,255,255,.26)
+}
+.juggle-hand::before{content:"";position:absolute;left:4px;top:12px;width:22px;height:4px;border-top:1px solid rgba(0,0,0,.18);border-radius:50%;transform:rotate(-8deg)}
+.juggle-catch-glow{position:absolute;left:50%;bottom:-24px;width:37px;height:17px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(125,211,252,.55),rgba(125,211,252,.12) 48%,transparent 72%);opacity:0;filter:blur(2px)}
+
+/* The left/right arms alternate throws. Each personality has a different rhythm. */
+.juggle-stage.hoonmin .arm-left{animation:hoonminArmL .93s cubic-bezier(.38,.02,.34,1) infinite}
+.juggle-stage.hoonmin .arm-right{animation:hoonminArmR .93s cubic-bezier(.38,.02,.34,1) infinite}
+.juggle-stage.hoonmin .arm-left .juggle-forearm{animation:hoonminForeL .93s ease-in-out infinite}
+.juggle-stage.hoonmin .arm-right .juggle-forearm{animation:hoonminForeR .93s ease-in-out infinite}
+.juggle-stage.hoonmin .juggle-catch-glow{animation:catchBlink .93s ease-in-out infinite}
+.juggle-stage.hoonmin .arm-right .juggle-catch-glow{animation-delay:-.465s}
+
+.juggle-stage.daim .arm-left{animation:daimArmL .84s cubic-bezier(.3,.05,.45,1) infinite}
+.juggle-stage.daim .arm-right{animation:daimArmR .84s cubic-bezier(.3,.05,.45,1) infinite}
+.juggle-stage.daim .arm-left .juggle-forearm{animation:daimForeL .84s ease-in-out infinite}
+.juggle-stage.daim .arm-right .juggle-forearm{animation:daimForeR .84s ease-in-out infinite}
+.juggle-stage.daim .juggle-catch-glow{animation:catchBlink .84s ease-in-out infinite}
+.juggle-stage.daim .arm-right .juggle-catch-glow{animation-delay:-.42s}
+
+.juggle-stage.sunsik .arm-left{animation:sunsikArmL .62s cubic-bezier(.25,.02,.32,1) infinite}
+.juggle-stage.sunsik .arm-right{animation:sunsikArmR .62s cubic-bezier(.25,.02,.32,1) infinite}
+.juggle-stage.sunsik .arm-left .juggle-forearm{animation:sunsikForeL .62s ease-in-out infinite}
+.juggle-stage.sunsik .arm-right .juggle-forearm{animation:sunsikForeR .62s ease-in-out infinite}
+.juggle-stage.sunsik .juggle-catch-glow{animation:catchBlink .62s ease-in-out infinite}
+.juggle-stage.sunsik .arm-right .juggle-catch-glow{animation-delay:-.31s}
+
+/* compact item trajectories, centered over the newly reduced character */
+.juggle-stage.hoonmin .juggle-ball{animation-name:hoonminCascadeSmall}
+.juggle-stage.hoonmin .b2{animation-name:hoonminCascadeSmallB}.juggle-stage.hoonmin .b3{animation-name:hoonminCascadeSmallC}
+.juggle-stage.daim .juggle-ball{animation-name:daimReverseSmall}.juggle-stage.daim .b2{animation-name:daimReverseSmallB}.juggle-stage.daim .b3{animation-name:daimReverseSmallC}
+.juggle-stage.sunsik .juggle-ball{animation-name:sunsikShowerSmall}.juggle-stage.sunsik .b2{animation-name:sunsikShowerSmallB}.juggle-stage.sunsik .b3{animation-name:sunsikShowerSmallC}
+
+@keyframes hoonminArmL{0%,100%{transform:rotate(18deg) translateY(1px)}42%{transform:rotate(-23deg) translateY(-5px)}58%{transform:rotate(-8deg) translateY(-3px)}}
+@keyframes hoonminArmR{0%,100%{transform:scaleX(-1) rotate(-18deg) translateY(1px)}42%{transform:scaleX(-1) rotate(23deg) translateY(-5px)}58%{transform:scaleX(-1) rotate(8deg) translateY(-3px)}}
+@keyframes hoonminForeL{0%,100%{transform:rotate(17deg)}38%{transform:rotate(-38deg)}58%{transform:rotate(-8deg)}}
+@keyframes hoonminForeR{0%,100%{transform:rotate(17deg)}38%{transform:rotate(-38deg)}58%{transform:rotate(-8deg)}}
+@keyframes daimArmL{0%,100%{transform:rotate(24deg) translateY(1px)}35%{transform:rotate(-31deg) translateY(-7px)}63%{transform:rotate(-5deg) translateY(-2px)}}
+@keyframes daimArmR{0%,100%{transform:scaleX(-1) rotate(-24deg) translateY(1px)}35%{transform:scaleX(-1) rotate(31deg) translateY(-7px)}63%{transform:scaleX(-1) rotate(5deg) translateY(-2px)}}
+@keyframes daimForeL{0%,100%{transform:rotate(25deg)}31%{transform:rotate(-48deg)}61%{transform:rotate(-5deg)}}
+@keyframes daimForeR{0%,100%{transform:rotate(25deg)}31%{transform:rotate(-48deg)}61%{transform:rotate(-5deg)}}
+@keyframes sunsikArmL{0%,100%{transform:rotate(32deg) translateY(2px)}34%{transform:rotate(-39deg) translateY(-7px)}62%{transform:rotate(8deg) translateY(-2px)}}
+@keyframes sunsikArmR{0%,100%{transform:scaleX(-1) rotate(-32deg) translateY(2px)}34%{transform:scaleX(-1) rotate(39deg) translateY(-7px)}62%{transform:scaleX(-1) rotate(-8deg) translateY(-2px)}}
+@keyframes sunsikForeL{0%,100%{transform:rotate(31deg)}31%{transform:rotate(-58deg)}58%{transform:rotate(6deg)}}
+@keyframes sunsikForeR{0%,100%{transform:rotate(31deg)}31%{transform:rotate(-58deg)}58%{transform:rotate(6deg)}}
+@keyframes catchBlink{0%,28%,72%,100%{opacity:0;transform:translateX(-50%) scale(.6)}42%,52%{opacity:.92;transform:translateX(-50%) scale(1.15)}}
+
+@keyframes hoonminCascadeSmall{0%{transform:translate(-76px,73px) rotate(-8deg) scale(.92)}24%{transform:translate(-46px,-43px) rotate(58deg)}50%{transform:translate(2px,-96px) rotate(132deg) scale(1.06)}76%{transform:translate(49px,-41px) rotate(208deg)}100%{transform:translate(77px,73px) rotate(278deg) scale(.92)}}
+@keyframes hoonminCascadeSmallB{0%{transform:translate(77px,73px) rotate(12deg)}24%{transform:translate(48px,-37px) rotate(78deg)}50%{transform:translate(-2px,-89px) rotate(150deg)}76%{transform:translate(-50px,-40px) rotate(224deg)}100%{transform:translate(-76px,73px) rotate(292deg)}}
+@keyframes hoonminCascadeSmallC{0%,100%{transform:translate(-1px,-90px) rotate(0)}25%{transform:translate(65px,-19px) rotate(85deg)}50%{transform:translate(19px,70px) rotate(174deg)}75%{transform:translate(-66px,-17px) rotate(263deg)}}
+@keyframes daimReverseSmall{0%{transform:translate(-76px,62px) rotate(0) scale(.9)}32%{transform:translate(-18px,-77px) rotate(-110deg) scale(1.06)}58%{transform:translate(47px,-29px) rotate(-190deg)}100%{transform:translate(76px,63px) rotate(-300deg) scale(.92)}}
+@keyframes daimReverseSmallB{0%{transform:translate(75px,61px) rotate(0)}32%{transform:translate(18px,-84px) rotate(120deg) scale(1.06)}58%{transform:translate(-46px,-31px) rotate(210deg)}100%{transform:translate(-76px,62px) rotate(320deg)}}
+@keyframes daimReverseSmallC{0%,100%{transform:translate(0,54px) rotate(0) scale(.88)}34%{transform:translate(0,-108px) rotate(160deg) scale(1.1)}67%{transform:translate(0,-20px) rotate(310deg) scale(.98)}}
+@keyframes sunsikShowerSmall{0%{transform:translate(-79px,50px) rotate(0) scale(.88)}25%{transform:translate(-44px,-84px) rotate(96deg)}50%{transform:translate(46px,-87px) rotate(190deg) scale(1.04)}75%{transform:translate(79px,9px) rotate(282deg)}100%{transform:translate(-79px,50px) rotate(360deg) scale(.88)}}
+@keyframes sunsikShowerSmallB{0%{transform:translate(49px,-80px) rotate(0)}25%{transform:translate(80px,9px) rotate(95deg)}50%{transform:translate(-77px,52px) rotate(190deg)}75%{transform:translate(-45px,-82px) rotate(280deg)}100%{transform:translate(49px,-80px) rotate(360deg)}}
+@keyframes sunsikShowerSmallC{0%{transform:translate(80px,8px) rotate(0)}25%{transform:translate(-77px,53px) rotate(94deg)}50%{transform:translate(-45px,-83px) rotate(188deg)}75%{transform:translate(48px,-80px) rotate(279deg)}100%{transform:translate(80px,8px) rotate(360deg)}}
+
+/* Keep compact balance on short phones and landscape AR. */
+@media (max-height:620px){
+  .juggle-stage{min-height:430px;height:88vh}.juggle-character-shell{width:min(35vw,155px);height:48%;bottom:6%}
+  .juggle-items{inset:21% 15% 25%}.juggle-caption{bottom:0}.juggle-hud{top:0}.juggle-progress{top:15%}
+}
+@media (orientation:landscape) and (max-height:560px){
+  .juggle-stage{width:min(66vw,430px);height:94vh;min-height:340px;transform:none}
+  .juggle-character-shell{width:min(22vw,145px);height:55%;bottom:3%}
+  .juggle-items{inset:18% 18% 22%}.juggle-hud{top:0}.juggle-caption{bottom:0}
+}
+@media (prefers-reduced-motion:reduce){.juggle-arm,.juggle-forearm,.juggle-catch-glow{animation-duration:1.8s!important}}
