@@ -174,3 +174,61 @@
   .juggle-items{inset:18% 18% 22%}.juggle-hud{top:0}.juggle-caption{bottom:0}
 }
 @media (prefers-reduced-motion:reduce){.juggle-arm,.juggle-forearm,.juggle-catch-glow{animation-duration:1.8s!important}}
+
+/* v3 · Kinetic 2D rig ----------------------------------------------------
+   Arms now track the actual animated item positions every frame. The body
+   also reacts subtly to the center of mass, so the character reads as one
+   performer rather than a static PNG with decorative arms. */
+.juggle-character-shell.is-kinetic .juggle-character{
+  transform-origin:50% 72%;
+  transform:translateY(var(--body-bob,0px)) rotate(var(--body-lean,0deg)) scale(var(--body-breathe,1));
+  transition:transform 55ms linear;
+  will-change:transform;
+}
+.juggle-character-shell.is-kinetic .juggle-arm{animation:none!important;transition:none!important}
+.juggle-character-shell.is-kinetic .juggle-forearm{animation:none!important;transition:none!important}
+.juggle-character-shell.is-kinetic .arm-left{transform:rotate(var(--track-rot,0deg)) translateY(calc(var(--reach,0) * 10px))}
+.juggle-character-shell.is-kinetic .arm-right{transform:scaleX(-1) rotate(var(--track-rot,0deg)) translateY(calc(var(--reach,0) * 10px))}
+.juggle-character-shell.is-kinetic .juggle-forearm{transform:rotate(var(--fore-rot,0deg)) translateY(calc(var(--reach,0) * 8px));transform-origin:50% 8px}
+.juggle-character-shell.is-kinetic .juggle-catch-glow{animation:none!important;opacity:0;transform:translateX(-50%) scale(.55);transition:opacity 90ms ease,transform 90ms ease}
+.juggle-character-shell.is-kinetic .juggle-arm.near-catch .juggle-catch-glow{opacity:.95;transform:translateX(-50%) scale(1.15)}
+.juggle-character-shell.is-kinetic .juggle-arm.near-catch .juggle-hand{transform:translateX(-50%) scale(1.06) rotate(-5deg)}
+.juggle-character-shell.is-kinetic .arm-right.near-catch .juggle-hand{transform:translateX(-50%) scale(1.06) rotate(5deg)}
+
+/* Make the active hand visually pass in front of the torso without making
+   the entire rig feel oversized. */
+.juggle-character-shell.is-kinetic .juggle-arm{z-index:2}
+.juggle-character-shell.is-kinetic .juggle-upper-arm{transform:scaleY(calc(1 + var(--reach,0) * .08));transform-origin:50% 8px}
+.juggle-character-shell.is-kinetic .juggle-hand{transition:transform 90ms ease,filter 90ms ease}
+.juggle-character-shell.is-kinetic .juggle-arm.near-catch .juggle-hand{filter:brightness(1.08) drop-shadow(0 0 5px rgba(125,211,252,.42))}
+
+/* v4 · TRUE SPRITE RIG --------------------------------------------------
+   Body / upper arms / forearms / hands are separate PNG sprites.
+   JS drives shoulder and elbow joints with a two-bone IK solve. */
+.juggle-character-shell.true-sprite-rig{overflow:visible;width:min(43vw,180px);height:51%;}
+.sprite-rig{position:absolute;inset:0;transform:translateY(var(--body-bob,0px)) rotate(var(--body-lean,0deg)) scale(var(--body-breathe,1));transform-origin:50% 73%;will-change:transform;filter:drop-shadow(0 12px 18px rgba(0,0,0,.4))}
+.rig-body{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center bottom;user-select:none;-webkit-user-drag:none;pointer-events:none;z-index:2}
+.rig-arm{position:absolute;top:52.5%;width:29%;height:24%;transform-origin:50% 9%;will-change:transform;z-index:3;pointer-events:none}
+.rig-arm-left{left:7.5%;transform:rotate(var(--shoulder,0deg))}
+.rig-arm-right{right:7.5%;transform:rotate(var(--shoulder,0deg))}
+.rig-upper{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;object-position:center top;transform-origin:50% 9%;user-select:none;-webkit-user-drag:none}
+.rig-fore-joint{position:absolute;left:6%;top:48%;width:92%;height:86%;transform:rotate(var(--elbow,0deg));transform-origin:50% 9%;will-change:transform}
+.rig-fore{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;object-position:center top;user-select:none;-webkit-user-drag:none}
+.rig-hand{position:absolute;left:10%;top:55%;width:80%;height:78%;object-fit:contain;object-position:center top;transform:rotate(var(--wrist,0deg));transform-origin:50% 18%;will-change:transform;user-select:none;-webkit-user-drag:none}
+.rig-catch-glow{position:absolute;left:50%;top:93%;width:66%;height:28%;transform:translate(-50%,-50%) scale(.55);border-radius:50%;background:radial-gradient(ellipse,rgba(125,211,252,.65),rgba(125,211,252,.13) 50%,transparent 74%);filter:blur(2px);opacity:0;transition:opacity 80ms ease,transform 80ms ease}
+.rig-arm.near-catch .rig-catch-glow{opacity:.95;transform:translate(-50%,-50%) scale(1.1)}
+.rig-arm.near-catch .rig-hand{filter:brightness(1.06) drop-shadow(0 0 5px rgba(125,211,252,.38))}
+
+/* Fine alignment per character. */
+.sprite-rig.hoonmin .rig-arm-left{left:7.0%}.sprite-rig.hoonmin .rig-arm-right{right:7.0%}
+.sprite-rig.daim .rig-arm-left{left:6.2%}.sprite-rig.daim .rig-arm-right{right:6.2%}
+.sprite-rig.sunsik .rig-arm-left{left:6.5%}.sprite-rig.sunsik .rig-arm-right{right:6.5%}
+
+/* The old synthetic CSS arm rig is no longer used in v4. */
+.true-sprite-rig .juggle-character,.true-sprite-rig .juggle-arm-rig{display:none!important}
+.juggle-character-shell.is-kinetic .sprite-rig{transition:transform 45ms linear}
+.juggle-overlay.exit .sprite-rig{filter:blur(6px) drop-shadow(0 10px 16px rgba(0,0,0,.3));opacity:0;transition:opacity .35s ease,filter .35s ease}
+
+@media (max-height:620px){.juggle-character-shell.true-sprite-rig{width:min(35vw,155px);height:48%}}
+@media (orientation:landscape) and (max-height:560px){.juggle-character-shell.true-sprite-rig{width:min(22vw,145px);height:55%}}
+@media (prefers-reduced-motion:reduce){.sprite-rig{transition:none!important}.rig-arm,.rig-fore-joint,.rig-hand{transition:none!important}}
