@@ -324,7 +324,30 @@ function serverConfig(){
   return (!u||u===LEGACY_SERVER_URL||u===BAD_V60_SERVER_URL)?DEFAULT_SERVER_URL:u;
 }
 function setServerUrl(url){const v=getV3();v.serverUrl=(url||'').trim().replace(/\/$/,'');saveV3(v)}
-async function syncScoreToServer(){const base=serverConfig();if(!base)return {ok:false,reason:'offline'};const p=getProfile(),v=getV3();try{const r=await fetch(base+'/api/score',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:p.name||'원정대원',org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length})});if(!r.ok)throw new Error('HTTP '+r.status);return {ok:true,data:await r.json()}}catch(e){return {ok:false,reason:String(e)}}}
+async function syncScoreToServer(){
+  const base=serverConfig();
+  if(!base)return {ok:false,reason:'offline'};
+  const p=getProfile(),v=getV3();
+  const payload={name:(p.name||'원정대원').trim(),org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length};
+  try{
+    const headers=(window.JopamsAuth&&JopamsAuth.authHeaders)?JopamsAuth.authHeaders({'content-type':'application/json'}):{'content-type':'application/json'};
+    const r=await fetch(base+'/api/score',{method:'POST',headers,body:JSON.stringify(payload)});
+    const data=await r.json().catch(()=>({}));
+    // 랭킹 화면은 15초마다 자동 동기화하므로 3초 rate limit은 실제 오류가 아니다.
+    if(r.status===429&&data&&data.error==='rate_limited')return {ok:true,rateLimited:true,data};
+    if(!r.ok||data?.ok===false)throw new Error(data?.error||('HTTP '+r.status));
+    return {ok:true,data};
+  }catch(e){return {ok:false,reason:String(e&&e.message||e)}}
+}
+async function savePlayerAndSync({name,org,avatar}={}){
+  const clean=String(name||'').replace(/[<>]/g,'').trim().slice(0,14);
+  if(!clean)return {ok:false,reason:'empty_name'};
+  const p=updatePlayer({name:clean,org,avatar});
+  // 프로필 저장 직후 서버 랭킹에도 즉시 이름/소속/점수를 등록한다.
+  const sync=await syncScoreToServer();
+  try{window.dispatchEvent(new CustomEvent('jopams:profile-saved',{detail:{profile:p,sync}}))}catch(_){}
+  return {ok:!!sync.ok,profile:p,sync};
+}
 async function fetchServerLeaderboard(){const base=serverConfig();if(!base)return null;try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)throw new Error();const j=await r.json();return Array.isArray(j)?j:(j.items||null)}catch(e){return null}}
 function miniGameForCheckpoint(cp){return ['speed','shield','quiz'][cp.idx%3]}
 function miniGameCharacter(cp){return ['sunsik','daim','hoonmin'][cp.idx%3]}
