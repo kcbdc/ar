@@ -348,6 +348,35 @@ async function savePlayerAndSync({name,org,avatar}={}){
   try{window.dispatchEvent(new CustomEvent('jopams:profile-saved',{detail:{profile:p,sync}}))}catch(_){}
   return {ok:!!sync.ok,profile:p,sync};
 }
+
+const RANKING_RECOVERY_KEY='jopams_ranking_recovery_v1';
+function localRankingRecoveryStatus(){
+  try{return localStorage.getItem(RANKING_RECOVERY_KEY)==='1'}catch(_){return false}
+}
+function hasRecoverableLocalRankingProfile(){
+  try{
+    if(!localStorage.getItem('jopams_save_v1'))return false;
+    const name=String(getProfile().name||'').trim();
+    return !!name && name!=='원정대원';
+  }catch(_){return false}
+}
+async function forceLocalRankingRecovery({markComplete=true}={}){
+  const p=getProfile(),v=getV3();
+  const name=String(p.name||'').trim();
+  if(!name||name==='원정대원')return {ok:false,reason:'no_registered_name'};
+  const sync=await syncScoreToServer();
+  if(sync.ok&&markComplete){try{localStorage.setItem(RANKING_RECOVERY_KEY,'1')}catch(_){}}
+  return {ok:!!sync.ok,profile:{name,org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length},sync};
+}
+function runRankingRecoveryOnce(){
+  if(localRankingRecoveryStatus()||!hasRecoverableLocalRankingProfile())return;
+  setTimeout(()=>{forceLocalRankingRecovery().then(result=>{
+    try{window.dispatchEvent(new CustomEvent('jopams:ranking-recovery',{detail:result}))}catch(_){}
+    if(result.ok)console.info('[JopamsGO] 기존 로컬 랭킹 정보를 서버로 자동 복구했습니다.',result.profile);
+  }).catch(()=>{});},1200);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',runRankingRecoveryOnce,{once:true});else runRankingRecoveryOnce();
+
 async function fetchServerLeaderboard(){const base=serverConfig();if(!base)return null;try{const r=await fetch(base+'/api/leaderboard',{cache:'no-store'});if(!r.ok)throw new Error();const j=await r.json();return Array.isArray(j)?j:(j.items||null)}catch(e){return null}}
 function miniGameForCheckpoint(cp){return ['speed','shield','quiz'][cp.idx%3]}
 function miniGameCharacter(cp){return ['sunsik','daim','hoonmin'][cp.idx%3]}
