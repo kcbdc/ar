@@ -1,1 +1,11 @@
-{"name":"조팸스 GO","short_name":"조팸스 GO","start_url":"./index.html","scope":"./","display":"standalone","orientation":"portrait","background_color":"#101e31","theme_color":"#152942","lang":"ko-KR","description":"현실 공간을 탐험하며 배우는 공공구매 AR 어드벤처","icons":[{"src":"assets/img/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"assets/img/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"assets/img/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+{
+  "name": "조팸스 내비 MVP 7.5",
+  "short_name": "조팸스 Drive",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f6f8fb",
+  "theme_color": "#ffffff",
+  "lang": "ko-KR",
+  "description": "다임·순식·훈민 캐릭터와 함께하는 스마트 드라이브 내비게이션"
+}
