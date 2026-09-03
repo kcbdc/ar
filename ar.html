@@ -79,7 +79,7 @@ let geoRetryButtonShown=false,geoRetryCount=0;
   if(vmImg)vmImg.src=SCANNER_TOOL_DATA_URI;
 })();
 const charImgs={sunsik:'assets/img/sunsik.png',daim:'assets/img/daim.png',hoonmin:'assets/img/hoonmin.png'};
-const pointSearchCue=document.getElementById('pointSearchCue'),pointSearchFill=document.getElementById('pointSearchFill'),pointSearchTitle=document.getElementById('pointSearchTitle'),sparkIcon=document.getElementById('sparkIcon');let pointSearchCheckpointIdx=null,pointSearchProgress=0,pointSearchLastHeading=null,pointSearchFound=false;const POINT_SEARCH_REQUIRED_DEG=90;function resetPointSearch(idx=null){pointSearchCheckpointIdx=idx;pointSearchProgress=0;pointSearchLastHeading=null;pointSearchFound=false;if(pointSearchFill)pointSearchFill.style.width='0%';if(pointSearchCue)pointSearchCue.classList.remove('show','found');}function advancePointSearch(heading){if(pointSearchCheckpointIdx===null||pointSearchFound||heading===null)return;if(pointSearchLastHeading===null){pointSearchLastHeading=heading;return;}const delta=Math.min(18,Math.abs(angleDiff(heading,pointSearchLastHeading)));pointSearchLastHeading=heading;if(delta<1)return;pointSearchProgress=Math.min(POINT_SEARCH_REQUIRED_DEG,pointSearchProgress+delta);const pct=Math.round(pointSearchProgress/POINT_SEARCH_REQUIRED_DEG*100);if(pointSearchFill)pointSearchFill.style.width=pct+'%';if(pointSearchProgress>=POINT_SEARCH_REQUIRED_DEG){pointSearchFound=true;if(pointSearchCue){pointSearchCue.classList.add('found');pointSearchTitle.textContent='아이템 발견!';}vibrate([35,35,70]);playSfx('spawn');setTimeout(()=>pointSearchCue&&pointSearchCue.classList.remove('show'),500);}}function refreshEnvIcon(env=JopamsLive.environment()){const el=document.getElementById('envIcon');if(el)el.innerHTML=uiIcon(env.weather==='rain'?'rain':env.weather==='cloud'?'cloud':env.period==='night'?'moon':'sun')}refreshEnvIcon();window.addEventListener('jopams:environment',e=>refreshEnvIcon(e.detail||JopamsLive.environment()));const activeAvatar=()=>getProfile().avatar||'daim';const currentPerks=()=>JopamsLive.skillPerks(activeAvatar());const episodeGame=ep=>['speed','shield','quiz','trace'][(Number(ep?.id||1)-1)%4];
+const pointSearchCue=document.getElementById('pointSearchCue'),pointSearchFill=document.getElementById('pointSearchFill'),pointSearchTitle=document.getElementById('pointSearchTitle'),sparkIcon=document.getElementById('sparkIcon');let pointSearchCheckpointIdx=null,pointSearchProgress=0,pointSearchLastHeading=null,pointSearchFound=false;function beginnerCaptureMode(){return getProgress().length<12}function pointSearchRequiredDeg(){return beginnerCaptureMode()?45:90}function resetPointSearch(idx=null){pointSearchCheckpointIdx=idx;pointSearchProgress=0;pointSearchLastHeading=null;pointSearchFound=false;if(pointSearchFill)pointSearchFill.style.width='0%';if(pointSearchCue)pointSearchCue.classList.remove('show','found');}function advancePointSearch(heading){if(pointSearchCheckpointIdx===null||pointSearchFound||heading===null)return;if(pointSearchLastHeading===null){pointSearchLastHeading=heading;return;}const delta=Math.min(18,Math.abs(angleDiff(heading,pointSearchLastHeading)));pointSearchLastHeading=heading;if(delta<1)return;const requiredDeg=pointSearchRequiredDeg();pointSearchProgress=Math.min(requiredDeg,pointSearchProgress+delta);const pct=Math.round(pointSearchProgress/requiredDeg*100);if(pointSearchFill)pointSearchFill.style.width=pct+'%';if(pointSearchProgress>=requiredDeg){pointSearchFound=true;if(pointSearchCue){pointSearchCue.classList.add('found');pointSearchTitle.textContent='아이템 발견!';}vibrate([35,35,70]);playSfx('spawn');setTimeout(()=>pointSearchCue&&pointSearchCue.classList.remove('show'),500);}}function refreshEnvIcon(env=JopamsLive.environment()){const el=document.getElementById('envIcon');if(el)el.innerHTML=uiIcon(env.weather==='rain'?'rain':env.weather==='cloud'?'cloud':env.period==='night'?'moon':'sun')}refreshEnvIcon();window.addEventListener('jopams:environment',e=>refreshEnvIcon(e.detail||JopamsLive.environment()));const activeAvatar=()=>getProfile().avatar||'daim';const currentPerks=()=>JopamsLive.skillPerks(activeAvatar());const episodeGame=ep=>['speed','shield','quiz','trace'][(Number(ep?.id||1)-1)%4];
 const permGate=document.getElementById('permGate'),permNote=document.getElementById('permNote'),permStartBtn=document.getElementById('permStartBtn'),stepCam=document.getElementById('stepCam'),stepLoc=document.getElementById('stepLoc'),stepOri=document.getElementById('stepOri');
 document.getElementById('arCount').textContent=getProgress().length;const arSound=document.getElementById('arSound');function refreshSound(){arSound.textContent=getV4().sound?'♪':'♩';arSound.classList.toggle('muted',!getV4().sound)}refreshSound();arSound.onclick=()=>{const on=!getV4().sound;setSoundEnabled(on);if(on)startScannerAmbience();playSfx('tap');refreshSound()};document.addEventListener('visibilitychange',()=>{if(document.hidden){stopScannerAmbience()}else{startScannerAmbience();if(IS_IOS&&trackingStarted)restartIOSGeoWatch('visibility');else if(geoWatchId!==null&&Date.now()-lastGeoFixAt>6000)requestOneShot(GEO_FINE)}});
 function setStep(el,ok){el.classList.remove('ok','fail');el.classList.add(ok?'ok':'fail');}
@@ -591,9 +591,16 @@ const launchGame=()=>{if(kind==='speed')setupSpeedGame(stage);else if(kind==='sh
 // v17: 처음 만나는 미니게임 종류는 룰 설명 화면을 한 번 보여준 뒤 시작한다.
 if(!hasSeenMiniTutorial(kind)){
   const t=MINI_TUTORIAL[kind];
-  document.getElementById('miniTitle').textContent=t.title;
+  const easy=beginnerCaptureMode();
+  const easyDesc={
+    speed:'넓은 포획 존에 맞춰 터치하세요. 처음 12개를 모으는 동안에는 빗나가도 같은 자리에서 바로 다시 도전할 수 있어요.',
+    shield:'버튼을 길게 눌러 충전하세요. 처음 12개를 모으는 동안에는 손을 놓쳐도 신호가 잠기지 않고 바로 다시 시도할 수 있어요.',
+    quiz:'공공구매 상식 O/X입니다. 처음 12개를 모으는 동안에는 틀려도 같은 문제를 다시 선택할 수 있어요.',
+    trace:'빛나는 신호점을 순서대로 터치하세요. 처음 12개를 모으는 동안에는 순서를 틀려도 처음부터 바로 다시 즐길 수 있어요.'
+  };
+  document.getElementById('miniTitle').textContent=easy?t.title+' · EASY':t.title;
   document.getElementById('miniDesc').textContent='';
-  stage.innerHTML='<div class="mini-tutorial"><p>'+t.desc+'</p><button class="mini-primary" id="miniTutorialGo">알겠어요, 시작할게요</button></div>';
+  stage.innerHTML='<div class="mini-tutorial"><p>'+(easy?easyDesc[kind]:t.desc)+'</p><button class="mini-primary" id="miniTutorialGo">알겠어요, 시작할게요</button></div>';
   document.getElementById('miniTutorialGo').onclick=()=>{markMiniTutorialSeen(kind);launchGame();};
 }else{
   launchGame();
@@ -640,9 +647,9 @@ function failCaptureAttempt(msg){
 }
 function setupSpeedGame(stage){
   miniAttemptEnding=false;
-  const tier=challengeTier(),zoneWidth=[0,18,14,11][tier],half=zoneWidth/2,center=52,period=[0,430,390,355][tier];
-  document.getElementById('miniTitle').textContent='순식 · SIGNAL TAP · LV.'+tier;
-  document.getElementById('miniDesc').textContent='좁아진 포획 존의 중심을 노리세요. 실패하면 다른 지점으로 이동합니다.';
+  const easy=beginnerCaptureMode(),tier=challengeTier(),zoneWidth=easy?40:[0,18,14,11][tier],half=zoneWidth/2,center=52,period=easy?650:[0,430,390,355][tier];
+  document.getElementById('miniTitle').textContent=easy?'순식 · SIGNAL TAP · EASY':'순식 · SIGNAL TAP · LV.'+tier;
+  document.getElementById('miniDesc').textContent=easy?'넓은 포획 존에 맞춰 터치하세요. 빗나가도 바로 다시 도전할 수 있어요.':'좁아진 포획 존의 중심을 노리세요. 실패하면 다른 지점으로 이동합니다.';
   stage.innerHTML='<div class="timing-track"><div class="timing-zone" id="timingZone"></div><i id="timingNeedle"></i></div><button class="mini-primary" id="timingTap">지금 포획!</button>';
   const zone=document.getElementById('timingZone'),needle=document.getElementById('timingNeedle'),started=performance.now();
   zone.style.left=(center-half)+'%';zone.style.width=zoneWidth+'%';
@@ -653,14 +660,14 @@ function setupSpeedGame(stage){
     const x=Number(needle.dataset.x||0),perk=currentPerks();
     const bonus=activeAvatar()==='sunsik'?Math.min(4,(perk.timingWidthPct||20)/10):0;
     if(x>=center-half-bonus&&x<=center+half+bonus)miniSuccess();
-    else failCaptureAttempt('타이밍 미스!')
+    else if(easy)miniSoftFail('조금만 맞춰보세요 · 바로 다시 도전!');else failCaptureAttempt('타이밍 미스!')
   }
 }
 function setupShieldGame(stage){
   miniAttemptEnding=false;
-  const tier=challengeTier(),duration=[0,2200,2550,2900][tier];
-  document.getElementById('miniTitle').textContent='다임 · SHIELD CHARGE · LV.'+tier;
-  document.getElementById('miniDesc').textContent='손을 떼지 말고 끝까지 충전하세요.';
+  const easy=beginnerCaptureMode(),tier=challengeTier(),duration=easy?1250:[0,2200,2550,2900][tier];
+  document.getElementById('miniTitle').textContent=easy?'다임 · SHIELD CHARGE · EASY':'다임 · SHIELD CHARGE · LV.'+tier;
+  document.getElementById('miniDesc').textContent=easy?'짧게 충전하면 포획 완료! 중간에 놓쳐도 바로 다시 할 수 있어요.':'손을 떼지 말고 끝까지 충전하세요.';
   stage.innerHTML='<div class="charge-orb"><span id="chargePct">0%</span><i id="chargeFill"></i></div><button class="mini-primary hold" id="chargeBtn">누르고 있기</button>';
   let start=null,raf=null,graceUsed=0,pointerActive=false;
   const btn=document.getElementById('chargeBtn'),pct=document.getElementById('chargePct'),fill=document.getElementById('chargeFill');
@@ -676,7 +683,10 @@ function setupShieldGame(stage){
     if(start===null||miniAttemptEnding)return;
     stop();
     const grace=activeAvatar()==='daim'?(currentPerks().shieldGrace||1):0;
-    if(graceUsed<grace){
+    if(easy){
+      miniSoftFail('괜찮아요 · 바로 다시 눌러 충전하세요!');
+      pct.textContent='0%';fill.style.setProperty('--charge','0%');
+    }else if(graceUsed<grace){
       graceUsed++;miniSoftFail('다임 실드 발동 · 한 번 보호했어요 ('+graceUsed+'/'+grace+')');
       pct.textContent='0%';fill.style.setProperty('--charge','0%');
     }else failCaptureAttempt('실드 충전이 끊겼어요')
@@ -711,23 +721,24 @@ function prefetchAIQuiz(topic){
   }).catch(()=>{aiQuizCache[topic]='failed';});
 }
 function setupQuizGame(stage){
-  document.getElementById('miniTitle').textContent='훈민 · QUICK O/X';
-  document.getElementById('miniDesc').textContent='공공구매 상식에 답하고 아이템을 포획하세요.';
+  const easy=beginnerCaptureMode();
+  document.getElementById('miniTitle').textContent=easy?'훈민 · QUICK O/X · EASY':'훈민 · QUICK O/X';
+  document.getElementById('miniDesc').textContent=easy?'공공구매 상식 O/X · 틀려도 바로 다시 선택할 수 있어요.':'공공구매 상식에 답하고 아이템을 포획하세요.';
   const topic=pendingEpisode.item;
   const ready=aiQuizCache[topic];
   const useAI=ready&&ready!=='pending'&&ready!=='failed';
   const q=useAI?{q:ready.question,a:ready.answer,explain:ready.explanation}:QUIZ_BANK[(pendingEpisode.id-1)%QUIZ_BANK.length];
   stage.innerHTML='<div class="quiz-q">'+q.q+'</div>'+(useAI?'<small class="quiz-ai-badge">✦ AI 출제</small>':'')+'<div class="ox-row"><button id="oxO">O</button><button id="oxX">X</button></div>'+(activeAvatar()==='hoonmin'&&currentPerks().quizHint?'<button class="quiz-hint-btn" id="quizHintBtn">훈민 힌트 1회</button>':'');
-  miniAttemptEnding=false;document.getElementById('oxO').onclick=()=>q.a?miniSuccess():failCaptureAttempt((q.explain?q.explain+' · ':'')+'오답! 정답은 X');
-  document.getElementById('oxX').onclick=()=>!q.a?miniSuccess():failCaptureAttempt((q.explain?q.explain+' · ':'')+'오답! 정답은 O');
+  miniAttemptEnding=false;document.getElementById('oxO').onclick=()=>q.a?miniSuccess():(easy?miniSoftFail('아쉬워요 · 다시 선택해 보세요!'):failCaptureAttempt((q.explain?q.explain+' · ':'')+'오답! 정답은 X'));
+  document.getElementById('oxX').onclick=()=>!q.a?miniSuccess():(easy?miniSoftFail('아쉬워요 · 다시 선택해 보세요!'):failCaptureAttempt((q.explain?q.explain+' · ':'')+'오답! 정답은 O'));
   const hb=document.getElementById('quizHintBtn');if(hb)hb.onclick=()=>{hb.disabled=true;hb.textContent='힌트 · '+(q.a?'O 쪽이 더 가까워요':'X 쪽이 더 가까워요');playSfx('near')};
   if(useAI)delete aiQuizCache[topic]; // 한 번 쓴 문제는 캐시에서 비워 다음엔 새로 받도록 함
 }
 function setupTraceGame(stage){
   miniAttemptEnding=false;
-  const tier=challengeTier(),count=tier===1?3:4;
-  document.getElementById('miniTitle').textContent='SIGNAL TRACE · LV.'+tier;
-  document.getElementById('miniDesc').textContent='빛나는 신호를 순서대로 추적하세요. 잘못 누르면 현재 지점은 잠깁니다.';
+  const easy=beginnerCaptureMode(),tier=challengeTier(),count=easy?3:(tier===1?3:4);
+  document.getElementById('miniTitle').textContent=easy?'SIGNAL TRACE · EASY':'SIGNAL TRACE · LV.'+tier;
+  document.getElementById('miniDesc').textContent=easy?'신호 3개를 순서대로 터치하세요. 틀려도 바로 처음부터 다시 할 수 있어요.':'빛나는 신호를 순서대로 추적하세요. 잘못 누르면 현재 지점은 잠깁니다.';
   const anchors=[[16,24],[50,18],[78,30],[22,68],[55,62],[80,72],[38,42]];
   // 같은 패턴 암기를 막기 위해 매 도전마다 위치를 섞는다.
   const shuffled=anchors.slice().sort(()=>Math.random()-.5).slice(0,count);
@@ -737,7 +748,13 @@ function setupTraceGame(stage){
     d.style.left=shuffled[i][0]+'%';d.style.top=shuffled[i][1]+'%';
     d.onclick=()=>{
       if(miniAttemptEnding)return;
-      if(i!==idx){failCaptureAttempt('신호 순서가 끊겼어요');return}
+      if(i!==idx){
+        if(easy){
+          miniSoftFail('순서가 달라요 · 1번부터 다시!');idx=0;
+          dots.forEach((dot,j)=>{dot.classList.remove('hit','active');if(j===0)dot.classList.add('active')});
+        }else failCaptureAttempt('신호 순서가 끊겼어요');
+        return
+      }
       d.classList.add('hit');d.classList.remove('active');idx++;
       if(idx>=dots.length){miniSuccess();return}
       dots[idx].classList.add('active');playSfx('near')
