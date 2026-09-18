@@ -333,10 +333,13 @@ async function syncScoreToServer(){
     const headers=(window.JopamsAuth&&JopamsAuth.authHeaders)?JopamsAuth.authHeaders({'content-type':'application/json'}):{'content-type':'application/json'};
     const r=await fetch(base+'/api/score',{method:'POST',headers,body:JSON.stringify(payload)});
     const data=await r.json().catch(()=>({}));
-    // 랭킹 화면은 15초마다 자동 동기화하므로 3초 rate limit은 실제 오류가 아니다.
-    if(r.status===429&&data&&data.error==='rate_limited')return {ok:true,rateLimited:true,data};
+    // 비로그인 사용자는 서버의 스팸 방지 제한으로 429가 날 수 있다. 이 경우 연결 자체는 정상으로 본다.
+    if(r.status===429&&data&&data.error==='rate_limited')return {ok:true,rateLimited:true,inSync:false,submittedScore:payload.score,serverScore:null,data};
     if(!r.ok||data?.ok===false)throw new Error(data?.error||('HTTP '+r.status));
-    return {ok:true,data};
+    const serverScore=Number.isFinite(Number(data?.score))?Number(data.score):null;
+    const submittedScore=Math.max(0,Math.floor(Number(payload.score)||0));
+    const inSync=serverScore==null?true:serverScore>=submittedScore;
+    return {ok:true,inSync,submittedScore,serverScore,data};
   }catch(e){return {ok:false,reason:String(e&&e.message||e)}}
 }
 async function savePlayerAndSync({name,org,avatar}={}){
@@ -365,8 +368,9 @@ async function forceLocalRankingRecovery({markComplete=true}={}){
   const name=String(p.name||'').trim();
   if(!name||name==='원정대원')return {ok:false,reason:'no_registered_name'};
   const sync=await syncScoreToServer();
-  if(sync.ok&&markComplete){try{localStorage.setItem(RANKING_RECOVERY_KEY,'1')}catch(_){}}
-  return {ok:!!sync.ok,profile:{name,org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length},sync};
+  const fullySynced=!!sync.ok&&sync.inSync!==false;
+  if(fullySynced&&markComplete){try{localStorage.setItem(RANKING_RECOVERY_KEY,'1')}catch(_){}}
+  return {ok:fullySynced,partial:!!sync.ok&&!fullySynced,profile:{name,org:v.org||'본사',score:missionScore(),xp:totalXP(),collected:getProgress().length},sync};
 }
 function runRankingRecoveryOnce(){
   if(localRankingRecoveryStatus()||!hasRecoverableLocalRankingProfile())return;
