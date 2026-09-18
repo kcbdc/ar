@@ -124,7 +124,7 @@ async function issueSession(env,userId){const token=randomToken(40),hash=await s
 async function upsertSocialUser(env,provider,pid,nickname='',profileImage=''){const now=Date.now(),old=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();const candidate=old&&old.id?String(old.id):('usr_'+randomToken(18));await env.DB.prepare(`INSERT INTO users(id,provider,provider_user_id,nickname,profile_image,created_at,last_login_at) VALUES(?,?,?,?,?,?,?) ON CONFLICT(provider,provider_user_id) DO UPDATE SET nickname=excluded.nickname,profile_image=excluded.profile_image,last_login_at=excluded.last_login_at`).bind(candidate,provider,pid,String(nickname||'').slice(0,80),String(profileImage||'').slice(0,500),now,now).run();const row=await env.DB.prepare('SELECT id FROM users WHERE provider=? AND provider_user_id=?').bind(provider,pid).first();return {id:String(row&&row.id||candidate),provider,nickname:String(nickname||'원정대원').slice(0,80),profileImage:String(profileImage||'').slice(0,500)}}
 function redirect(location){return new Response(null,{status:302,headers:{location,'cache-control':'no-store'}})}
 
-export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account,authorization','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v35-game-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
+export default {async fetch(req,env){const u=new URL(req.url);const allow=env.ALLOWED_ORIGIN||'*';const h={'access-control-allow-origin':allow,'access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS','access-control-allow-headers':'content-type,x-jopams-account,authorization','cache-control':'no-store'};if(req.method==='OPTIONS')return new Response(null,{status:204,headers:h});if(u.pathname==='/health')return json({ok:true,service:'jopams-go-ranking',version:'v36-score-sync',ai:!!env.AI,hasChat:true,hasQuiz:true,hasGameSync:true,cooldownDays:3,cooldownRadiusM:12},200,h);
 if(u.pathname==='/api/auth/guest'&&req.method==='POST'){
   try{
     const guestPid='guest_'+randomToken(24);
@@ -340,18 +340,26 @@ if(u.pathname==='/api/score'&&req.method==='POST'){
   const org=String(b.org||'본사').replace(/[<>]/g,'').trim().slice(0,30)||'본사';
   let score=Math.min(99999999,Math.max(0,Math.floor(Number(b.score)||0)));
   const existing=await env.DB.prepare('SELECT score,updated_at FROM scores WHERE name=? AND org=?').bind(name,org).first();
-  if(existing){
-    const lastMs=Date.parse(String(existing.updated_at).replace(' ','T')+'Z');
-    if(Number.isFinite(lastMs)&&(Date.now()-lastMs)<MIN_INTERVAL_MS){
-      return json({ok:false,error:'rate_limited'},429,h);
+  // v36: 소셜 로그인 세션이 확인된 사용자는 자신의 로컬 진행도에서 계산된 SVP를 그대로 반영한다.
+  // 기존 MAX_DELTA(1,500) 제한은 정상적인 XP 보상 1회만으로도 초과되어 서버 점수가 계속 뒤처지는 원인이었다.
+  // 인증되지 않은 요청에는 기존 rate limit / 증가폭 제한을 그대로 유지해 오픈 API 스팸 방어를 보존한다.
+  const authUser=await sessionUser(req,env);
+  const trustedSession=!!authUser&&authUser.provider!=='guest';
+  if(!trustedSession){
+    if(existing){
+      const lastMs=Date.parse(String(existing.updated_at).replace(' ','T')+'Z');
+      if(Number.isFinite(lastMs)&&(Date.now()-lastMs)<MIN_INTERVAL_MS){
+        return json({ok:false,error:'rate_limited'},429,h);
+      }
+      const allowedMax=Number(existing.score||0)+MAX_DELTA;
+      if(score>allowedMax)score=allowedMax;
+    }else if(score>INITIAL_CAP){
+      score=INITIAL_CAP;
     }
-    const allowedMax=Number(existing.score||0)+MAX_DELTA;
-    if(score>allowedMax)score=allowedMax;
-  }else{
-    if(score>INITIAL_CAP)score=INITIAL_CAP;
   }
   await env.DB.prepare('INSERT INTO scores(name,org,score,updated_at) VALUES(?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(name,org) DO UPDATE SET score=MAX(score,excluded.score),updated_at=CURRENT_TIMESTAMP').bind(name,org,score).run();
-  return json({ok:true,score},200,h)
+  const saved=await env.DB.prepare('SELECT score FROM scores WHERE name=? AND org=?').bind(name,org).first();
+  return json({ok:true,score:Number(saved?.score??score),submittedScore:Math.max(0,Math.floor(Number(b.score)||0)),authenticated:trustedSession},200,h)
 }
 if(u.pathname==='/api/reward/claim'&&req.method==='POST'){
   let b;try{b=await req.json()}catch{return json({ok:false,error:'invalid_json'},400,h)}
